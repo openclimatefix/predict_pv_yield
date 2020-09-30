@@ -1,0 +1,17 @@
+name: optical_flow
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.8
+  - numpy
+  - pandas
+  - matplotlib
+  - zarr
+  - xarray
+  - ipykernel
+  - google-cloud-storage
+  - gcsfs
+  - dask
+  - python-graphviz  # used for visualising dask graphs
+  - opencv  # also run `apt install libgl1-mesa-glx`
+  - scikit-image
