@@ -1,6 +1,7 @@
-name: optical_flow
+name: predict_pv_yield
 channels:
   - conda-forge
+  - pytorch
 dependencies:
   - python>=3.8
   - numpy
@@ -15,3 +16,6 @@ dependencies:
   - python-graphviz  # used for visualising dask graphs
   - opencv  # also run `apt install libgl1-mesa-glx`
   - scikit-image
+  - pytorch
+  - cudatoolkit=11.0
+  - pytorch-lightning
