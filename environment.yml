@@ -1,7 +1,7 @@
 name: predict_pv_yield
 channels:
-  - conda-forge
   - pytorch
+  - conda-forge
 dependencies:
   - python>=3.8
   - numpy
@@ -14,8 +14,8 @@ dependencies:
   - gcsfs
   - dask
   - python-graphviz  # used for visualising dask graphs
-  - opencv  # also run `apt install libgl1-mesa-glx`
+  - conda-forge::opencv  # also run `apt install libgl1-mesa-glx`
   - scikit-image
-  - pytorch
+  - pytorch::pytorch  # explicitly specify pytorch channel to prevent conda from using conda-forge for pytorch, and hence installing the CPU-only version.
   - cudatoolkit=11.0
   - pytorch-lightning
