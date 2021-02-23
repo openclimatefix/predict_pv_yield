@@ -18,4 +18,5 @@ dependencies:
   - scikit-image
   - pytorch::pytorch  # explicitly specify pytorch channel to prevent conda from using conda-forge for pytorch, and hence installing the CPU-only version.
   - cudatoolkit=11.0
+  - pytorch::torchvision
   - pytorch-lightning
