@@ -30,5 +30,6 @@ dependencies:
   - pytorch::torchvision
   - pytorch-lightning
 
-  # Energy & PV
+  # PV & Geospatial
   - pvlib
+  - pyproj
