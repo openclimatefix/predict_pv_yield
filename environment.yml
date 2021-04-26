@@ -4,7 +4,7 @@ channels:
   - pvlib
   - conda-forge
 dependencies:
-  - python>=3.8
+  - python=3.8
   
   # Scientific Python
   - numpy
@@ -16,7 +16,8 @@ dependencies:
   
   # Cloud & distributed compute
   - google-cloud-storage
-  - gcsfs
+  - fsspec=0.8.7  # Only need this line for gcsfs=0.7.2
+  - gcsfs=0.7.2
   - dask
   - python-graphviz  # used for visualising dask graphs
   
@@ -26,8 +27,8 @@ dependencies:
   
   # Machine learning
   - pytorch::pytorch  # explicitly specify pytorch channel to prevent conda from using conda-forge for pytorch, and hence installing the CPU-only version.
-  - cudatoolkit=11.0
-  - pytorch::torchvision
+  - cudatoolkit=11.1
+  #- pytorch::torchvision  # It's possible that torchvision creates package conflicts with opencv, maybe?  Need to explore more.
   - pytorch-lightning
 
   # PV & Geospatial
