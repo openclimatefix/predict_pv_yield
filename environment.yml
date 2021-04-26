@@ -15,7 +15,7 @@ dependencies:
   - ipykernel
   
   # Cloud & distributed compute
-  - google-cloud-storage
+  # - google-cloud-storage  # not sure if this is needed?
   - fsspec=0.8.7  # Only need this line for gcsfs=0.7.2
   - gcsfs=0.7.2
   - dask
