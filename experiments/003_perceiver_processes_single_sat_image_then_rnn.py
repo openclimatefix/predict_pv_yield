@@ -55,11 +55,14 @@ def get_dataloaders():
     TEMP_PATH = '/home/jack/temp/'
 
     train_dataset = NetCDFDataset(
-        24_000,
+        25_000,
         os.path.join(DATA_PATH, 'train'),
         os.path.join(TEMP_PATH, 'train'))
 
-    #validation_dataset = NetCDFDataset(1_000, 'gs://solar-pv-nowcasting-data/prepared_ML_training_data/v2/validation/', '/home/jack/temp/validation')
+    validation_dataset = NetCDFDataset(
+        1_000,
+        os.path.join(DATA_PATH, 'validation'),
+        os.path.join(TEMP_PATH, 'validation'))
 
     dataloader_config = dict(
         pin_memory=True,
@@ -76,7 +79,10 @@ def get_dataloaders():
     train_dataloader = torch.utils.data.DataLoader(
         train_dataset, **dataloader_config)
 
-    return train_dataloader
+    validation_dataloader = torch.utils.data.DataLoader(
+        validation_dataset, **dataloader_config)
+
+    return train_dataloader, validation_dataloader
 
 
 class LitModel(pl.LightningModule):
@@ -251,12 +257,12 @@ class LitModel(pl.LightningModule):
         return self._training_or_validation_step(batch, is_train_step=False)
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=0.0001)
+        optimizer = torch.optim.Adam(self.parameters(), lr=0.0005)
         return optimizer
 
 
 def main():
-    train_dataloader = get_dataloaders()
+    train_dataloader, validation_dataloader = get_dataloaders()
     model = LitModel()
     logger = NeptuneLogger(project='OpenClimateFix/predict-pv-yield')
     logger.log_hyperparams(params)
