@@ -1,37 +1,31 @@
 name: predict_pv_yield
 channels:
   - pytorch
-  - pvlib
   - conda-forge
 dependencies:
-  - python>=3.8
+  - python>=3.9
+  - pip
   
   # Scientific Python
   - numpy
   - pandas
   - matplotlib
-  - zarr
   - xarray
   - ipykernel
   
   # Cloud & distributed compute
   - gcsfs
-  - dask
-  - python-graphviz  # used for visualising dask graphs
-  
-  # Images
-  - conda-forge::opencv  # also run `apt install libgl1-mesa-glx`
-  - scikit-image
   
   # Machine learning
   - pytorch::pytorch  # explicitly specify pytorch channel to prevent conda from using conda-forge for pytorch, and hence installing the CPU-only version.
-  - cudatoolkit=11.1
   - pytorch-lightning
 
-  # PV & Geospatial
-  - pvlib
-  - pyproj
-
-  -pip:
+  # Development tools
+  - pytest
+  - flake8
+  - jedi
+  - mypy
+  
+  - pip:
     - neptune-client[pytorch-lightning]
     - tilemapbase  # For plotting human-readable geographical maps.
