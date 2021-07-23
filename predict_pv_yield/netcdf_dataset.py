@@ -57,7 +57,7 @@ class NetCDFDataset(torch.utils.data.Dataset):
             'nwp', 'nwp_x_coords', 'nwp_y_coords',
             'sat_data', 'sat_x_coords', 'sat_y_coords',
             'pv_yield', 'pv_system_id', 'pv_system_row_number'
-        ] + example.DATETIME_FEATURE_NAMES:
+        ] + list(example.DATETIME_FEATURE_NAMES):
             batch[key] = netcdf_batch[key]
         batch = example.to_numpy(batch)
 

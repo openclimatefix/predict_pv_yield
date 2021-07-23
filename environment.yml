@@ -12,6 +12,8 @@ dependencies:
   - matplotlib
   - xarray
   - ipykernel
+  - pyproj
+  - h5netcdf
   
   # Cloud & distributed compute
   - gcsfs
