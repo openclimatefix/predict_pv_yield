@@ -92,7 +92,11 @@ class LitModel(pl.LightningModule):
         self.perceiver = Perceiver(
             input_channels=len(params['sat_channels']),
             input_axis=2,
-            num_classes=PERCEIVER_OUTPUT_SIZE)
+            num_freq_bands=6,
+            max_freq=10,
+            depth=2,
+            num_classes=PERCEIVER_OUTPUT_SIZE,
+        )
 
         self.fc1 = nn.Linear(
             in_features=PERCEIVER_OUTPUT_SIZE,
