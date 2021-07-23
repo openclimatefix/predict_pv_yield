@@ -1,16 +1,17 @@
 # Intro
 Early experiments on predicting solar PV yield using satellite imagery, deep learning and optical flow.
 
+These experiments are focused on predicting solar PV yield.  Please see [SatFlow](https://github.com/openclimatefix/satflow/) for complementary experiments on predicting the next few hours of satellite imagery (i.e. trying to predict how clouds are going to move!)
 
 # Installation
 
+From within the cloned `predict_pv_yield` directory:
+
 ```
 conda env create -f environment.yml
-sudo apt install libgl1-mesa-glx  # required for OpenCV
 conda activate predict_pv_yield
+pip install -e .
 ```
 
-# Pinned packages
-
-You might want to pin some of the packages with specified versions in environment.yml: https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-pkgs.html#preventing-packages-from-updating-pinning
+Also download `nowcasting_dataset` and install in the `predict_pv_yield` conda environment using `pip install -e .` from within the `nowcasting_dataset` directory.
 
