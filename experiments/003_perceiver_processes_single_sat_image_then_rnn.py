@@ -256,10 +256,10 @@ class LitModel(pl.LightningModule):
 def main():
     train_dataloader = get_dataloaders()
     model = LitModel()
-    logger = NeptuneLogger(project='OpenClimateFix/predict-pv-yield')
-    logger.log_hyperparams(params)
-    _LOG.info(f'logger.version = {logger.version}')
-    trainer = pl.Trainer(gpus=1, max_epochs=10_000, logger=logger)
+    #logger = NeptuneLogger(project='OpenClimateFix/predict-pv-yield')
+    #logger.log_hyperparams(params)
+    #_LOG.info(f'logger.version = {logger.version}')
+    trainer = pl.Trainer(gpus=1, max_epochs=10_000) #, logger=logger)
     trainer.fit(model, train_dataloader)
 
 
