@@ -251,7 +251,7 @@ class LitModel(pl.LightningModule):
         return self._training_or_validation_step(batch, is_train_step=False)
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=0.001)
+        optimizer = torch.optim.Adam(self.parameters(), lr=0.0001)
         return optimizer
 
 
@@ -261,7 +261,7 @@ def main():
     logger = NeptuneLogger(project='OpenClimateFix/predict-pv-yield')
     logger.log_hyperparams(params)
     _LOG.info(f'logger.version = {logger.version}')
-    trainer = pl.Trainer(gpus=1, max_epochs=10_000) #, logger=logger)
+    trainer = pl.Trainer(gpus=1, max_epochs=10_000, logger=logger)
     trainer.fit(model, train_dataloader)
 
 
