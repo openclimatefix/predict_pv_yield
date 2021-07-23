@@ -8,7 +8,8 @@ from torch import nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
 
-from nowcasting_dataset.dataset import worker_init_fn, NetCDFDataset
+from nowcasting_dataset.dataset import worker_init_fn
+from nowcasting_dataset.netcdf_dataset import NetCDFDataset
 from predict_pv_yield.visualisation import plot_example
 
 from neptune.new.integrations.pytorch_lightning import NeptuneLogger
