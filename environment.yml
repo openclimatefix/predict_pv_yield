@@ -4,7 +4,7 @@ channels:
   - pvlib
   - conda-forge
 dependencies:
-  - python=3.8
+  - python>=3.8
   
   # Scientific Python
   - numpy
@@ -31,3 +31,7 @@ dependencies:
   # PV & Geospatial
   - pvlib
   - pyproj
+
+  -pip:
+    - neptune-client[pytorch-lightning]
+    - tilemapbase  # For plotting human-readable geographical maps.
