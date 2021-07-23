@@ -55,7 +55,7 @@ def get_dataloaders():
     TEMP_PATH = '/home/jack/temp/'
 
     train_dataset = NetCDFDataset(
-        23_100,
+        12_500,
         os.path.join(DATA_PATH, 'train'),
         os.path.join(TEMP_PATH, 'train'))
 
