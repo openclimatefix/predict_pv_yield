@@ -29,3 +29,4 @@ dependencies:
   - pip:
     - neptune-client[pytorch-lightning]
     - tilemapbase  # For plotting human-readable geographical maps.
+    - perceiver-pytorch
