@@ -23,6 +23,9 @@ _LOG.setLevel(logging.DEBUG)
 
 
 params = dict(
+    # DATA
+    # TODO: Everything that relates to the dataset should come automatically
+    # from a yaml file stored with the dataset.
     batch_size=32,
     history_len=6,  #: Number of timesteps of history, not including t0.
     forecast_len=12,  #: Number of timesteps of forecast.
@@ -31,7 +34,10 @@ params = dict(
         't', 'dswrf', 'prate', 'r', 'sde', 'si10', 'vis', 'lcc', 'mcc', 'hcc'),
     sat_channels=(
         'HRV', 'IR_016', 'IR_039', 'IR_087', 'IR_097', 'IR_108', 'IR_120',
-        'IR_134', 'VIS006', 'VIS008', 'WV_062', 'WV_073')
+        'IR_134', 'VIS006', 'VIS008', 'WV_062', 'WV_073'),
+
+    # TRAINING
+    precision=16  # 16, 32, or 64-bit precision for data.
 )
 
 
@@ -55,12 +61,12 @@ def get_dataloaders():
     TEMP_PATH = '/home/jack/temp/'
 
     train_dataset = NetCDFDataset(
-        25_000,
+        24_900,
         os.path.join(DATA_PATH, 'train'),
         os.path.join(TEMP_PATH, 'train'))
 
     validation_dataset = NetCDFDataset(
-        1_000,
+        900,
         os.path.join(DATA_PATH, 'validation'),
         os.path.join(TEMP_PATH, 'validation'))
 
@@ -101,8 +107,8 @@ class LitModel(pl.LightningModule):
             num_freq_bands=6,
             max_freq=10,
             depth=2,
-            num_latents=64,
-            latent_dim=32,
+            num_latents=128,
+            latent_dim=64,
             num_classes=PERCEIVER_OUTPUT_SIZE,
         )
 
@@ -267,7 +273,9 @@ def main():
     logger = NeptuneLogger(project='OpenClimateFix/predict-pv-yield')
     logger.log_hyperparams(params)
     _LOG.info(f'logger.version = {logger.version}')
-    trainer = pl.Trainer(gpus=1, max_epochs=10_000, logger=logger)
+    trainer = pl.Trainer(
+        gpus=1, max_epochs=10_000, logger=logger,
+        precision=params['precision'])
     trainer.fit(model, train_dataloader)
 
 
