@@ -24,10 +24,11 @@ def plot_example(
         float(batch['sat_y_coords'][example_i, 0].cpu().numpy()))
 
     def _format_ax(ax):
-        ax.scatter(
-            batch['x_meters_center'][example_i].cpu(),
-            batch['y_meters_center'][example_i].cpu(),
-            s=500, color='white', marker='x')
+        if 'x_meters_center' in batch:
+            ax.scatter(
+                batch['x_meters_center'][example_i].cpu(),
+                batch['y_meters_center'][example_i].cpu(),
+                s=500, color='white', marker='x')
 
     ax = fig.add_subplot(nrows, ncols, 1)
     sat_data = batch['sat_data'][example_i, :, :, :, 0].cpu().numpy()

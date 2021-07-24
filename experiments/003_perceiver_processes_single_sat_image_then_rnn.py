@@ -276,7 +276,7 @@ def main():
     trainer = pl.Trainer(
         gpus=1, max_epochs=10_000, logger=logger,
         precision=params['precision'])
-    trainer.fit(model, train_dataloader)
+    trainer.fit(model, train_dataloader, validation_dataloader)
 
 
 if __name__ == '__main__':
