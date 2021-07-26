@@ -1,15 +1,19 @@
 import gcsfs
 import os
+import numpy as np
 import xarray as xr
 from nowcasting_dataset import utils as nd_utils
 from nowcasting_dataset import example
+from nowcasting_dataset.data_sources.satellite_data_source import (
+    SAT_MEAN, SAT_STD)
 import torch
 
 
 class NetCDFDataset(torch.utils.data.Dataset):
     """Loads data saved by the `prepare_ml_training_data.py` script."""
 
-    def __init__(self, n_batches: int, src_path: str, tmp_path: str):
+    def __init__(
+            self, n_batches: int, src_path: str, tmp_path: str):
         """
         Args:
           n_batches: Number of batches available on disk.
@@ -56,9 +60,22 @@ class NetCDFDataset(torch.utils.data.Dataset):
         for key in [
             'nwp', 'nwp_x_coords', 'nwp_y_coords',
             'sat_data', 'sat_x_coords', 'sat_y_coords',
-            'pv_yield', 'pv_system_id', 'pv_system_row_number'
+            'pv_yield', 'pv_system_id', 'pv_system_row_number',
+            'pv_system_x_coords', 'pv_system_y_coords',
+            'x_meters_center', 'y_meters_center'
         ] + list(example.DATETIME_FEATURE_NAMES):
-            batch[key] = netcdf_batch[key]
+            try:
+                batch[key] = netcdf_batch[key]
+            except KeyError:
+                pass
+
+        sat_data = batch['sat_data']
+        if sat_data.dtype == np.int16:
+            sat_data -= SAT_MEAN
+            sat_data /= SAT_STD
+            sat_data = sat_data.astype(np.float32)
+            batch['sat_data'] = sat_data
+
         batch = example.to_numpy(batch)
 
         return batch

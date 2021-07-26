@@ -37,7 +37,8 @@ params = dict(
         'IR_134', 'VIS006', 'VIS008', 'WV_062', 'WV_073'),
 
     # TRAINING
-    precision=16  # 16, 32, or 64-bit precision for data.
+    precision=16,  #: 16, 32, or 64-bit precision for data.
+    val_check_interval=1_000,  #: Check validation this many batches, or proportion of the epoch
 )
 
 
@@ -251,14 +252,19 @@ class LitModel(pl.LightningModule):
         return self._training_or_validation_step(batch, is_train_step=True)
 
     def validation_step(self, batch, batch_idx):
+        INTERESTING_EXAMPLES = (1, 5, 6, 7, 9, 11, 17, 19)
+        name = f'validation/plot/epoch{self.current_epoch}'
         if batch_idx == 0:
             # Plot example
             model_output = self(batch)
-            fig = plot_example(
-                batch, model_output, history_len=params['history_len'],
-                forecast_len=params['forecast_len'],
-                nwp_channels=params['nwp_channels'])
-            self.logger.experiment['validation/plot'].log(File.as_image(fig))
+            for example_i in INTERESTING_EXAMPLES:
+                fig = plot_example(
+                    batch, model_output, history_len=params['history_len'],
+                    forecast_len=params['forecast_len'],
+                    nwp_channels=params['nwp_channels'],
+                    example_i=example_i,
+                    epoch=self.current_epoch)
+                self.logger.experiment[name].log(File.as_image(fig))
 
         return self._training_or_validation_step(batch, is_train_step=False)
 
@@ -275,7 +281,9 @@ def main():
     _LOG.info(f'logger.version = {logger.version}')
     trainer = pl.Trainer(
         gpus=1, max_epochs=10_000, logger=logger,
-        precision=params['precision'])
+        precision=params['precision'],
+        val_check_interval=params['val_check_interval']
+    )
     trainer.fit(model, train_dataloader, validation_dataloader)
 
 

@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from typing import Iterable
+from typing import Iterable, Optional
 import tilemapbase
 from nowcasting_dataset.geospatial import osgb_to_lat_lon
 from nowcasting_dataset.example import DATETIME_FEATURE_NAMES
@@ -9,7 +9,8 @@ from nowcasting_dataset.example import DATETIME_FEATURE_NAMES
 
 def plot_example(
         batch, model_output, history_len: int, forecast_len: int,
-        nwp_channels: Iterable[str], example_i: int = 0, border: int = 0
+        nwp_channels: Iterable[str], example_i: int = 0, border: int = 0,
+        epoch: Optional[int] = None
 ) -> plt.Figure:
 
     fig = plt.figure(figsize=(20, 20))
@@ -44,7 +45,10 @@ def plot_example(
     ax.imshow(
         sat_data[history_len+1], extent=extent, interpolation='none',
         vmin=sat_min, vmax=sat_max)
-    ax.set_title('t = 0')
+    if epoch is None:
+        ax.set_title('t = 0')
+    else:
+        ax.set_title(f't = 0, epoch = {epoch}')
     _format_ax(ax)
 
     ax = fig.add_subplot(nrows, ncols, 3)
