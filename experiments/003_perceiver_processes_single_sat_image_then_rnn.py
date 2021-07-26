@@ -73,7 +73,7 @@ def get_dataloaders():
 
     dataloader_config = dict(
         pin_memory=True,
-        num_workers=24,
+        num_workers=16,
         prefetch_factor=8,
         worker_init_fn=worker_init_fn,
         persistent_workers=True,
@@ -242,9 +242,14 @@ class LitModel(pl.LightningModule):
         # the mean across the batch?
         tag = "Train" if is_train_step else "Validation"
         self.log_dict(
-            {f'MSE/{tag}': mse_loss}, on_step=is_train_step, on_epoch=True)
-        self.log_dict(
-            {f'NMAE/{tag}': nmae_loss}, on_step=is_train_step, on_epoch=True)
+            {
+                f'MSE/{tag}': mse_loss,
+                f'NMAE/{tag}': nmae_loss
+            },
+            on_step=is_train_step,
+            on_epoch=True,
+            sync_dist=True  # Required for distributed training (even multi-GPU on signle machine)
+        )
 
         return nmae_loss
 
@@ -280,7 +285,7 @@ def main():
     logger.log_hyperparams(params)
     _LOG.info(f'logger.version = {logger.version}')
     trainer = pl.Trainer(
-        gpus=1, max_epochs=10_000, logger=logger,
+        gpus=-1, max_epochs=10_000, logger=logger,
         precision=params['precision'],
         val_check_interval=params['val_check_interval']
     )
