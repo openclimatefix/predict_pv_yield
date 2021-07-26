@@ -4,9 +4,25 @@ import numpy as np
 import xarray as xr
 from nowcasting_dataset import utils as nd_utils
 from nowcasting_dataset import example
-from nowcasting_dataset.data_sources.satellite_data_source import (
-    SAT_MEAN, SAT_STD)
 import torch
+
+
+# TODO: Take these from nowcasting_dataset.
+SAT_MEAN = xr.DataArray(
+    data=[
+        93.23458, 131.71373, 843.7779 , 736.6148 , 771.1189 , 589.66034,
+        862.29816, 927.69586,  90.70885, 107.58985, 618.4583 , 532.47394],
+    dims=['variable'],
+    coords={'variable': list(SAT_VARIABLE_NAMES)}).astype(np.float32)
+
+SAT_STD = xr.DataArray(
+    data=[
+        115.34247 , 139.92636 ,  36.99538 ,  57.366386,  30.346825,
+        149.68007 ,  51.70631 ,  35.872967, 115.77212 , 120.997154,
+         98.57828 ,  99.76469],
+    dims=['variable'],
+    coords={'variable': list(SAT_VARIABLE_NAMES)}).astype(np.float32)
+
 
 
 class NetCDFDataset(torch.utils.data.Dataset):
