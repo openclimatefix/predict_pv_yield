@@ -73,7 +73,7 @@ def get_dataloaders():
 
     dataloader_config = dict(
         pin_memory=True,
-        num_workers=24,
+        num_workers=16,
         prefetch_factor=8,
         worker_init_fn=worker_init_fn,
         persistent_workers=True,
