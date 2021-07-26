@@ -8,6 +8,10 @@ import torch
 
 
 # TODO: Take these from nowcasting_dataset.
+SAT_VARIABLE_NAMES = (
+    'HRV', 'IR_016', 'IR_039', 'IR_087', 'IR_097', 'IR_108', 'IR_120',
+    'IR_134', 'VIS006', 'VIS008', 'WV_062', 'WV_073')
+
 SAT_MEAN = xr.DataArray(
     data=[
         93.23458, 131.71373, 843.7779 , 736.6148 , 771.1189 , 589.66034,
