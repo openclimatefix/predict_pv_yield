@@ -29,7 +29,7 @@ params = dict(
     batch_size=32,
     history_len=6,  #: Number of timesteps of history, not including t0.
     forecast_len=12,  #: Number of timesteps of forecast.
-    image_size_pixels=32,
+    image_size_pixels=64,
     nwp_channels=(
         't', 'dswrf', 'prate', 'r', 'sde', 'si10', 'vis', 'lcc', 'mcc', 'hcc'),
     sat_channels=(
@@ -57,7 +57,7 @@ RNN_HIDDEN_SIZE = 16
 
 
 def get_dataloaders():
-    DATA_PATH = 'gs://solar-pv-nowcasting-data/prepared_ML_training_data/v2/'
+    DATA_PATH = 'gs://solar-pv-nowcasting-data/prepared_ML_training_data/v3/'
     TEMP_PATH = '/home/jack/temp/'
 
     train_dataset = NetCDFDataset(
