@@ -270,6 +270,7 @@ class LitModel(pl.LightningModule):
                     example_i=example_i,
                     epoch=self.current_epoch)
                 self.logger.experiment[name].log(File.as_image(fig))
+                fig.close()
 
         return self._training_or_validation_step(batch, is_train_step=False)
 
@@ -287,7 +288,9 @@ def main():
     trainer = pl.Trainer(
         gpus=-1, max_epochs=10_000, logger=logger,
         precision=params['precision'],
-        val_check_interval=params['val_check_interval']
+        val_check_interval=params['val_check_interval'],
+        accelerator='ddp',
+        plugins=pl.plugins.DDPPlugin(find_unused_parameters=False)
     )
     trainer.fit(model, train_dataloader, validation_dataloader)
 
