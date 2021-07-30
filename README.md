@@ -1,7 +1,9 @@
 # Intro
-Early experiments on predicting solar PV yield using satellite imagery, deep learning and optical flow.
+Early experiments on predicting solar electricity generation over the next few hours, using satellite imagery, deep learning and as many other data sources as we can think of :)
 
-These experiments are focused on predicting solar PV yield.  Please see [SatFlow](https://github.com/openclimatefix/satflow/) for complementary experiments on predicting the next few hours of satellite imagery (i.e. trying to predict how clouds are going to move!)
+These experiments are focused on predicting solar PV yield.
+
+Please see [SatFlow](https://github.com/openclimatefix/satflow/) for complementary experiments on predicting the next few hours of satellite imagery (i.e. trying to predict how clouds are going to move!)
 
 # Installation
 
