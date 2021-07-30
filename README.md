@@ -1,5 +1,5 @@
 # Intro
-Early experiments on predicting solar electricity generation over the next few hours, using satellite imagery, deep learning and as many other data sources as we can think of :)
+Early experiments on predicting solar electricity generation over the next few hours, using deep learning, satellite imagery, and as many other data sources as we can think of :)
 
 These experiments are focused on predicting solar PV yield.
 
