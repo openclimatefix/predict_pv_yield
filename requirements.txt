@@ -1,3 +1,4 @@
+git+git://github.com/openclimatefix/nowcasting_dataset@main#egg=nowcasting_dataset
 numpy
 pandas
 matplotlib
