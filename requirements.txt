@@ -9,6 +9,7 @@ gcsfs
 scikit-image
 torch
 pytorch-lightning
+perceiver_pytorch
 dask
 pvlib
 pyproj
