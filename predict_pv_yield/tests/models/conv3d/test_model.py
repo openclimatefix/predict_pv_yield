@@ -17,7 +17,7 @@ def test_model_forward():
 
 
     data_configruation = dict(
-        batch_size=,
+        batch_size=32,
         history_len=1,  #: Number of timesteps of history, not including t0.
         forecast_len=3,  #: Number of timesteps of forecast.
         image_size_pixels=8,
