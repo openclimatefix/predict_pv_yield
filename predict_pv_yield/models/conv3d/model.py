@@ -77,7 +77,6 @@ class Model(pl.LightningModule):
         out = F.relu(self.sat_conv2(out))
         out = F.relu(self.sat_conv3(out))
 
-        print(out.shape)
         out = out.reshape(batch_size, self.cnn_output_size)
         out = F.relu(self.fc1(out))
 
