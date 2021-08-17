@@ -15,12 +15,11 @@ def test_init():
 
 def test_model_forward():
 
-
     data_configruation = dict(
         batch_size=32,
-        history_len=1,  #: Number of timesteps of history, not including t0.
-        forecast_len=3,  #: Number of timesteps of forecast.
-        image_size_pixels=8,
+        history_len=6,  #: Number of timesteps of history, not including t0.
+        forecast_len=12,  #: Number of timesteps of forecast.
+        image_size_pixels=16,
         nwp_channels=NWP_VARIABLE_NAMES,
         sat_channels=SAT_VARIABLE_NAMES,
     )
@@ -74,9 +73,9 @@ def test_train():
     # set up data configuration
     data_configruation = dict(
         batch_size=32,
-        history_len=1,  #: Number of timesteps of history, not including t0.
-        forecast_len=3,  #: Number of timesteps of forecast.
-        image_size_pixels=8,
+        history_len=6,  #: Number of timesteps of history, not including t0.
+        forecast_len=12,  #: Number of timesteps of forecast.
+        image_size_pixels=16,
         nwp_channels=NWP_VARIABLE_NAMES,
         sat_channels=SAT_VARIABLE_NAMES,
     )
