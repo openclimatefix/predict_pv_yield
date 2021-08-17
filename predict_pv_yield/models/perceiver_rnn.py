@@ -60,7 +60,6 @@ class PerceiverRNN(BaseModel):
             num_latents=128,
             latent_dim=64,
             num_classes=PERCEIVER_OUTPUT_SIZE,
-            sequential=True,
             weight_tie_layers=True
         )
 
