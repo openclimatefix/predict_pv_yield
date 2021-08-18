@@ -16,7 +16,9 @@ def main():
     logger = NeptuneLogger(project="OpenClimateFix/predict-pv-yield")
     _LOG.info(f"logger.version = {logger.version}")
     trainer = pl.Trainer(gpus=0, max_epochs=10, logger=logger)
-    trainer.fit(model, train_dataloaders=train_dataloader, val_dataloaders=validation_dataloader)
+
+    # dont need to train baseline model
+    # trainer.fit(model, train_dataloaders=train_dataloader, val_dataloaders=validation_dataloader)
 
     trainer.validate(model, validation_dataloader)
 
