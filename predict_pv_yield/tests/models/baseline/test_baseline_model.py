@@ -61,7 +61,7 @@ def test_model_forward():
     assert y.shape[1] == data_configruation['forecast_len']
 
 
-def test_train():
+def test_trainer():
 
     # set up data configuration
     data_configruation = dict(
@@ -79,9 +79,6 @@ def test_train():
     # create fake data loader
     train_dataset = FakeDataset(
         batch_size=data_configruation["batch_size"],
-        width=data_configruation["image_size_pixels"],
-        height=data_configruation["image_size_pixels"],
-        channels=len(data_configruation["sat_channels"]),
         seq_length=data_configruation["history_len"] + data_configruation["forecast_len"] + 1,
     )
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=None)
