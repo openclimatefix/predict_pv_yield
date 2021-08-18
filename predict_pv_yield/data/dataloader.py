@@ -4,23 +4,23 @@ import torch
 from typing import Tuple
 
 
-def get_dataloaders() -> Tuple:
+def get_dataloaders(n_train_data: int = 24900, n_validation_data: int = 900) -> Tuple:
     DATA_PATH = 'gs://solar-pv-nowcasting-data/prepared_ML_training_data/v4/'
     TEMP_PATH = '.'
 
     train_dataset = NetCDFDataset(
-        24_900,
+        n_train_data,
         os.path.join(DATA_PATH, 'train'),
         os.path.join(TEMP_PATH, 'train'))
 
     validation_dataset = NetCDFDataset(
-        900,
+        n_validation_data,
         os.path.join(DATA_PATH, 'validation'),
         os.path.join(TEMP_PATH, 'validation'))
 
     dataloader_config = dict(
         pin_memory=True,
-        num_workers=6,
+        num_workers=8,
         prefetch_factor=8,
         worker_init_fn=worker_init_fn,
         persistent_workers=True,

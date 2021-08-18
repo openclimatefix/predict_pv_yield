@@ -20,7 +20,7 @@ data_configruation_default = dict(
     sat_channels=SAT_VARIABLE_NAMES,
 )
 
-model_configuration_default = dict(conv3d_channels=16, kennel=3)
+model_configuration_default = dict(conv3d_channels=8, kennel=3)
 
 
 class Model(pl.LightningModule):
@@ -39,11 +39,17 @@ class Model(pl.LightningModule):
         self.forecast_len = data_configruation["forecast_len"]
         self.history_len = data_configruation["history_len"]
         conv3d_channels = model_configuration["conv3d_channels"]
-        self.cnn_output_size = conv3d_channels * ((data_configruation["image_size_pixels"] - 6) ** 2) \
-                               * (self.forecast_len + self.history_len + 1 - 6)
+        self.cnn_output_size = (
+            conv3d_channels
+            * ((data_configruation["image_size_pixels"] - 6) ** 2)
+            * (self.forecast_len + self.history_len + 1 - 6)
+        )
 
         self.sat_conv1 = nn.Conv3d(
-            in_channels=len(data_configruation["sat_channels"]), out_channels=conv3d_channels, kernel_size=(3, 3, 3), padding=0
+            in_channels=len(data_configruation["sat_channels"]),
+            out_channels=conv3d_channels,
+            kernel_size=(3, 3, 3),
+            padding=0,
         )
         self.sat_conv2 = nn.Conv3d(
             in_channels=conv3d_channels, out_channels=conv3d_channels, kernel_size=(3, 3, 3), padding=0
