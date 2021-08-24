@@ -46,8 +46,8 @@ def test_model_forward():
 
     # check out put is the correct shape
     assert len(y.shape) == 2
-    assert y.shape[0] == data_configruation['batch_size']
-    assert y.shape[1] == data_configruation['forecast_len']
+    assert y.shape[0] == data_configruation["batch_size"]
+    assert y.shape[1] == data_configruation["forecast_len"]
 
 
 class FakeDataset(torch.utils.data.Dataset):
@@ -65,10 +65,16 @@ class FakeDataset(torch.utils.data.Dataset):
         return self.length
 
     def __getitem__(self, idx):
-        return {
+
+        x = {
             "sat_data": torch.randn(self.batch_size, self.seq_length, self.width, self.height, self.channels),
             "pv_yield": torch.randn(self.batch_size, self.seq_length, 128),
         }
+
+        # add a nan
+        x["pv_yield"][0, 0, :] = float("nan")
+
+        return x
 
 
 def test_train():

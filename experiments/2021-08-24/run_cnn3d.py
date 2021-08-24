@@ -11,7 +11,7 @@ _LOG = logging.getLogger("predict_pv_yield")
 _LOG.setLevel(logging.DEBUG)
 
 _LOG = logging.getLogger("nowcasting_dataset")
-_LOG.setLevel(logging.DEBUG)
+_LOG.setLevel(logging.INFO)
 
 
 def main():
