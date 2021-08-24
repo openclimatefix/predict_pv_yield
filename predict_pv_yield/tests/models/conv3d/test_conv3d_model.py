@@ -30,13 +30,16 @@ def test_model_forward():
     # start model
     model = Model(data_configruation=data_configruation, model_configuration=model_configuration)
 
-    # set up fake data
-    # satelite data
-    x = {"sat_data": torch.randn(data_configruation['batch_size'],
-                                 data_configruation["history_len"] + data_configruation["forecast_len"] + 1,
-                                 data_configruation['image_size_pixels'],
-                                 data_configruation['image_size_pixels'],
-                                 len(data_configruation["sat_channels"]))}
+    # create fake data loader
+    train_dataset = FakeDataset(
+        batch_size=data_configruation["batch_size"],
+        width=data_configruation["image_size_pixels"],
+        height=data_configruation["image_size_pixels"],
+        channels=len(data_configruation["sat_channels"]),
+        seq_length=data_configruation["history_len"] + data_configruation["forecast_len"] + 1,
+    )
+
+    x = next(iter(train_dataset))
 
     # run data through model
     y = model(x)

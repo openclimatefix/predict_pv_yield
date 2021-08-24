@@ -28,6 +28,7 @@ class Model(pl.LightningModule):
         self,
         data_configruation: dict = data_configruation_default,
         model_configuration: dict = model_configuration_default,
+        include_pv_yield: bool = True,
     ):
         """
         Fairly simply 3d conv model.
@@ -38,6 +39,7 @@ class Model(pl.LightningModule):
 
         self.forecast_len = data_configruation["forecast_len"]
         self.history_len = data_configruation["history_len"]
+        self.include_pv_yield = include_pv_yield
         conv3d_channels = model_configuration["conv3d_channels"]
         self.cnn_output_size = (
             conv3d_channels
@@ -60,10 +62,14 @@ class Model(pl.LightningModule):
         )
 
         self.fc1 = nn.Linear(in_features=self.cnn_output_size, out_features=128)
-
         self.fc2 = nn.Linear(in_features=128, out_features=128)
 
-        self.fc3 = nn.Linear(in_features=128, out_features=64)
+        if include_pv_yield:
+            fc3_in_features = 1024
+        else:
+            fc3_in_features = 128
+
+        self.fc3 = nn.Linear(in_features=fc3_in_features, out_features=64)
         self.fc4 = nn.Linear(in_features=64, out_features=self.forecast_len)
         # self.fc5 = nn.Linear(in_features=32, out_features=8)
         # self.fc6 = nn.Linear(in_features=8, out_features=1)
@@ -84,17 +90,24 @@ class Model(pl.LightningModule):
         out = F.relu(self.sat_conv3(out))
 
         out = out.reshape(batch_size, self.cnn_output_size)
+
+        # Fully connected layers
         out = F.relu(self.fc1(out))
+        out = F.relu(self.fc2(out))
+        # which has shape (batch_size, 128)
+
+        # add pv yield
+        if self.include_pv_yield:
+            pv_yield_history = x["pv_yield"][:, : self.history_len + 1]
+
+            pv_yield_history = pv_yield_history.reshape(
+                pv_yield_history.shape[0], pv_yield_history.shape[1] * pv_yield_history.shape[2]
+            )
+            out = torch.cat((out, pv_yield_history), dim=1)
 
         # Fully connected layers.
-        out = F.relu(self.fc2(out))
         out = F.relu(self.fc3(out))
         out = self.fc4(out)
-        # print(out.shape)
-        # out = F.relu(self.fc5(out))
-        # print(out.shape)
-        # final_out = self.fc6(out)
-        # print(f'{final_out.shape=}')
 
         out = out.reshape(batch_size, self.forecast_len)
 
