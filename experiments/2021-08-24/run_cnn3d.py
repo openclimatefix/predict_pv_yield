@@ -15,12 +15,17 @@ _LOG.setLevel(logging.DEBUG)
 
 
 def main():
-    train_dataloader, validation_dataloader = get_dataloaders(n_train_data=24900, n_validation_data=1000, cloud='aws')
+    train_dataloader, validation_dataloader = get_dataloaders(
+        n_train_data=24900,
+        n_validation_data=1000,
+        data_path="gs://solar-pv-nowcasting-data/prepared_ML_training_data/v4/",
+        cloud="gcp",
+    )
     model = Model()
 
-    logger = NeptuneLogger(project='OpenClimateFix/predict-pv-yield')
+    logger = NeptuneLogger(project="OpenClimateFix/predict-pv-yield")
     logger.log_hyperparams(model_configuration_default)
-    _LOG.info(f'logger.version = {logger.version}')
+    _LOG.info(f"logger.version = {logger.version}")
     trainer = pl.Trainer(gpus=0, max_epochs=10)
     trainer.fit(model, train_dataloaders=train_dataloader, val_dataloaders=validation_dataloader)
 
@@ -28,5 +33,5 @@ def main():
     trainer.validate(model, validation_dataloader)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
