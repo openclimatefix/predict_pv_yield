@@ -122,8 +122,8 @@ class Model(pl.LightningModule):
         mae_loss = (y_hat - y).abs().mean()
 
         tag = "Train" if is_train_step else "Validation"
-        self.log_dict({f"MSE/{tag}": mse_loss}, on_step=is_train_step, on_epoch=True)
-        self.log_dict({f"MAE/{tag}": mae_loss}, on_step=is_train_step, on_epoch=True)
+        self.log_dict({f"MSE/{tag}": mse_loss}, on_step=True, on_epoch=True)
+        self.log_dict({f"MAE/{tag}": mae_loss}, on_step=True, on_epoch=True)
 
         return mae_loss
 
