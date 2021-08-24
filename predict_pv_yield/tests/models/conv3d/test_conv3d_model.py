@@ -25,7 +25,7 @@ def test_model_forward():
     )
 
     # model configuration
-    model_configuration = dict(conv3d_channels=16, kennel=3)
+    model_configuration = dict(conv3d_channels=16, kennel=3, number_of_conv3d_layers=4)
 
     # start model
     model = Model(data_configruation=data_configruation, model_configuration=model_configuration)
@@ -90,7 +90,7 @@ def test_train():
     )
 
     # model configuration
-    model_configuration = dict(conv3d_channels=16, kennel=3)
+    model_configuration = dict(conv3d_channels=16, kennel=3, number_of_conv3d_layers=4)
 
     # start model
     model = Model(data_configruation=data_configruation, model_configuration=model_configuration)

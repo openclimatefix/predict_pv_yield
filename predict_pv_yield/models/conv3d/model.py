@@ -20,7 +20,7 @@ data_configruation_default = dict(
     sat_channels=SAT_VARIABLE_NAMES,
 )
 
-model_configuration_default = dict(conv3d_channels=8, kennel=3)
+model_configuration_default = dict(conv3d_channels=8, kennel=3, number_of_conv3d_layers=4)
 
 
 class Model(pl.LightningModule):
@@ -40,11 +40,13 @@ class Model(pl.LightningModule):
         self.forecast_len = data_configruation["forecast_len"]
         self.history_len = data_configruation["history_len"]
         self.include_pv_yield = include_pv_yield
+        self.number_of_conv3d_layers = model_configuration["number_of_conv3d_layers"]
         conv3d_channels = model_configuration["conv3d_channels"]
+
         self.cnn_output_size = (
             conv3d_channels
-            * ((data_configruation["image_size_pixels"] - 6) ** 2)
-            * (self.forecast_len + self.history_len + 1 - 6)
+            * ((data_configruation["image_size_pixels"] - 2*self.number_of_conv3d_layers) ** 2)
+            * (self.forecast_len + self.history_len + 1 - 2*self.number_of_conv3d_layers)
         )
 
         self.sat_conv1 = nn.Conv3d(
@@ -57,17 +59,12 @@ class Model(pl.LightningModule):
             in_channels=conv3d_channels, out_channels=conv3d_channels, kernel_size=(3, 3, 3), padding=0
         )
 
-        self.sat_conv3 = nn.Conv3d(
-            in_channels=conv3d_channels, out_channels=conv3d_channels, kernel_size=(3, 3, 3), padding=0
-        )
-
         self.fc1 = nn.Linear(in_features=self.cnn_output_size, out_features=128)
         self.fc2 = nn.Linear(in_features=128, out_features=128)
 
+        fc3_in_features = 128
         if include_pv_yield:
-            fc3_in_features = 1024
-        else:
-            fc3_in_features = 128
+            fc3_in_features += 128*7 # 7 could be (history_len + 1)
 
         self.fc3 = nn.Linear(in_features=fc3_in_features, out_features=64)
         self.fc4 = nn.Linear(in_features=64, out_features=self.forecast_len)
@@ -86,8 +83,8 @@ class Model(pl.LightningModule):
 
         # :) Pass data through the network :)
         out = F.relu(self.sat_conv1(sat_data))
-        out = F.relu(self.sat_conv2(out))
-        out = F.relu(self.sat_conv3(out))
+        for i in range(0, self.number_of_conv3d_layers-1):
+            out = F.relu(self.sat_conv2(out))
 
         out = out.reshape(batch_size, self.cnn_output_size)
 
