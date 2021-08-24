@@ -15,11 +15,8 @@ _LOG.setLevel(logging.DEBUG)
 
 
 def main():
-    train_dataloader, validation_dataloader = get_dataloaders(n_train_data=10, n_validation_data=10, cloud='aws')
+    train_dataloader, validation_dataloader = get_dataloaders(n_train_data=24900, n_validation_data=1000, cloud='aws')
     model = Model()
-
-    x = next(iter(train_dataloader))
-    x = next(iter(validation_dataloader))
 
     logger = NeptuneLogger(project='OpenClimateFix/predict-pv-yield')
     logger.log_hyperparams(model_configuration_default)
