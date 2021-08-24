@@ -21,3 +21,4 @@ mypy
 tables
 tilemapbase
 neptune-client
+boto3
