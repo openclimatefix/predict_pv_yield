@@ -27,10 +27,7 @@ if __name__ == "__main__":
     main()
 
 
-# Managed to run it on GCP.
-#  Results are logged to https://app.neptune.ai/o/OpenClimateFix/org/predict-pv-yield/e/PRED-120/monitoring
-# Notes:
-# 1. Large training set, and one epoch took a day, so should use GPU for this model. I was a bit suprised as I didnt
-# think the model was so big.
-# 2. Need to work on validationm general validation method. Good to base line against a really simple model. For
-# validation might need to think carefully about metrics that will be used.
+# https://app.neptune.ai/o/OpenClimateFix/org/predict-pv-yield/e/PRED-124/charts
+#
+# {'Validation: MAE': 0.08886486291885376, 'Validation: MSE': 0.02136283740401268}
+#
