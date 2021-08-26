@@ -16,7 +16,7 @@ _LOG.setLevel(logging.INFO)
 
 def main():
     train_dataloader, validation_dataloader = get_dataloaders(
-        n_train_data=24900,
+        n_train_data=2000,
         n_validation_data=1000,
         data_path="gs://solar-pv-nowcasting-data/prepared_ML_training_data/v4/",
         cloud="gcp",
@@ -38,7 +38,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-# https://app.neptune.ai/o/OpenClimateFix/org/predict-pv-yield/e/PRED-133/monitoring
-
-# https://app.neptune.ai/o/OpenClimateFix/org/predict-pv-yield/e/PRED-132/monitoring
-# https://app.neptune.ai/o/OpenClimateFix/org/predict-pv-yield/e/PRED-131/monitoring

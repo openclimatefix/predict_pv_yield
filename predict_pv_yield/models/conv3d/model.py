@@ -29,6 +29,7 @@ class Model(pl.LightningModule):
         data_configruation: dict = data_configruation_default,
         model_configuration: dict = model_configuration_default,
         include_pv_yield: bool = True,
+        include_nwp: bool = True,
     ):
         """
         Fairly simply 3d conv model.
@@ -40,7 +41,9 @@ class Model(pl.LightningModule):
         self.forecast_len = data_configruation["forecast_len"]
         self.history_len = data_configruation["history_len"]
         self.include_pv_yield = include_pv_yield
+        self.include_nwp = include_nwp
         self.number_of_conv3d_layers = model_configuration["number_of_conv3d_layers"]
+        self.number_of_nwp_features = 10*19*2*2
         conv3d_channels = model_configuration["conv3d_channels"]
 
         self.cnn_output_size = (
@@ -65,6 +68,9 @@ class Model(pl.LightningModule):
         fc3_in_features = 128
         if include_pv_yield:
             fc3_in_features += 128*7 # 7 could be (history_len + 1)
+        if include_nwp:
+            self.fc_nwp = nn.Linear(in_features=self.number_of_nwp_features, out_features=128)
+            fc3_in_features += 128
 
         self.fc3 = nn.Linear(in_features=fc3_in_features, out_features=64)
         self.fc4 = nn.Linear(in_features=64, out_features=self.forecast_len)
@@ -101,6 +107,18 @@ class Model(pl.LightningModule):
                 pv_yield_history.shape[0], pv_yield_history.shape[1] * pv_yield_history.shape[2]
             )
             out = torch.cat((out, pv_yield_history), dim=1)
+
+        # *********************** NWP Data ************************************
+        if self.include_nwp:
+            # Shape: batch_size, channel, seq_length, width, height
+            nwp_data = x['nwp'].float()
+            nwp_data = nwp_data.flatten(start_dim=1)
+
+            # fully connected layer
+            out_nwp = F.relu(self.fc_nwp(nwp_data))
+
+            # join with other FC layer
+            out = torch.cat((out, out_nwp), dim=1)
 
         # Fully connected layers.
         out = F.relu(self.fc3(out))

@@ -35,7 +35,7 @@ def test_model_forward():
         batch_size=data_configruation["batch_size"],
         width=data_configruation["image_size_pixels"],
         height=data_configruation["image_size_pixels"],
-        channels=len(data_configruation["sat_channels"]),
+        sat_channels=len(data_configruation["sat_channels"]),
         seq_length=data_configruation["history_len"] + data_configruation["forecast_len"] + 1,
     )
 
@@ -53,12 +53,12 @@ def test_model_forward():
 class FakeDataset(torch.utils.data.Dataset):
     """Fake dataset."""
 
-    def __init__(self, batch_size=32, seq_length=3, width=16, height=16, channels=8, length=32):
+    def __init__(self, batch_size=32, seq_length=3, width=16, height=16, sat_channels=8, length=32):
         self.batch_size = batch_size
         self.seq_length = seq_length
         self.width = width
         self.height = height
-        self.channels = channels
+        self.sat_channels = sat_channels
         self.length = length
 
     def __len__(self):
@@ -67,8 +67,9 @@ class FakeDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
 
         x = {
-            "sat_data": torch.randn(self.batch_size, self.seq_length, self.width, self.height, self.channels),
+            "sat_data": torch.randn(self.batch_size, self.seq_length, self.width, self.height, self.sat_channels),
             "pv_yield": torch.randn(self.batch_size, self.seq_length, 128),
+            "nwp": torch.randn(self.batch_size, 10, self.seq_length, 2, 2),
         }
 
         # add a nan
@@ -100,7 +101,7 @@ def test_train():
         batch_size=data_configruation["batch_size"],
         width=data_configruation["image_size_pixels"],
         height=data_configruation["image_size_pixels"],
-        channels=len(data_configruation["sat_channels"]),
+        sat_channels=len(data_configruation["sat_channels"]),
         seq_length=data_configruation["history_len"] + data_configruation["forecast_len"] + 1,
     )
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=None)
