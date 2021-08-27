@@ -7,6 +7,8 @@ from nowcasting_dataset.data_sources.satellite_data_source import SAT_VARIABLE_N
 from nowcasting_dataset.data_sources.nwp_data_source import NWP_VARIABLE_NAMES
 from torch import nn
 
+from predict_pv_yield.models.base_model import BaseModel
+
 logging.basicConfig()
 _LOG = logging.getLogger("predict_pv_yield")
 _LOG.setLevel(logging.DEBUG)
@@ -23,7 +25,7 @@ data_configruation_default = dict(
 model_configuration_default = dict(conv3d_channels=8, kennel=3, number_of_conv3d_layers=4)
 
 
-class Model(pl.LightningModule):
+class Model(BaseModel):
     def __init__(
         self,
         data_configruation: dict = data_configruation_default,
@@ -127,30 +129,3 @@ class Model(pl.LightningModule):
         out = out.reshape(batch_size, self.forecast_len)
 
         return out
-
-    def _training_or_validation_step(self, batch, is_train_step: bool = True):
-        # put the batch data through the model
-        y_hat = self(batch)
-
-        # get the true result out. Select the first data point, as this is the pv system in the center of the image
-        y = batch["pv_yield"][:, -self.forecast_len :, 0]
-
-        # calculate mse, mae
-        mse_loss = F.mse_loss(y_hat, y)
-        mae_loss = (y_hat - y).abs().mean()
-
-        tag = "Train" if is_train_step else "Validation"
-        self.log_dict({f"MSE/{tag}": mse_loss}, on_step=True, on_epoch=True)
-        self.log_dict({f"MAE/{tag}": mae_loss}, on_step=True, on_epoch=True)
-
-        return mae_loss
-
-    def training_step(self, batch, batch_idx):
-        return self._training_or_validation_step(batch)
-
-    def validation_step(self, batch, batch_idx):
-        return self._training_or_validation_step(batch, is_train_step=False)
-
-    def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=0.001)
-        return optimizer
