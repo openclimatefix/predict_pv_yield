@@ -3,33 +3,24 @@ import logging
 import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
-from nowcasting_dataset.data_sources.satellite_data_source import SAT_VARIABLE_NAMES
-from nowcasting_dataset.data_sources.nwp_data_source import NWP_VARIABLE_NAMES
 from torch import nn
 
 logging.basicConfig()
 _LOG = logging.getLogger("predict_pv_yield")
-_LOG.setLevel(logging.DEBUG)
-
-data_configruation_default = dict(
-    batch_size=32,
-    history_len=6,  #: Number of timesteps of history, not including t0.
-    forecast_len=12,  #: Number of timesteps of forecast.
-    image_size_pixels=64,
-    nwp_channels=NWP_VARIABLE_NAMES,
-    sat_channels=SAT_VARIABLE_NAMES,
-)
-
-model_configuration_default = dict(conv3d_channels=8, kennel=3, number_of_conv3d_layers=4)
 
 
 class Model(pl.LightningModule):
     def __init__(
         self,
-        data_configruation: dict = data_configruation_default,
-        model_configuration: dict = model_configuration_default,
         include_pv_yield: bool = True,
         include_nwp: bool = True,
+        forecast_len: int = 6,
+        history_len: int = 12,
+        number_of_conv3d_layers: int = 4,
+        conv3d_channels: int = 32,
+        image_size_pixels: int = 64,
+        number_sat_channels: int = 12,
+        batch_size: int = 64
     ):
         """
         Fairly simply 3d conv model.
@@ -38,22 +29,22 @@ class Model(pl.LightningModule):
         """
         super().__init__()
 
-        self.forecast_len = data_configruation["forecast_len"]
-        self.history_len = data_configruation["history_len"]
+        self.forecast_len = forecast_len
+        self.history_len = history_len
         self.include_pv_yield = include_pv_yield
         self.include_nwp = include_nwp
-        self.number_of_conv3d_layers = model_configuration["number_of_conv3d_layers"]
+        self.number_of_conv3d_layers = number_of_conv3d_layers
         self.number_of_nwp_features = 10*19*2*2
-        conv3d_channels = model_configuration["conv3d_channels"]
+        conv3d_channels = conv3d_channels
 
         self.cnn_output_size = (
             conv3d_channels
-            * ((data_configruation["image_size_pixels"] - 2*self.number_of_conv3d_layers) ** 2)
+            * ((image_size_pixels - 2*self.number_of_conv3d_layers) ** 2)
             * (self.forecast_len + self.history_len + 1 - 2*self.number_of_conv3d_layers)
         )
 
         self.sat_conv1 = nn.Conv3d(
-            in_channels=len(data_configruation["sat_channels"]),
+            in_channels=number_sat_channels,
             out_channels=conv3d_channels,
             kernel_size=(3, 3, 3),
             padding=0,
@@ -111,7 +102,7 @@ class Model(pl.LightningModule):
         # *********************** NWP Data ************************************
         if self.include_nwp:
             # Shape: batch_size, channel, seq_length, width, height
-            nwp_data = x['nwp'].float()
+            nwp_data = x['nwp']
             nwp_data = nwp_data.flatten(start_dim=1)
 
             # fully connected layer
