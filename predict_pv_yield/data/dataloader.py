@@ -86,7 +86,7 @@ class NetCDFDataModule(LightningDataModule):
 
     def val_dataloader(self):
         val_dataset = NetCDFDataset(
-            self.n_train_data,
+            self.n_val_data,
             os.path.join(self.data_path, "validation"),
             os.path.join(self.temp_path, "validation"),
             cloud=self.cloud,
@@ -97,7 +97,7 @@ class NetCDFDataModule(LightningDataModule):
     def test_dataloader(self):
         # TODO need to change this to a test folder
         test_dataset = NetCDFDataset(
-            self.n_train_data,
+            self.n_val_data,
             os.path.join(self.data_path, "validation"),
             os.path.join(self.temp_path, "validation"),
             cloud=self.cloud,
