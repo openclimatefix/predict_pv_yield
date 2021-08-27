@@ -1,16 +1,31 @@
 from predict_pv_yield.models.conv3d.model import Model
 import torch
 import pytorch_lightning as pl
-import numpy as np
+import yaml
+import os
+import predict_pv_yield
 
 
-from nowcasting_dataset.data_sources.satellite_data_source import SAT_VARIABLE_NAMES
-from nowcasting_dataset.data_sources.nwp_data_source import NWP_VARIABLE_NAMES
+def load_config(config_file):
+    with open(config_file, "r") as cfg:
+        config = yaml.load(cfg, Loader=yaml.FullLoader)
+
+    config.pop("_target_")  # This is only for Hydra
+
+    return config
+
 
 
 def test_init():
 
-    m = Model()
+    path = os.path.dirname(predict_pv_yield.__file__)
+
+    config_file = f"{path}/../configs/model/conv3d.yaml"
+    config = load_config(config_file)
+
+    print(config)
+
+    m = Model(**config)
 
 
 def test_model_forward():
