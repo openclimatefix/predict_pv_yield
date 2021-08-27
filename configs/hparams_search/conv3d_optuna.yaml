@@ -43,14 +43,14 @@ hydra:
     search_space:
       model.conv3d_channels:
         type: categorical
-        choices: [16, 32, 64]
+        choices: [8, 16, 32]
       model.fc1_output_features:
         type: categorical
-        choices: [16, 32, 64, 128]
+        choices: [8, 16, 32, 64, 128]
       model.fc2_output_features:
         type: categorical
-        choices: [ 16, 32, 64, 128 ]
+        choices: [8, 16, 32, 64, 128 ]
       model.fc3_output_features:
         type: categorical
-        choices: [ 16, 32, 64, 128 ]
+        choices: [8, 16, 32, 64, 128 ]
 
