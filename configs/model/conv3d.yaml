@@ -1,7 +1,7 @@
 _target_: predict_pv_yield.models.conv3d.model.Model
 
-include_pv_yield: False
-include_nwp: False
+include_pv_yield: True
+include_nwp: True
 forecast_len: 6
 history_len: 12
 number_of_conv3d_layers: 4
