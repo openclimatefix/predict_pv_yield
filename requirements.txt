@@ -15,6 +15,7 @@ dask
 pvlib
 pyproj
 pytest
+pytest-cov
 flake8
 jedi
 mypy
