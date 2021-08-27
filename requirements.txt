@@ -22,3 +22,4 @@ tables
 tilemapbase
 neptune-client
 boto3
+rich
