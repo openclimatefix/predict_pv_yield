@@ -20,7 +20,9 @@ class Model(pl.LightningModule):
         conv3d_channels: int = 32,
         image_size_pixels: int = 64,
         number_sat_channels: int = 12,
-        batch_size: int = 64
+        fc1_output_features: int = 128,
+        fc2_output_features: int = 128,
+        fc3_output_features: int = 64,
     ):
         """
         Fairly simply 3d conv model.
@@ -35,6 +37,9 @@ class Model(pl.LightningModule):
         self.include_nwp = include_nwp
         self.number_of_conv3d_layers = number_of_conv3d_layers
         self.number_of_nwp_features = 10*19*2*2
+        self.fc1_output_features = fc1_output_features
+        self.fc2_output_features = fc2_output_features
+        self.fc3_output_features = fc3_output_features
         conv3d_channels = conv3d_channels
 
         self.cnn_output_size = (
@@ -53,18 +58,18 @@ class Model(pl.LightningModule):
             in_channels=conv3d_channels, out_channels=conv3d_channels, kernel_size=(3, 3, 3), padding=0
         )
 
-        self.fc1 = nn.Linear(in_features=self.cnn_output_size, out_features=128)
-        self.fc2 = nn.Linear(in_features=128, out_features=128)
+        self.fc1 = nn.Linear(in_features=self.cnn_output_size, out_features=self.fc1_output_features)
+        self.fc2 = nn.Linear(in_features=self.fc1_output_features, out_features=self.fc2_output_features)
 
-        fc3_in_features = 128
+        fc3_in_features = self.fc2_output_features
         if include_pv_yield:
             fc3_in_features += 128*7 # 7 could be (history_len + 1)
         if include_nwp:
             self.fc_nwp = nn.Linear(in_features=self.number_of_nwp_features, out_features=128)
             fc3_in_features += 128
 
-        self.fc3 = nn.Linear(in_features=fc3_in_features, out_features=64)
-        self.fc4 = nn.Linear(in_features=64, out_features=self.forecast_len)
+        self.fc3 = nn.Linear(in_features=fc3_in_features, out_features=self.fc3_output_features)
+        self.fc4 = nn.Linear(in_features=self.fc3_output_features, out_features=self.forecast_len)
         # self.fc5 = nn.Linear(in_features=32, out_features=8)
         # self.fc6 = nn.Linear(in_features=8, out_features=1)
 

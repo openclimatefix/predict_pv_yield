@@ -5,7 +5,9 @@ include_nwp: False
 forecast_len: 6
 history_len: 12
 number_of_conv3d_layers: 4
-conv3d_channels: 32
 image_size_pixels: 64
 number_sat_channels: 12
-batch_size: 64
+conv3d_channels: 32
+fc1_output_features: 128
+fc2_output_features: 128
+fc3_output_features: 64
