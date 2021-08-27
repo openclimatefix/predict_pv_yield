@@ -45,13 +45,13 @@ class Model(BaseModel):
         self.include_pv_yield = include_pv_yield
         self.include_nwp = include_nwp
         self.number_of_conv3d_layers = model_configuration["number_of_conv3d_layers"]
-        self.number_of_nwp_features = 10*19*2*2
+        self.number_of_nwp_features = 10 * 19 * 2 * 2
         conv3d_channels = model_configuration["conv3d_channels"]
 
         self.cnn_output_size = (
             conv3d_channels
-            * ((data_configruation["image_size_pixels"] - 2*self.number_of_conv3d_layers) ** 2)
-            * (self.forecast_len + self.history_len + 1 - 2*self.number_of_conv3d_layers)
+            * ((data_configruation["image_size_pixels"] - 2 * self.number_of_conv3d_layers) ** 2)
+            * (self.forecast_len + self.history_len + 1 - 2 * self.number_of_conv3d_layers)
         )
 
         self.sat_conv1 = nn.Conv3d(
@@ -69,7 +69,7 @@ class Model(BaseModel):
 
         fc3_in_features = 128
         if include_pv_yield:
-            fc3_in_features += 128*7 # 7 could be (history_len + 1)
+            fc3_in_features += 128 * 7  # 7 could be (history_len + 1)
         if include_nwp:
             self.fc_nwp = nn.Linear(in_features=self.number_of_nwp_features, out_features=128)
             fc3_in_features += 128
@@ -91,7 +91,7 @@ class Model(BaseModel):
 
         # :) Pass data through the network :)
         out = F.relu(self.sat_conv1(sat_data))
-        for i in range(0, self.number_of_conv3d_layers-1):
+        for i in range(0, self.number_of_conv3d_layers - 1):
             out = F.relu(self.sat_conv2(out))
 
         out = out.reshape(batch_size, self.cnn_output_size)
@@ -113,7 +113,7 @@ class Model(BaseModel):
         # *********************** NWP Data ************************************
         if self.include_nwp:
             # Shape: batch_size, channel, seq_length, width, height
-            nwp_data = x['nwp'].float()
+            nwp_data = x["nwp"].float()
             nwp_data = nwp_data.flatten(start_dim=1)
 
             # fully connected layer
