@@ -49,8 +49,8 @@ class Model(pl.LightningModule):
         mse_loss = F.mse_loss(y_hat, y)
         mae_loss = (y_hat - y).abs().mean()
 
-        self.log_dict({f"{tag}: MSE": mse_loss}, on_step=on_step, on_epoch=True)
-        self.log_dict({f"{tag}: MAE": mae_loss}, on_step=on_step, on_epoch=True)
+        self.log_dict({f"MSE/{tag}": mse_loss}, on_step=on_step, on_epoch=True)
+        self.log_dict({f"MAE/{tag}": mae_loss}, on_step=on_step, on_epoch=True)
 
         return mae_loss
 

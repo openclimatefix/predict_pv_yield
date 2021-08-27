@@ -1,0 +1,4 @@
+_target_: predict_pv_yield.models.baseline.last_value.Model
+
+forecast_len: 6
+history_len: 12
