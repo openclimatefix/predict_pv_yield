@@ -1,15 +1,13 @@
 from predict_pv_yield.models.conv3d.model import Model
 import torch
 import pytorch_lightning as pl
-import yaml
-import predict_pv_yield
 from predict_pv_yield.utils import load_config
 
 
 class FakeDataset(torch.utils.data.Dataset):
     """Fake dataset."""
 
-    def __init__(self, batch_size=32, seq_length=3, width=16, height=16, number_sat_channels=8, length=32):
+    def __init__(self, batch_size=32, seq_length=3, width=16, height=16, number_sat_channels=8, length=10):
         self.batch_size = batch_size
         self.seq_length = seq_length
         self.width = width
