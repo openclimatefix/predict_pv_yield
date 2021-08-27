@@ -1,10 +1,9 @@
 import os
 from nowcasting_dataset.dataset import NetCDFDataset, worker_init_fn
-import torch
-from typing import Tuple, Optional
+from typing import Tuple
 import logging
+import torch
 from pytorch_lightning import LightningDataModule
-from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split
 
 
 _LOG = logging.getLogger(__name__)
@@ -24,7 +23,6 @@ def get_dataloaders(
     )
 
     train_dataloader = data_module.train_dataloader()
-
     validation_dataloader = data_module.val_dataloader()
 
     return train_dataloader, validation_dataloader
@@ -77,26 +75,32 @@ class NetCDFDataModule(LightningDataModule):
         )
 
     def train_dataloader(self):
-        return NetCDFDataset(
+        train_dataset = NetCDFDataset(
             self.n_train_data,
             os.path.join(self.data_path, "train"),
             os.path.join(self.temp_path, "train"),
             cloud=self.cloud,
         )
 
+        return torch.utils.data.DataLoader(train_dataset, **self.dataloader_config)
+
     def val_dataloader(self):
-        return NetCDFDataset(
+        val_dataset = NetCDFDataset(
             self.n_train_data,
             os.path.join(self.data_path, "validation"),
             os.path.join(self.temp_path, "validation"),
             cloud=self.cloud,
         )
 
+        return torch.utils.data.DataLoader(val_dataset, **self.dataloader_config)
+
     def test_dataloader(self):
         # TODO need to change this to a test folder
-        return NetCDFDataset(
-                self.n_train_data,
-                os.path.join(self.data_path, "validation"),
-                os.path.join(self.temp_path, "validation"),
-                cloud=self.cloud,
-            )
+        test_dataset = NetCDFDataset(
+            self.n_train_data,
+            os.path.join(self.data_path, "validation"),
+            os.path.join(self.temp_path, "validation"),
+            cloud=self.cloud,
+        )
+
+        return torch.utils.data.DataLoader(test_dataset, **self.dataloader_config)
