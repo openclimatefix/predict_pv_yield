@@ -52,7 +52,6 @@ def test_model_forward():
 
     # create fake data loader
     train_dataset = FakeDataset(
-        batch_size=config["batch_size"],
         width=config["image_size_pixels"],
         height=config["image_size_pixels"],
         number_sat_channels=config["number_sat_channels"],
@@ -66,7 +65,7 @@ def test_model_forward():
 
     # check out put is the correct shape
     assert len(y.shape) == 2
-    assert y.shape[0] == config["batch_size"]
+    assert y.shape[0] == 32
     assert y.shape[1] == config["forecast_len"]
 
 
@@ -80,7 +79,6 @@ def test_train():
 
     # create fake data loader
     train_dataset = FakeDataset(
-        batch_size=config["batch_size"],
         width=config["image_size_pixels"],
         height=config["image_size_pixels"],
         number_sat_channels=config["number_sat_channels"],
