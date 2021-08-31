@@ -26,7 +26,8 @@ def load_config(config_file):
     with open(config_file, "r") as cfg:
         config = yaml.load(cfg, Loader=yaml.FullLoader)
 
-    config.pop("_target_")  # This is only for Hydra
+    if "_target" in config.keys():
+        config.pop("_target_")  # This is only for Hydra
 
     return config
 
