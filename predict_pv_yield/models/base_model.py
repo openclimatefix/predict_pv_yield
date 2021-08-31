@@ -34,7 +34,8 @@ class BaseModel(pl.LightningModule):
         return self._training_or_validation_step(batch, is_train_step=True, tag="Train")
 
     def validation_step(self, batch, batch_idx):
-        INTERESTING_EXAMPLES = (1, 5, 6, 7, 9, 11, 17, 19)
+        # INTERESTING_EXAMPLES = (1, 5, 6, 7, 9, 11, 17, 19)
+        INTERESTING_EXAMPLES = ()
         name = f"validation/plot/epoch{self.current_epoch}"
         if batch_idx == 0:
             # Plot example

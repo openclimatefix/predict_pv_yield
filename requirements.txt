@@ -23,3 +23,9 @@ tables
 tilemapbase
 neptune-client
 boto3
+rich
+omegaconf
+hydra-core
+python-dotenv
+hydra-optuna-sweeper
+psutil

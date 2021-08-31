@@ -1,0 +1,13 @@
+_target_: predict_pv_yield.models.conv3d.model.Model
+
+include_pv_yield: False
+include_nwp: False
+forecast_len: 6
+history_len: 12
+number_of_conv3d_layers: 4
+conv3d_channels: 32
+image_size_pixels: 16 # this is made smaller for testing
+number_sat_channels: 12
+fc1_output_features: 16
+fc2_output_features: 16
+fc3_output_features: 16

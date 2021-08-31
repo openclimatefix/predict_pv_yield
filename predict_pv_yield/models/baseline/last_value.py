@@ -1,9 +1,5 @@
 import logging
 
-import pytorch_lightning as pl
-import torch
-import torch.nn.functional as F
-
 from predict_pv_yield.models.base_model import BaseModel
 
 
