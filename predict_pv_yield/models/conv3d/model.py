@@ -5,11 +5,13 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
+from predict_pv_yield.models.base_model import BaseModel
+
 logging.basicConfig()
 _LOG = logging.getLogger("predict_pv_yield")
 
 
-class Model(pl.LightningModule):
+class Model(BaseModel):
     def __init__(
         self,
         include_pv_yield: bool = True,
@@ -42,10 +44,12 @@ class Model(pl.LightningModule):
         self.fc3_output_features = fc3_output_features
         conv3d_channels = conv3d_channels
 
+        self.number_of_nwp_features = 10 * 19 * 2 * 2
+
         self.cnn_output_size = (
             conv3d_channels
-            * ((image_size_pixels - 2*self.number_of_conv3d_layers) ** 2)
-            * (self.forecast_len + self.history_len + 1 - 2*self.number_of_conv3d_layers)
+            * ((image_size_pixels - 2 * self.number_of_conv3d_layers) ** 2)
+            * (self.forecast_len + self.history_len + 1 - 2 * self.number_of_conv3d_layers)
         )
 
         self.sat_conv1 = nn.Conv3d(
@@ -63,7 +67,7 @@ class Model(pl.LightningModule):
 
         fc3_in_features = self.fc2_output_features
         if include_pv_yield:
-            fc3_in_features += 128*7 # 7 could be (history_len + 1)
+            fc3_in_features += 128 * 7  # 7 could be (history_len + 1)
         if include_nwp:
             self.fc_nwp = nn.Linear(in_features=self.number_of_nwp_features, out_features=128)
             fc3_in_features += 128
@@ -85,7 +89,7 @@ class Model(pl.LightningModule):
 
         # :) Pass data through the network :)
         out = F.relu(self.sat_conv1(sat_data))
-        for i in range(0, self.number_of_conv3d_layers-1):
+        for i in range(0, self.number_of_conv3d_layers - 1):
             out = F.relu(self.sat_conv2(out))
 
         out = out.reshape(batch_size, self.cnn_output_size)
@@ -123,30 +127,3 @@ class Model(pl.LightningModule):
         out = out.reshape(batch_size, self.forecast_len)
 
         return out
-
-    def _training_or_validation_step(self, batch, is_train_step: bool = True):
-        # put the batch data through the model
-        y_hat = self(batch)
-
-        # get the true result out. Select the first data point, as this is the pv system in the center of the image
-        y = batch["pv_yield"][:, -self.forecast_len :, 0]
-
-        # calculate mse, mae
-        mse_loss = F.mse_loss(y_hat, y)
-        mae_loss = (y_hat - y).abs().mean()
-
-        tag = "Train" if is_train_step else "Validation"
-        self.log_dict({f"MSE/{tag}": mse_loss}, on_step=True, on_epoch=True)
-        self.log_dict({f"MAE/{tag}": mae_loss}, on_step=True, on_epoch=True)
-
-        return mae_loss
-
-    def training_step(self, batch, batch_idx):
-        return self._training_or_validation_step(batch)
-
-    def validation_step(self, batch, batch_idx):
-        return self._training_or_validation_step(batch, is_train_step=False)
-
-    def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=0.001)
-        return optimizer
