@@ -51,7 +51,7 @@ RNN_HIDDEN_SIZE = 16
 
 
 class PerceiverRNN(BaseModel):
-    def __init__(self, history_len: int, forecast_len: int, nwp_channels: Iterable[str]):
+    def __init__(self, history_len: int, forecast_len: int, nwp_channels: Iterable[str] = params["nwp_channels"]):
         super().__init__()
         self.history_len = history_len
         self.forecast_len = forecast_len
