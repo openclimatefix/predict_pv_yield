@@ -72,15 +72,17 @@ class Model(BaseModel):
             * (self.forecast_len + self.history_len + 1 - 2 * self.number_of_conv3d_layers)
         )
 
-        self.sat_conv1 = nn.Conv3d(
+        self.sat_conv0 = nn.Conv3d(
             in_channels=number_sat_channels,
             out_channels=conv3d_channels,
             kernel_size=(3, 3, 3),
             padding=0,
         )
-        self.sat_conv2 = nn.Conv3d(
-            in_channels=conv3d_channels, out_channels=conv3d_channels, kernel_size=(3, 3, 3), padding=0
-        )
+        for i in range(0, self.number_of_conv3d_layers - 1):
+            layer = nn.Conv3d(
+                in_channels=conv3d_channels, out_channels=conv3d_channels, kernel_size=(3, 3, 3), padding=0
+            )
+            setattr(self, f'conv3d_{i + 1}', layer)
 
         self.fc1 = nn.Linear(in_features=self.cnn_output_size, out_features=self.fc1_output_features)
         self.fc2 = nn.Linear(in_features=self.fc1_output_features, out_features=self.fc2_output_features)
@@ -110,9 +112,10 @@ class Model(BaseModel):
         # Now shape: batch_size, n_chans, seq_len, height, width
 
         # :) Pass data through the network :)
-        out = F.relu(self.sat_conv1(sat_data))
+        out = F.relu(self.sat_conv0(sat_data))
         for i in range(0, self.number_of_conv3d_layers - 1):
-            out = F.relu(self.sat_conv2(out))
+            layer = getattr(self, f'conv3d_{i + 1}')
+            out = F.relu(layer(out))
 
         out = out.reshape(batch_size, self.cnn_output_size)
 
