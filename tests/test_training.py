@@ -6,7 +6,7 @@ from hydra import compose, initialize
 
 def test_train():
 
-    os.environ["NEPTUNE_API_TOKEN"] = "not_at_token"
+    os.environ["NEPTUNE_API_TOKEN"] = "not_a_token"
 
     initialize(config_path="../configs", job_name="test_app")
     config = compose(

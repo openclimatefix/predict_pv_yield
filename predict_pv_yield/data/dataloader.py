@@ -145,6 +145,10 @@ class FakeDataset(torch.utils.data.Dataset):
             ),
             "pv_yield": torch.randn(self.batch_size, self.seq_length, 128),
             "nwp": torch.randn(self.batch_size, 10, self.seq_length, 2, 2),
+            "hour_of_day_sin": torch.randn(self.batch_size, self.seq_length),
+            "hour_of_day_cos": torch.randn(self.batch_size, self.seq_length),
+            "day_of_year_sin": torch.randn(self.batch_size, self.seq_length),
+            "day_of_year_cos": torch.randn(self.batch_size, self.seq_length),
         }
 
         # add a nan
