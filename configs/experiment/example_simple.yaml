@@ -5,7 +5,7 @@
 
 defaults:
   - override /trainer: default.yaml # choose trainer from 'configs/trainer/'
-  - override /model: conv3d.yaml
+  - override /model: baseline.yaml
   - override /datamodule: netcdf_datamodule_gcp.yaml
   - override /callbacks: default.yaml
   - override /logger: neptune.yaml
@@ -24,5 +24,4 @@ datamodule:
   n_val_data: 2
 
 
-model:
-  conv3d_channels: 4
+validate_only: '1'  # by putting this key in the config file, the model does not get trained.

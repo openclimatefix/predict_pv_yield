@@ -2,36 +2,7 @@ from predict_pv_yield.models.conv3d.model import Model
 import torch
 import pytorch_lightning as pl
 from predict_pv_yield.utils import load_config
-
-
-class FakeDataset(torch.utils.data.Dataset):
-    """Fake dataset."""
-
-    def __init__(self, batch_size=32, seq_length=3, width=16, height=16, number_sat_channels=8, length=10):
-        self.batch_size = batch_size
-        self.seq_length = seq_length
-        self.width = width
-        self.height = height
-        self.number_sat_channels = number_sat_channels
-        self.length = length
-
-    def __len__(self):
-        return self.length
-
-    def __getitem__(self, idx):
-
-        x = {
-            "sat_data": torch.randn(
-                self.batch_size, self.seq_length, self.width, self.height, self.number_sat_channels
-            ),
-            "pv_yield": torch.randn(self.batch_size, self.seq_length, 128),
-            "nwp": torch.randn(self.batch_size, 10, self.seq_length, 2, 2),
-        }
-
-        # add a nan
-        x["pv_yield"][0, 0, :] = float("nan")
-
-        return x
+from predict_pv_yield.data.dataloader import FakeDataset
 
 
 def test_init():

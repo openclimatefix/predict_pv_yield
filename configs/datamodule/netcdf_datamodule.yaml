@@ -7,3 +7,4 @@ cloud:  "aws"
 num_workers: 8
 pin_memory: True
 data_path: "prepared_ML_training_data/v4/"
+fake_data: False
