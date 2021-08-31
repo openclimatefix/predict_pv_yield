@@ -38,7 +38,7 @@ def test_model_forward():
     x["pv_system_row_number"] = torch.randint(high=940, size=(batch_size, 1))
 
     # pv yield data
-    x["pv_yield"] = torch.randn(batch_size, seq_length)
+    x["pv_yield"] = torch.randn(batch_size, seq_length, 1)
 
     # run data through model
     y = model(x)
