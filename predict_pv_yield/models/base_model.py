@@ -3,6 +3,7 @@ import torch
 import torch.nn.functional as F
 from predict_pv_yield.visualisation import plot_example
 from predict_pv_yield.models.loss import WeightedLosses
+from predict_pv_yield.models.metrics import mae_each_forecast_horizon, mse_each_forecast_horizon
 from neptune.new.types import File
 
 
@@ -41,6 +42,24 @@ class BaseModel(pl.LightningModule):
             sync_dist=True  # Required for distributed training
             # (even multi-GPU on signle machine).
         )
+
+        if tag != 'Train':
+            # add metrics for each forecast horizon
+            mse_each_forecast_horizon_metric = mse_each_forecast_horizon(output=y_hat, target=y)
+            mae_each_forecast_horizon_metric = mae_each_forecast_horizon(output=y_hat, target=y)
+
+            metrics_mse = {f"MSE_forecast_horizon_{i}/{tag}": mse_each_forecast_horizon_metric[i]
+                           for i in range(self.forecast_len)}
+            metrics_mae = {f"MSE_forecast_horizon_{i}/{tag}": mae_each_forecast_horizon_metric[i]
+                           for i in range(self.forecast_len)}
+
+            self.log_dict(
+                {**metrics_mse, **metrics_mae},
+                on_step=True,
+                on_epoch=True,
+                sync_dist=True  # Required for distributed training
+                # (even multi-GPU on signle machine).
+            )
 
         return nmae_loss
 

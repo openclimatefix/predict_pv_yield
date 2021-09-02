@@ -1,6 +1,5 @@
 from predict_pv_yield.models.loss import WeightedLosses
 import torch
-import numpy as np
 import pytest
 
 
