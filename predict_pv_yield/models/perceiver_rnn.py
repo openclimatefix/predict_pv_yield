@@ -51,7 +51,7 @@ RNN_HIDDEN_SIZE = 16
 
 
 class PerceiverRNN(BaseModel):
-    def __init__(self, history_len: int, forecast_len: int, nwp_channels: Iterable[str]):
+    def __init__(self, history_len: int, forecast_len: int, nwp_channels: Iterable[str] = params["nwp_channels"]):
         super().__init__()
         self.history_len = history_len
         self.forecast_len = forecast_len
@@ -157,7 +157,8 @@ class PerceiverRNN(BaseModel):
             dim=2,
         )
 
-        pv_yield_history = x["pv_yield"][:, : self.history_len + 1].unsqueeze(-1)
+        # take the history of the pv yield of this system,
+        pv_yield_history = x["pv_yield"][:, : self.history_len + 1, 0].unsqueeze(-1)
         encoder_input = torch.cat((rnn_input[:, : self.history_len + 1], pv_yield_history), dim=2)
 
         encoder_output, encoder_hidden = self.encoder_rnn(encoder_input)
