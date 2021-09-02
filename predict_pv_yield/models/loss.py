@@ -1,5 +1,8 @@
 import math
 import torch
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class WeightedLosses:
@@ -13,6 +16,9 @@ class WeightedLosses:
         self.decay_rate = decay_rate
         self.forecast_length = forecast_length
 
+        logger.debug(f'Setting up weights with decay rate {decay_rate} and of length {forecast_length}')
+
+        # set default rate of ln(2) if not set
         if self.decay_rate is None:
             self.decay_rate = math.log(2)
 
@@ -23,7 +29,9 @@ class WeightedLosses:
         self.weights = weights / weights.sum()
 
     def get_mse_exp(self, output, target):
+        """Loss function weighted MSE """
         return torch.sum(self.weights * (output - target) ** 2)
 
     def get_mae_exp(self, output, target):
+        """Loss function weighted MAE"""
         return torch.sum(self.weights * torch.abs(output - target))

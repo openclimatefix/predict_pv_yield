@@ -10,7 +10,7 @@ class BaseModel(pl.LightningModule):
 
     def __init__(self):
         super().__init__()
-        self.weighted_losses = WeightedLosses(self.forecast_len)
+        self.weighted_losses = WeightedLosses(forecast_length=self.forecast_len)
 
     def _training_or_validation_step(self, batch, tag: str):
 
