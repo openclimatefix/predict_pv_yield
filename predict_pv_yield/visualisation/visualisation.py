@@ -94,10 +94,9 @@ def plot_example(
 
     # ************************ PV YIELD ***************************************
     ax = fig.add_subplot(nrows, ncols, 7)
-    ax.set_title('PV yield for PV ID {:,d}'.format(
-        batch['pv_system_id'][example_i].cpu()))
+    ax.set_title(f"PV yield for PV ID {batch['pv_system_id'][example_i, 0].cpu()}")
     pv_actual = pd.Series(
-        batch['pv_yield'][example_i].cpu().numpy(),
+        batch['pv_yield'][example_i, :, 0].cpu().numpy(),
         index=nwp_dt_index, name='actual')
     pv_pred = pd.Series(
         model_output[example_i].detach().cpu().numpy(),

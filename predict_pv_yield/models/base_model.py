@@ -2,6 +2,7 @@ import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 from predict_pv_yield.visualisation.visualisation import plot_example
+from nowcasting_dataset.data_sources.nwp_data_source import NWP_VARIABLE_NAMES
 from neptune.new.types import File
 
 
@@ -34,8 +35,7 @@ class BaseModel(pl.LightningModule):
         return self._training_or_validation_step(batch, is_train_step=True, tag="Train")
 
     def validation_step(self, batch, batch_idx):
-        # INTERESTING_EXAMPLES = (1, 5, 6, 7, 9, 11, 17, 19)
-        INTERESTING_EXAMPLES = ()
+        INTERESTING_EXAMPLES = (1, 5, 6, 7, 9, 11, 17, 19)
         name = f"validation/plot/epoch{self.current_epoch}"
         if batch_idx == 0:
             # Plot example
@@ -46,12 +46,16 @@ class BaseModel(pl.LightningModule):
                     model_output,
                     history_len=self.history_len,
                     forecast_len=self.forecast_len,
-                    nwp_channels=self.nwp_channels,
+                    nwp_channels=NWP_VARIABLE_NAMES,
                     example_i=example_i,
                     epoch=self.current_epoch,
                 )
                 self.logger.experiment[name].log(File.as_image(fig))
-                fig.close()
+                try:
+                    fig.close()
+                except Exception as _:
+                    # could not close figure
+                    pass
 
         return self._training_or_validation_step(batch, is_train_step=False, tag="Validation")
 
