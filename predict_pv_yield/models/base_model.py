@@ -74,9 +74,17 @@ class BaseModel(pl.LightningModule):
         INTERESTING_EXAMPLES = (1, 5, 6, 7, 9, 11, 17, 19)
         name = f"validation/plot/epoch{self.current_epoch}"
         if batch_idx == 0:
-            # Plot example
+
+            # get model ouptus
             model_output = self(batch)
+
+            # make sure the internestin example doesnt go above the batch size
+            batch_size = model_output.shape[0]
+
+            INTERESTING_EXAMPLES = (i for i in INTERESTING_EXAMPLES if i < batch_size)
+
             for example_i in INTERESTING_EXAMPLES:
+                # 1. Plot example
                 fig = plot_example(
                     batch,
                     model_output,
@@ -87,6 +95,7 @@ class BaseModel(pl.LightningModule):
                     epoch=self.current_epoch,
                 )
 
+                # save fig to log
                 self.logger.experiment[-1].log_image(name, fig)
                 try:
                     fig.close()
@@ -94,12 +103,14 @@ class BaseModel(pl.LightningModule):
                     # could not close figure
                     pass
 
-                # plot summary batch of predictions and results
+                # 2. plot summary batch of predictions and results
+                # make x,y data
                 y = batch["pv_yield"][:, :, 0].detach().numpy()
                 y_hat = model_output.detach().numpy()
                 time = [pd.to_datetime(x, unit="s") for x in batch["sat_datetime_index"].detach().numpy()]
                 time_hat = [pd.to_datetime(x, unit="s") for x in batch["sat_datetime_index"][:, self.history_len + 1:].detach().numpy()]
 
+                # plot and save to logger
                 fig = plot_batch_results(model_name=self.name, y=y, y_hat=y_hat, x=time, x_hat=time_hat)
                 fig.write_html(f"temp.html")
                 self.logger.experiment[-1].log_artifact(f"temp.html", f"{name}.html")

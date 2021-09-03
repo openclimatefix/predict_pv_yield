@@ -123,7 +123,7 @@ class NetCDFDataModule(LightningDataModule):
 class FakeDataset(torch.utils.data.Dataset):
     """Fake dataset."""
 
-    def __init__(self, batch_size=32, seq_length=19, width=16, height=16, number_sat_channels=8, length=20):
+    def __init__(self, batch_size=32, seq_length=19, width=16, height=16, number_sat_channels=8, length=10):
         self.batch_size = batch_size
         self.seq_length = seq_length
         self.width = width
