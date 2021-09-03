@@ -34,8 +34,8 @@ def test_model_forward():
     for time_variable in ["hour_of_day_sin", "hour_of_day_cos", "day_of_year_sin", "day_of_year_cos"]:
         x[time_variable] = torch.randn(batch_size, seq_length)
 
-    # setup pv index number
-    x["pv_system_row_number"] = torch.randint(high=940, size=(batch_size, 1))
+    # setup pv index number, make suer model can handle it as floats
+    x["pv_system_row_number"] = torch.randint(high=940, size=(batch_size, 1)).type(torch.FloatTensor)
 
     # pv yield data
     x["pv_yield"] = torch.randn(batch_size, seq_length, 1)

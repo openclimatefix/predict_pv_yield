@@ -105,15 +105,14 @@ class BaseModel(pl.LightningModule):
 
                 # 2. plot summary batch of predictions and results
                 # make x,y data
-                y = batch["pv_yield"][0 : self.batch_size, :, 0].detach().numpy()
-                y_hat = model_output[0 : self.batch_size].detach().numpy()
+                y = batch["pv_yield"][0 : self.batch_size, :, 0].cpu().numpy()
+                y_hat = model_output[0 : self.batch_size].cpu().numpy()
                 time = [
-                    pd.to_datetime(x, unit="s")
-                    for x in batch["sat_datetime_index"][0 : self.batch_size].detach().numpy()
+                    pd.to_datetime(x, unit="s") for x in batch["sat_datetime_index"][0 : self.batch_size].cpu().numpy()
                 ]
                 time_hat = [
                     pd.to_datetime(x, unit="s")
-                    for x in batch["sat_datetime_index"][0 : self.batch_size, self.history_len + 1 :].detach().numpy()
+                    for x in batch["sat_datetime_index"][0 : self.batch_size, self.history_len + 1 :].cpu().numpy()
                 ]
 
                 # plot and save to logger

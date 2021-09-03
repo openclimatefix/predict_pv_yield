@@ -28,6 +28,10 @@ class WeightedLosses:
         # normalized the weights
         self.weights = weights / weights.sum()
 
+        # move weights to gpu is needed
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.weights = self.weights .to(device)
+
     def get_mse_exp(self, output, target):
         """Loss function weighted MSE """
         return torch.sum(self.weights * (output - target) ** 2)

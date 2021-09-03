@@ -132,7 +132,7 @@ class PerceiverRNN(BaseModel):
 
         # ********************** Embedding of PV system ID ********************
         if self.embedding_dem:
-            pv_row = x["pv_system_row_number"][0: self.batch_size].repeat_interleave(TOTAL_SEQ_LEN)
+            pv_row = x["pv_system_row_number"][0: self.batch_size].type(torch.IntTensor).repeat_interleave(TOTAL_SEQ_LEN)
             pv_embedding = self.pv_system_id_embedding(pv_row)
             out = torch.cat((out, pv_embedding), dim=1)
 
