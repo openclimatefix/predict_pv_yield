@@ -13,6 +13,9 @@ import pandas as pd
 
 class BaseModel(pl.LightningModule):
 
+    # default batch_size
+    batch_size = 32
+
     def __init__(self):
         super().__init__()
         self.weighted_losses = WeightedLosses(forecast_length=self.forecast_len)
@@ -23,7 +26,7 @@ class BaseModel(pl.LightningModule):
         y_hat = self(batch)
 
         # get the true result out. Select the first data point, as this is the pv system in the center of the image
-        y = batch["pv_yield"][:, -self.forecast_len :, 0]
+        y = batch["pv_yield"][0:self.batch_size, -self.forecast_len :, 0]
 
         # calculate mse, mae
         mse_loss = F.mse_loss(y_hat, y)
@@ -78,10 +81,8 @@ class BaseModel(pl.LightningModule):
             # get model ouptus
             model_output = self(batch)
 
-            # make sure the internestin example doesnt go above the batch size
-            batch_size = model_output.shape[0]
-
-            INTERESTING_EXAMPLES = (i for i in INTERESTING_EXAMPLES if i < batch_size)
+            # make sure the interesting example doesnt go above the batch size
+            INTERESTING_EXAMPLES = (i for i in INTERESTING_EXAMPLES if i < self.batch_size)
 
             for example_i in INTERESTING_EXAMPLES:
                 # 1. Plot example

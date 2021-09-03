@@ -2,3 +2,6 @@ _target_: predict_pv_yield.models.perceiver_rnn.PerceiverRNN
 
 forecast_len: 12
 history_len: 6
+batch_size: 8
+num_latents: 128
+latent_dim: 64

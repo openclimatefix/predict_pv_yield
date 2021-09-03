@@ -54,10 +54,19 @@ class PerceiverRNN(BaseModel):
 
     name='perceiver_rnn'
 
-    def __init__(self, history_len: int, forecast_len: int, nwp_channels: Iterable[str] = params["nwp_channels"]):
+    def __init__(self, history_len: int,
+                 forecast_len: int,
+                 nwp_channels: Iterable[str] = params["nwp_channels"],
+                 batch_size: int = 32,
+                 num_latents: int = 128,
+                 latent_dim: int = 64,
+                 ):
         self.history_len = history_len
         self.forecast_len = forecast_len
         self.nwp_channels = nwp_channels
+        self.batch_size = batch_size
+        self.num_latents = num_latents
+        self.latent_dim = latent_dim
 
         super().__init__()
 
@@ -67,8 +76,8 @@ class PerceiverRNN(BaseModel):
             num_freq_bands=6,
             max_freq=10,
             depth=TOTAL_SEQ_LEN,
-            num_latents=128,
-            latent_dim=64,
+            num_latents=self.num_latents,
+            latent_dim=self.latent_dim,
             num_classes=PERCEIVER_OUTPUT_SIZE,
             weight_tie_layers=True,
         )
@@ -106,7 +115,7 @@ class PerceiverRNN(BaseModel):
         # ******************* Satellite imagery *************************
         # Shape: batch_size, seq_length, width, height, channel
         # TODO: Use optical flow, not actual sat images of the future!
-        sat_data = x["sat_data"]
+        sat_data = x["sat_data"][0: self.batch_size]
         batch_size, seq_len, width, height, n_chans = sat_data.shape
 
         # Stack timesteps as examples (to make a large batch)
@@ -122,7 +131,7 @@ class PerceiverRNN(BaseModel):
 
         # ********************** Embedding of PV system ID ********************
         if EMBEDDING_DIM:
-            pv_row = x["pv_system_row_number"].repeat_interleave(TOTAL_SEQ_LEN)
+            pv_row = x["pv_system_row_number"][0: self.batch_size].repeat_interleave(TOTAL_SEQ_LEN)
             pv_embedding = self.pv_system_id_embedding(pv_row)
             out = torch.cat((out, pv_embedding), dim=1)
 
@@ -142,7 +151,7 @@ class PerceiverRNN(BaseModel):
 
         # *********************** NWP Data ************************************
         # Shape: batch_size, channel, seq_length, width, height
-        nwp_data = x["nwp"].float()
+        nwp_data = x["nwp"][0: self.batch_size].float()
         # RNN expects seq_len to be dim 1.
         nwp_data = nwp_data.permute(0, 2, 1, 3, 4)
         batch_size, nwp_seq_len, n_nwp_chans, nwp_width, nwp_height = nwp_data.shape
@@ -153,16 +162,16 @@ class PerceiverRNN(BaseModel):
             (
                 out,
                 nwp_data,
-                x["hour_of_day_sin"].unsqueeze(-1),
-                x["hour_of_day_cos"].unsqueeze(-1),
-                x["day_of_year_sin"].unsqueeze(-1),
-                x["day_of_year_cos"].unsqueeze(-1),
+                x["hour_of_day_sin"][0: self.batch_size].unsqueeze(-1),
+                x["hour_of_day_cos"][0: self.batch_size].unsqueeze(-1),
+                x["day_of_year_sin"][0: self.batch_size].unsqueeze(-1),
+                x["day_of_year_cos"][0: self.batch_size].unsqueeze(-1),
             ),
             dim=2,
         )
 
         # take the history of the pv yield of this system,
-        pv_yield_history = x["pv_yield"][:, : self.history_len + 1, 0].unsqueeze(-1)
+        pv_yield_history = x["pv_yield"][0: self.batch_size][:, : self.history_len + 1, 0].unsqueeze(-1)
         encoder_input = torch.cat((rnn_input[:, : self.history_len + 1], pv_yield_history), dim=2)
 
         encoder_output, encoder_hidden = self.encoder_rnn(encoder_input)
