@@ -1,7 +1,7 @@
 import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
-from predict_pv_yield.visualisation import plot_example
+from predict_pv_yield.visualisation.visualisation import plot_example
 from neptune.new.types import File
 
 

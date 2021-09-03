@@ -9,6 +9,8 @@ _LOG.setLevel(logging.DEBUG)
 
 
 class Model(BaseModel):
+    name = 'last_value'
+
     def __init__(
         self,
         forecast_len: int = 12,

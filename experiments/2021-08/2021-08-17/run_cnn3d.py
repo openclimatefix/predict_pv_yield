@@ -1,21 +1,15 @@
 from predict_pv_yield.models.conv3d.model import Model, params
 
-import numpy as np
 import os
 
-import torch
-from torch import nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
 
-from nowcasting_dataset.data_sources.satellite_data_source import SAT_VARIABLE_NAMES
 from predict_pv_yield.data.dataloader import get_dataloaders
 
-from predict_pv_yield.netcdf_dataset import NetCDFDataset, worker_init_fn
-from predict_pv_yield.visualisation import plot_example
+from predict_pv_yield.visualisation.visualisation import plot_example
 
 from neptune.new.integrations.pytorch_lightning import NeptuneLogger
-from neptune.new.types import File
 
 import logging
 
