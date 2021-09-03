@@ -5,3 +5,4 @@ history_len: 6
 batch_size: 8
 num_latents: 128
 latent_dim: 64
+eembedding_dem: 16

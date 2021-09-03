@@ -42,7 +42,6 @@ SAT_Y_STD = np.float32(406454.17945938)
 
 
 TOTAL_SEQ_LEN = params["history_len"] + params["forecast_len"] + 1
-EMBEDDING_DIM = 16
 NWP_SIZE = len(params["nwp_channels"]) * 2 * 2  # channels x width x height
 N_DATETIME_FEATURES = 4
 PERCEIVER_OUTPUT_SIZE = 512
@@ -60,6 +59,7 @@ class PerceiverRNN(BaseModel):
                  batch_size: int = 32,
                  num_latents: int = 128,
                  latent_dim: int = 64,
+                 embedding_dem:int = 16,
                  ):
         self.history_len = history_len
         self.forecast_len = forecast_len
@@ -67,6 +67,7 @@ class PerceiverRNN(BaseModel):
         self.batch_size = batch_size
         self.num_latents = num_latents
         self.latent_dim = latent_dim
+        self.embedding_dem = embedding_dem
 
         super().__init__()
 
@@ -84,14 +85,14 @@ class PerceiverRNN(BaseModel):
 
         self.fc1 = nn.Linear(in_features=PERCEIVER_OUTPUT_SIZE, out_features=256)
 
-        self.fc2 = nn.Linear(in_features=256 + EMBEDDING_DIM, out_features=128)
+        self.fc2 = nn.Linear(in_features=256 + self.embedding_dem, out_features=128)
 
         self.fc3 = nn.Linear(in_features=128, out_features=64)
         self.fc4 = nn.Linear(in_features=64, out_features=32)
         self.fc5 = nn.Linear(in_features=32, out_features=FC_OUTPUT_SIZE)
 
-        if EMBEDDING_DIM:
-            self.pv_system_id_embedding = nn.Embedding(num_embeddings=940, embedding_dim=EMBEDDING_DIM)
+        if self.embedding_dem:
+            self.pv_system_id_embedding = nn.Embedding(num_embeddings=940, embedding_dim=self.embedding_dem)
 
         # TODO: Get rid of RNNs!
         self.encoder_rnn = nn.GRU(
@@ -130,7 +131,7 @@ class PerceiverRNN(BaseModel):
         out = F.relu(self.fc1(out))
 
         # ********************** Embedding of PV system ID ********************
-        if EMBEDDING_DIM:
+        if self.embedding_dem:
             pv_row = x["pv_system_row_number"][0: self.batch_size].repeat_interleave(TOTAL_SEQ_LEN)
             pv_embedding = self.pv_system_id_embedding(pv_row)
             out = torch.cat((out, pv_embedding), dim=1)
