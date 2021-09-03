@@ -5,6 +5,9 @@ import dotenv
 import hydra
 from omegaconf import DictConfig
 
+# this file can be run for example using
+#  python run.py experiment=example_simple
+
 # load environment variables from `.env` file if it exists
 # recursively searches for `.env` in all folders starting from work dir
 dotenv.load_dotenv(override=True)

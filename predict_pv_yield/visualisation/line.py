@@ -46,16 +46,20 @@ def plot_one_result(x, y, y_hat):
 
 
 # plot all of batch
-def plot_batch_results(x: Union[np.array, List], y: np.array, y_hat: np.array, model_name: str):
+def plot_batch_results(x: Union[np.array, List], y: np.array, y_hat: np.array, model_name: str, x_hat: Union[np.array, List] = None):
     """
     Plot batch results
 
     x: is a list of time series for the different predictions in the batch, should be size [batch_size, forecast length]
     y: the truth values of pv yield, should be size [batch_size, forecast length]
     y_hat: the predicted values of pv yield, should be size [batch_size, forecast length]
+    x_hat: the x values for the predictions (y_hat), note that if none is supplied then x is used instead
 
     return: a plotly figure
     """
+
+    if x_hat is None:
+        x_hat = x
 
     batchsize = y.shape[0]
     N = int(np.ceil(batchsize ** 0.5))
@@ -73,12 +77,14 @@ def plot_batch_results(x: Union[np.array, List], y: np.array, y_hat: np.array, m
             col=col,
         )
         fig.add_trace(
-            make_trace(x=x[i], y=y_hat[i], truth=False, show_legend=False if i > 0 else True),
+            make_trace(x=x_hat[i], y=y_hat[i], truth=False, show_legend=False if i > 0 else True),
             row=row,
             col=col,
         )
     fig.update_layout(
         title=f"Batch Plot of PV Predict: {model_name}",
+        width=1500,
+        height=1500,
     )
     fig.update_yaxes(range=[0, 1])
 

@@ -52,7 +52,8 @@ class BaseModel(pl.LightningModule):
                     example_i=example_i,
                     epoch=self.current_epoch,
                 )
-                self.logger.experiment[name].log(File.as_image(fig))
+
+                self.logger.experiment[-1].log_image(name, fig)
                 try:
                     fig.close()
                 except Exception as _:
@@ -60,12 +61,14 @@ class BaseModel(pl.LightningModule):
                     pass
 
                 # plot summary batch of predictions and results
-                y = batch["pv_yield"][:, 7:, 0].detach().numpy()
+                y = batch["pv_yield"][:, :, 0].detach().numpy()
                 y_hat = model_output.detach().numpy()
-                time = [pd.to_datetime(x, unit="s") for x in batch["sat_datetime_index"][:, 7:].detach().numpy()]
+                time = [pd.to_datetime(x, unit="s") for x in batch["sat_datetime_index"].detach().numpy()]
+                time_hat = [pd.to_datetime(x, unit="s") for x in batch["sat_datetime_index"][:, self.history_len + 1:].detach().numpy()]
 
-                fig = plot_batch_results(model_name=self.name, y=y, y_hat=y_hat, x=time)
-                self.logger.experiment[name].log(fig)
+                fig = plot_batch_results(model_name=self.name, y=y, y_hat=y_hat, x=time, x_hat=time_hat)
+                fig.write_html(f"temp.html")
+                self.logger.experiment[-1].log_artifact(f"temp.html", f"{name}.html")
 
         return self._training_or_validation_step(batch, is_train_step=False, tag="Validation")
 

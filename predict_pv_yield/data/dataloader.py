@@ -143,11 +143,9 @@ class FakeDataset(torch.utils.data.Dataset):
             "sat_data": torch.randn(
                 self.batch_size, self.seq_length, self.width, self.height, self.number_sat_channels
             ),
-            'sat_datetime_index': torch.randn(self.batch_size, self.seq_length),
             "pv_yield": torch.randn(self.batch_size, self.seq_length, 128),
             'pv_system_id': torch.randn(self.batch_size, 128),
             "nwp": torch.randn(self.batch_size, 10, self.seq_length, 2, 2),
-            'nwp_target_time': torch.randn(self.batch_size, self.seq_length),
             "hour_of_day_sin": torch.randn(self.batch_size, self.seq_length),
             "hour_of_day_cos": torch.randn(self.batch_size, self.seq_length),
             "day_of_year_sin": torch.randn(self.batch_size, self.seq_length),
@@ -160,5 +158,9 @@ class FakeDataset(torch.utils.data.Dataset):
         # add fake x and y coords, and make sure they are sorted
         x['sat_x_coords'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length))
         x['sat_y_coords'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length), descending=True)
+
+        # add sorted (fake) time series
+        x['sat_datetime_index'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length))
+        x['nwp_target_time'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length))
 
         return x
