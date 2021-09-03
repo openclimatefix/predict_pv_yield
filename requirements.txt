@@ -29,3 +29,4 @@ hydra-core
 python-dotenv
 hydra-optuna-sweeper
 psutil
+plotly

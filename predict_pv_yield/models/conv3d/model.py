@@ -12,6 +12,9 @@ _LOG = logging.getLogger("predict_pv_yield")
 
 
 class Model(BaseModel):
+
+    name = 'conv3d'
+
     def __init__(
         self,
         include_pv_yield: bool = True,

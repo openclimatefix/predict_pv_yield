@@ -123,7 +123,7 @@ class NetCDFDataModule(LightningDataModule):
 class FakeDataset(torch.utils.data.Dataset):
     """Fake dataset."""
 
-    def __init__(self, batch_size=32, seq_length=10, width=16, height=16, number_sat_channels=8, length=10):
+    def __init__(self, batch_size=32, seq_length=19, width=16, height=16, number_sat_channels=8, length=10):
         self.batch_size = batch_size
         self.seq_length = seq_length
         self.width = width
@@ -144,6 +144,7 @@ class FakeDataset(torch.utils.data.Dataset):
                 self.batch_size, self.seq_length, self.width, self.height, self.number_sat_channels
             ),
             "pv_yield": torch.randn(self.batch_size, self.seq_length, 128),
+            'pv_system_id': torch.randn(self.batch_size, 128),
             "nwp": torch.randn(self.batch_size, 10, self.seq_length, 2, 2),
             "hour_of_day_sin": torch.randn(self.batch_size, self.seq_length),
             "hour_of_day_cos": torch.randn(self.batch_size, self.seq_length),
@@ -153,5 +154,13 @@ class FakeDataset(torch.utils.data.Dataset):
 
         # add a nan
         x["pv_yield"][0, 0, :] = float("nan")
+
+        # add fake x and y coords, and make sure they are sorted
+        x['sat_x_coords'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length))
+        x['sat_y_coords'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length), descending=True)
+
+        # add sorted (fake) time series
+        x['sat_datetime_index'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length))
+        x['nwp_target_time'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length))
 
         return x

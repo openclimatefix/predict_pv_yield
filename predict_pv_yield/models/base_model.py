@@ -1,10 +1,14 @@
 import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
-from predict_pv_yield.visualisation import plot_example
+
+from predict_pv_yield.visualisation.visualisation import plot_example
+from predict_pv_yield.visualisation.line import plot_batch_results
+from nowcasting_dataset.data_sources.nwp_data_source import NWP_VARIABLE_NAMES
 from predict_pv_yield.models.loss import WeightedLosses
 from predict_pv_yield.models.metrics import mae_each_forecast_horizon, mse_each_forecast_horizon
-from neptune.new.types import File
+
+import pandas as pd
 
 
 class BaseModel(pl.LightningModule):
@@ -67,24 +71,49 @@ class BaseModel(pl.LightningModule):
         return self._training_or_validation_step(batch, tag="Train")
 
     def validation_step(self, batch, batch_idx):
-        # INTERESTING_EXAMPLES = (1, 5, 6, 7, 9, 11, 17, 19)
-        INTERESTING_EXAMPLES = ()
+        INTERESTING_EXAMPLES = (1, 5, 6, 7, 9, 11, 17, 19)
         name = f"validation/plot/epoch{self.current_epoch}"
         if batch_idx == 0:
-            # Plot example
+
+            # get model ouptus
             model_output = self(batch)
+
+            # make sure the internestin example doesnt go above the batch size
+            batch_size = model_output.shape[0]
+
+            INTERESTING_EXAMPLES = (i for i in INTERESTING_EXAMPLES if i < batch_size)
+
             for example_i in INTERESTING_EXAMPLES:
+                # 1. Plot example
                 fig = plot_example(
                     batch,
                     model_output,
                     history_len=self.history_len,
                     forecast_len=self.forecast_len,
-                    nwp_channels=self.nwp_channels,
+                    nwp_channels=NWP_VARIABLE_NAMES,
                     example_i=example_i,
                     epoch=self.current_epoch,
                 )
-                self.logger.experiment[name].log(File.as_image(fig))
-                fig.close()
+
+                # save fig to log
+                self.logger.experiment[-1].log_image(name, fig)
+                try:
+                    fig.close()
+                except Exception as _:
+                    # could not close figure
+                    pass
+
+                # 2. plot summary batch of predictions and results
+                # make x,y data
+                y = batch["pv_yield"][:, :, 0].detach().numpy()
+                y_hat = model_output.detach().numpy()
+                time = [pd.to_datetime(x, unit="s") for x in batch["sat_datetime_index"].detach().numpy()]
+                time_hat = [pd.to_datetime(x, unit="s") for x in batch["sat_datetime_index"][:, self.history_len + 1:].detach().numpy()]
+
+                # plot and save to logger
+                fig = plot_batch_results(model_name=self.name, y=y, y_hat=y_hat, x=time, x_hat=time_hat)
+                fig.write_html(f"temp.html")
+                self.logger.experiment[-1].log_artifact(f"temp.html", f"{name}.html")
 
         return self._training_or_validation_step(batch, tag="Validation")
 
