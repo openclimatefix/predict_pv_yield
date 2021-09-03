@@ -26,7 +26,7 @@ class BaseModel(pl.LightningModule):
         y_hat = self(batch)
 
         # get the true result out. Select the first data point, as this is the pv system in the center of the image
-        y = batch["pv_yield"][0:self.batch_size, -self.forecast_len :, 0]
+        y = batch["pv_yield"][0 : self.batch_size, -self.forecast_len :, 0]
 
         # calculate mse, mae
         mse_loss = F.mse_loss(y_hat, y)
@@ -40,25 +40,24 @@ class BaseModel(pl.LightningModule):
         # shape (2, num_timesteps))[0, 1] on each example, and taking
         # the mean across the batch?
         self.log_dict(
-            {f"MSE/{tag}": mse_loss,
-             f"NMAE/{tag}": nmae_loss,
-             f"MSE_EXP/{tag}": mse_exp,
-             f"MAE_EXP/{tag}": mae_exp},
+            {f"MSE/{tag}": mse_loss, f"NMAE/{tag}": nmae_loss, f"MSE_EXP/{tag}": mse_exp, f"MAE_EXP/{tag}": mae_exp},
             on_step=True,
             on_epoch=True,
             sync_dist=True  # Required for distributed training
             # (even multi-GPU on signle machine).
         )
 
-        if tag != 'Train':
+        if tag != "Train":
             # add metrics for each forecast horizon
             mse_each_forecast_horizon_metric = mse_each_forecast_horizon(output=y_hat, target=y)
             mae_each_forecast_horizon_metric = mae_each_forecast_horizon(output=y_hat, target=y)
 
-            metrics_mse = {f"MSE_forecast_horizon_{i}/{tag}": mse_each_forecast_horizon_metric[i]
-                           for i in range(self.forecast_len)}
-            metrics_mae = {f"MSE_forecast_horizon_{i}/{tag}": mae_each_forecast_horizon_metric[i]
-                           for i in range(self.forecast_len)}
+            metrics_mse = {
+                f"MSE_forecast_horizon_{i}/{tag}": mse_each_forecast_horizon_metric[i] for i in range(self.forecast_len)
+            }
+            metrics_mae = {
+                f"MSE_forecast_horizon_{i}/{tag}": mae_each_forecast_horizon_metric[i] for i in range(self.forecast_len)
+            }
 
             self.log_dict(
                 {**metrics_mse, **metrics_mae},
@@ -106,10 +105,16 @@ class BaseModel(pl.LightningModule):
 
                 # 2. plot summary batch of predictions and results
                 # make x,y data
-                y = batch["pv_yield"][:, :, 0].detach().numpy()
-                y_hat = model_output.detach().numpy()
-                time = [pd.to_datetime(x, unit="s") for x in batch["sat_datetime_index"].detach().numpy()]
-                time_hat = [pd.to_datetime(x, unit="s") for x in batch["sat_datetime_index"][:, self.history_len + 1:].detach().numpy()]
+                y = batch["pv_yield"][0 : self.batch_size, :, 0].detach().numpy()
+                y_hat = model_output[0 : self.batch_size].detach().numpy()
+                time = [
+                    pd.to_datetime(x, unit="s")
+                    for x in batch["sat_datetime_index"][0 : self.batch_size].detach().numpy()
+                ]
+                time_hat = [
+                    pd.to_datetime(x, unit="s")
+                    for x in batch["sat_datetime_index"][0 : self.batch_size, self.history_len + 1 :].detach().numpy()
+                ]
 
                 # plot and save to logger
                 fig = plot_batch_results(model_name=self.name, y=y, y_hat=y_hat, x=time, x_hat=time_hat)
