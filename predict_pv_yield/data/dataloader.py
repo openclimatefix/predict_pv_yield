@@ -143,6 +143,7 @@ class FakeDataset(torch.utils.data.Dataset):
             "sat_data": torch.randn(
                 self.batch_size, self.seq_length, self.width, self.height, self.number_sat_channels
             ),
+            'sat_datetime_index': torch.randn(self.batch_size, self.seq_length),
             "pv_yield": torch.randn(self.batch_size, self.seq_length, 128),
             'pv_system_id': torch.randn(self.batch_size, 128),
             "nwp": torch.randn(self.batch_size, 10, self.seq_length, 2, 2),

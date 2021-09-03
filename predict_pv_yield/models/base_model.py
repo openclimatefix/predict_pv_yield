@@ -2,8 +2,10 @@ import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 from predict_pv_yield.visualisation.visualisation import plot_example
+from predict_pv_yield.visualisation.line import plot_batch_results
 from nowcasting_dataset.data_sources.nwp_data_source import NWP_VARIABLE_NAMES
 from neptune.new.types import File
+import pandas as pd
 
 
 class BaseModel(pl.LightningModule):
@@ -56,6 +58,14 @@ class BaseModel(pl.LightningModule):
                 except Exception as _:
                     # could not close figure
                     pass
+
+                # plot summary batch of predictions and results
+                y = batch["pv_yield"][:, 7:, 0].detach().numpy()
+                y_hat = model_output.detach().numpy()
+                time = [pd.to_datetime(x, unit="s") for x in batch["sat_datetime_index"][:, 7:].detach().numpy()]
+
+                fig = plot_batch_results(model_name=self.name, y=y, y_hat=y_hat, x=time)
+                self.logger.experiment[name].log(fig)
 
         return self._training_or_validation_step(batch, is_train_step=False, tag="Validation")
 
