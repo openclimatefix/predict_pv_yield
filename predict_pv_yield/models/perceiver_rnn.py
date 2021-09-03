@@ -55,10 +55,11 @@ class PerceiverRNN(BaseModel):
     name='perceiver_rnn'
 
     def __init__(self, history_len: int, forecast_len: int, nwp_channels: Iterable[str] = params["nwp_channels"]):
-        super().__init__()
         self.history_len = history_len
         self.forecast_len = forecast_len
         self.nwp_channels = nwp_channels
+
+        super().__init__()
 
         self.perceiver = Perceiver(
             input_channels=len(params["sat_channels"]),

@@ -19,10 +19,11 @@ class Model(BaseModel):
         """
         Simple baseline model that takes the last pv yield value and copies it forward
         """
-        super().__init__()
 
         self.forecast_len = forecast_len
         self.history_len = history_len
+
+        super().__init__()
 
     def forward(self, x):
         # Shape: batch_size, seq_length, n_sites

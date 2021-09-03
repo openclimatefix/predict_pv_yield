@@ -53,7 +53,6 @@ class Model(BaseModel):
         fc2_output_features: number of fully connected outputs nodes out of the the second fully connected layer
         fc3_output_features: number of fully connected outputs nodes out of the the third fully connected layer
         """
-        super().__init__()
 
         self.forecast_len = forecast_len
         self.history_len = history_len
@@ -65,6 +64,9 @@ class Model(BaseModel):
         self.fc1_output_features = fc1_output_features
         self.fc2_output_features = fc2_output_features
         self.fc3_output_features = fc3_output_features
+
+        super().__init__()
+
         conv3d_channels = conv3d_channels
 
         self.number_of_nwp_features = 10 * 19 * 2 * 2

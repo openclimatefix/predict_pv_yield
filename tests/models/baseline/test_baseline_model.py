@@ -32,7 +32,7 @@ class FakeDataset(torch.utils.data.Dataset):
 
 def test_model_forward():
 
-    data_configruation = dict(
+    data_configuration = dict(
         batch_size=32,
         history_len=6,  #: Number of timesteps of history, not including t0.
         forecast_len=12,  #: Number of timesteps of forecast.
@@ -46,8 +46,8 @@ def test_model_forward():
 
     # set up fake data
     train_dataset = iter(FakeDataset(
-        batch_size=data_configruation["batch_size"],
-        seq_length=data_configruation["history_len"] + data_configruation["forecast_len"] + 1,
+        batch_size=data_configuration["batch_size"],
+        seq_length=data_configuration["history_len"] + data_configuration["forecast_len"] + 1,
     ))
     # satellite data
     x = next(train_dataset)
@@ -57,8 +57,8 @@ def test_model_forward():
 
     # check out put is the correct shape
     assert len(y.shape) == 2
-    assert y.shape[0] == data_configruation['batch_size']
-    assert y.shape[1] == data_configruation['forecast_len']
+    assert y.shape[0] == data_configuration['batch_size']
+    assert y.shape[1] == data_configuration['forecast_len']
 
 
 def test_trainer():
@@ -74,7 +74,7 @@ def test_trainer():
     )
 
     # start model
-    model = Model()
+    model = Model(forecast_len=data_configruation['forecast_len'])
 
     # create fake data loader
     train_dataset = FakeDataset(
@@ -83,10 +83,8 @@ def test_trainer():
     )
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=None)
 
-    # fit model
+    # set up trainer
     trainer = pl.Trainer(gpus=0, max_epochs=1)
-    # trainer.fit(model, train_dataloader)
 
     # test over training set
     r = trainer.test(model, train_dataloader)
-    print(r)
