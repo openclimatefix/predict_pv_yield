@@ -14,6 +14,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+activities = [torch.profiler.ProfilerActivity.CPU]
+if torch.cuda.is_available():
+    activities.append(torch.profiler.ProfilerActivity.CUDA)
+
 
 class BaseModel(pl.LightningModule):
 
@@ -34,7 +38,7 @@ class BaseModel(pl.LightningModule):
         if profile:
             # profile the model run
             with torch.profiler.profile(
-                    activities=[torch.profiler.ProfilerActivity.CPU, torch.profiler.ProfilerActivity.CUDA]
+                    activities=activities
             ) as p:
                 # put the batch data through the model
                 y_hat = self(batch)
