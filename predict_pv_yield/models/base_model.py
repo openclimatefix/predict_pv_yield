@@ -10,6 +10,10 @@ from predict_pv_yield.models.metrics import mae_each_forecast_horizon, mse_each_
 
 import pandas as pd
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class BaseModel(pl.LightningModule):
 
@@ -20,10 +24,26 @@ class BaseModel(pl.LightningModule):
         super().__init__()
         self.weighted_losses = WeightedLosses(forecast_length=self.forecast_len)
 
-    def _training_or_validation_step(self, batch, tag: str):
+    def _training_or_validation_step(self, batch, tag: str, profile: bool = False):
+        """
+        batch: The batch data
+        tag: either 'Train', 'Validation' , 'Test'
+        profile: option to profile the model
+        """
 
-        # put the batch data through the model
-        y_hat = self(batch)
+        if profile:
+            # profile the model run
+            with torch.profiler.profile(
+                    activities=[torch.profiler.ProfilerActivity.CPU, torch.profiler.ProfilerActivity.CUDA]
+            ) as p:
+                # put the batch data through the model
+                y_hat = self(batch)
+            profile = p.key_averages().table(sort_by="self_cuda_time_total", row_limit=-1)
+            logger.debug(profile)
+            self.log_dict({'Profiler': profile})
+        else:
+            # put the batch data through the model
+            y_hat = self(batch)
 
         # get the true result out. Select the first data point, as this is the pv system in the center of the image
         y = batch["pv_yield"][0 : self.batch_size, -self.forecast_len :, 0]
@@ -70,7 +90,11 @@ class BaseModel(pl.LightningModule):
         return nmae_loss
 
     def training_step(self, batch, batch_idx):
-        return self._training_or_validation_step(batch, tag="Train")
+
+        if (batch_idx == 0) and (self.current_epoch == 0):
+            return self._training_or_validation_step(batch, tag="Train", profile=True)
+        else:
+            return self._training_or_validation_step(batch, tag="Train")
 
     def validation_step(self, batch, batch_idx):
         INTERESTING_EXAMPLES = (1, 5, 6, 7, 9, 11, 17, 19)
