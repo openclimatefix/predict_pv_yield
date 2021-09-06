@@ -28,23 +28,14 @@ class BaseModel(pl.LightningModule):
         super().__init__()
         self.weighted_losses = WeightedLosses(forecast_length=self.forecast_len)
 
-    def _training_or_validation_step(self, batch, tag: str, profile: bool = False):
+    def _training_or_validation_step(self, batch, tag: str):
         """
         batch: The batch data
         tag: either 'Train', 'Validation' , 'Test'
-        profile: option to profile the model
         """
 
-        if profile:
-            # profile the model run
-            with torch.profiler.profile(activities=activities, with_stack=True) as p:
-                # put the batch data through the model
-                y_hat = self(batch)
-            profile = p.key_averages().table(sort_by="cpu_time_total", row_limit=-1)
-            print(profile)
-        else:
-            # put the batch data through the model
-            y_hat = self(batch)
+        # put the batch data through the model
+        y_hat = self(batch)
 
         # get the true result out. Select the first data point, as this is the pv system in the center of the image
         y = batch["pv_yield"][0 : self.batch_size, -self.forecast_len :, 0]
@@ -93,7 +84,7 @@ class BaseModel(pl.LightningModule):
     def training_step(self, batch, batch_idx):
 
         if (batch_idx == 0) and (self.current_epoch == 0):
-            return self._training_or_validation_step(batch, tag="Train", profile=True)
+            return self._training_or_validation_step(batch, tag="Train")
         else:
             return self._training_or_validation_step(batch, tag="Train")
 
