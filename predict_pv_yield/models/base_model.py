@@ -10,6 +10,14 @@ from predict_pv_yield.models.metrics import mae_each_forecast_horizon, mse_each_
 
 import pandas as pd
 
+import logging
+
+logger = logging.getLogger(__name__)
+
+activities = [torch.profiler.ProfilerActivity.CPU]
+if torch.cuda.is_available():
+    activities.append(torch.profiler.ProfilerActivity.CUDA)
+
 
 class BaseModel(pl.LightningModule):
 
@@ -21,6 +29,10 @@ class BaseModel(pl.LightningModule):
         self.weighted_losses = WeightedLosses(forecast_length=self.forecast_len)
 
     def _training_or_validation_step(self, batch, tag: str):
+        """
+        batch: The batch data
+        tag: either 'Train', 'Validation' , 'Test'
+        """
 
         # put the batch data through the model
         y_hat = self(batch)
@@ -70,7 +82,11 @@ class BaseModel(pl.LightningModule):
         return nmae_loss
 
     def training_step(self, batch, batch_idx):
-        return self._training_or_validation_step(batch, tag="Train")
+
+        if (batch_idx == 0) and (self.current_epoch == 0):
+            return self._training_or_validation_step(batch, tag="Train")
+        else:
+            return self._training_or_validation_step(batch, tag="Train")
 
     def validation_step(self, batch, batch_idx):
         INTERESTING_EXAMPLES = (1, 5, 6, 7, 9, 11, 17, 19)
