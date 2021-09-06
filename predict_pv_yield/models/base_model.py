@@ -37,14 +37,11 @@ class BaseModel(pl.LightningModule):
 
         if profile:
             # profile the model run
-            with torch.profiler.profile(
-                    activities=activities
-            ) as p:
+            with torch.profiler.profile(activities=activities, with_stack=True) as p:
                 # put the batch data through the model
                 y_hat = self(batch)
             profile = p.key_averages().table(sort_by="self_cuda_time_total", row_limit=-1)
-            logger.debug(profile)
-            self.log_dict({'Profiler': profile})
+            print(profile)
         else:
             # put the batch data through the model
             y_hat = self(batch)
