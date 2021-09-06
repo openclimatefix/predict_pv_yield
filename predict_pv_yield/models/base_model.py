@@ -40,7 +40,7 @@ class BaseModel(pl.LightningModule):
             with torch.profiler.profile(activities=activities, with_stack=True) as p:
                 # put the batch data through the model
                 y_hat = self(batch)
-            profile = p.key_averages().table(sort_by="self_cuda_time_total", row_limit=-1)
+            profile = p.key_averages().table(sort_by="cpu_time_total", row_limit=-1)
             print(profile)
         else:
             # put the batch data through the model
