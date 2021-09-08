@@ -11,7 +11,7 @@ def test_mse_each_forecast_horizon():
     loss = mse_each_forecast_horizon(output=output, target=target)
 
     assert loss.cpu().numpy()[0] == 0
-    assert loss.cpu().numpy()[1] == 2*2 + 3*3
+    assert loss.cpu().numpy()[1] == (2*2 + 3*3) / 2
 
 
 def test_mae_each_forecast_horizon():
@@ -22,5 +22,5 @@ def test_mae_each_forecast_horizon():
     loss = mae_each_forecast_horizon(output=output, target=target)
 
     assert loss.cpu().numpy()[0] == 0
-    assert loss.cpu().numpy()[1] == 2 + 3
+    assert loss.cpu().numpy()[1] == (2 + 3) / 2
 
