@@ -2,11 +2,13 @@ import math
 import torch
 import logging
 
+from typing import Optional
+
 logger = logging.getLogger(__name__)
 
 
 class WeightedLosses:
-    def __init__(self, decay_rate: int = None, forecast_length: int = 6):
+    def __init__(self, decay_rate: Optional[int] = None, forecast_length: int = 6):
         """
         Want to set up the MSE loss function so the weights only have to be calculated once.
 

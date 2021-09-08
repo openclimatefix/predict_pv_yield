@@ -10,7 +10,7 @@ def mse_each_forecast_horizon(output: torch.Tensor, target: torch.Tensor) -> tor
     Return a tensor of size (forecast_length)
     """
 
-    return torch.sum((output - target) ** 2, dim=0)
+    return torch.mean((output - target) ** 2, dim=0)
 
 
 def mae_each_forecast_horizon(output: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
@@ -22,4 +22,4 @@ def mae_each_forecast_horizon(output: torch.Tensor, target: torch.Tensor) -> tor
     Return a tensor of size (forecast_length)
     """
 
-    return torch.sum(torch.abs(output - target), dim=0)
+    return torch.mean(torch.abs(output - target), dim=0)
