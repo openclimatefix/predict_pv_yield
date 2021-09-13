@@ -26,7 +26,7 @@ def test_model_forward():
         width=config["image_size_pixels"],
         height=config["image_size_pixels"],
         number_sat_channels=config["number_sat_channels"],
-        seq_length=model.history_len_5 + model.forecast_len_5 + 1,
+        seq_length_5=model.history_len_5 + model.forecast_len_5 + 1,
     )
 
     x = next(iter(train_dataset))
@@ -53,7 +53,7 @@ def test_train():
         width=config["image_size_pixels"],
         height=config["image_size_pixels"],
         number_sat_channels=config["number_sat_channels"],
-        seq_length=model.history_len_5 + model.forecast_len_5 + 1,
+        seq_length_5=model.history_len_5 + model.forecast_len_5 + 1,
     )
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=None)
 

@@ -123,9 +123,10 @@ class NetCDFDataModule(LightningDataModule):
 class FakeDataset(torch.utils.data.Dataset):
     """Fake dataset."""
 
-    def __init__(self, batch_size=32, seq_length=19, width=16, height=16, number_sat_channels=8, length=10):
+    def __init__(self, batch_size=32, seq_length_5=19, seq_length_30=4, width=16, height=16, number_sat_channels=8, length=10):
         self.batch_size = batch_size
-        self.seq_length = seq_length
+        self.seq_length_5 = seq_length_5  # the sequence data in 5 minute steps
+        self.seq_length_30 = seq_length_30  # the sequence data in 30 minute steps
         self.width = width
         self.height = height
         self.number_sat_channels = number_sat_channels
@@ -141,26 +142,31 @@ class FakeDataset(torch.utils.data.Dataset):
 
         x = {
             "sat_data": torch.randn(
-                self.batch_size, self.seq_length, self.width, self.height, self.number_sat_channels
+                self.batch_size, self.seq_length_5, self.width, self.height, self.number_sat_channels
             ),
-            "pv_yield": torch.randn(self.batch_size, self.seq_length, 128),
+            "pv_yield": torch.randn(self.batch_size, self.seq_length_5, 128),
             'pv_system_id': torch.randn(self.batch_size, 128),
-            "nwp": torch.randn(self.batch_size, 10, self.seq_length, 2, 2),
-            "hour_of_day_sin": torch.randn(self.batch_size, self.seq_length),
-            "hour_of_day_cos": torch.randn(self.batch_size, self.seq_length),
-            "day_of_year_sin": torch.randn(self.batch_size, self.seq_length),
-            "day_of_year_cos": torch.randn(self.batch_size, self.seq_length),
+            "nwp": torch.randn(self.batch_size, 10, self.seq_length_5, 2, 2),
+            "hour_of_day_sin": torch.randn(self.batch_size, self.seq_length_5),
+            "hour_of_day_cos": torch.randn(self.batch_size, self.seq_length_5),
+            "day_of_year_sin": torch.randn(self.batch_size, self.seq_length_5),
+            "day_of_year_cos": torch.randn(self.batch_size, self.seq_length_5),
+            "gsp_yield": torch.randn(self.batch_size, self.seq_length_30, 32),
+            'gsp_system_id': torch.randn(self.batch_size, 32),
         }
 
         # add a nan
         x["pv_yield"][0, 0, :] = float("nan")
 
         # add fake x and y coords, and make sure they are sorted
-        x['sat_x_coords'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length))
-        x['sat_y_coords'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length), descending=True)
+        x['sat_x_coords'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length_5))
+        x['sat_y_coords'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length_5), descending=True)
+        x['gsp_system_x_coords'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length_30))
+        x['gsp_system_y_coords'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length_30), descending=True)
 
         # add sorted (fake) time series
-        x['sat_datetime_index'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length))
-        x['nwp_target_time'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length))
+        x['sat_datetime_index'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length_5))
+        x['nwp_target_time'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length_5))
+        x['gsp_datetime_index'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length_30))
 
         return x
