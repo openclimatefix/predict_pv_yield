@@ -70,8 +70,6 @@ class Model(BaseModel):
 
         super().__init__()
 
-        print(f'{self.forecast_len}')
-
         conv3d_channels = conv3d_channels
 
         self.number_of_nwp_features = 10 * 19 * 2 * 2

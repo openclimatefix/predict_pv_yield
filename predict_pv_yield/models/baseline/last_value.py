@@ -30,7 +30,6 @@ class Model(BaseModel):
     def forward(self, x):
         # Shape: batch_size, seq_length, n_sites
         pv_yield = x["pv_yield"]
-        print(self.forecast_len)
 
         # take the last value non forecaster value and the first in the pv yeild
         # (this is the pv site we are preditcting for)

@@ -46,9 +46,6 @@ class BaseModel(pl.LightningModule):
             self.forecast_len = self.forecast_len_30
             self.history_len = self.history_len_30
 
-        print()
-        print(f'{self.forecast_len=}')
-
         self.weighted_losses = WeightedLosses(forecast_length=self.forecast_len)
 
     def _training_or_validation_step(self, batch, tag: str):
@@ -62,9 +59,6 @@ class BaseModel(pl.LightningModule):
 
         # get the true result out. Select the first data point, as this is the pv system in the center of the image
         y = batch[self.output_variable][0: self.batch_size, -self.forecast_len:, 0]
-
-        print(f'{y.shape=}')
-        print(f'{y_hat.shape=}')
 
         # calculate mse, mae
         mse_loss = F.mse_loss(y_hat, y)
