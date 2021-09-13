@@ -18,7 +18,7 @@ activities = [torch.profiler.ProfilerActivity.CPU]
 if torch.cuda.is_available():
     activities.append(torch.profiler.ProfilerActivity.CUDA)
 
-default_output_variable = 'pv_yield'
+default_output_variable = "pv_yield"
 
 
 class BaseModel(pl.LightningModule):
@@ -35,11 +35,11 @@ class BaseModel(pl.LightningModule):
         self.history_len_30 = self.history_minutes // 30  # the number of historic timestemps for 5 minutes data
         self.forecast_len_30 = self.forecast_minutes // 30  # the number of forecast timestemps for 5 minutes data
 
-        if not hasattr(self, 'output_variable'):
-            print('setting')
+        if not hasattr(self, "output_variable"):
+            print("setting")
             self.output_variable = default_output_variable
 
-        if self.output_variable == 'pv_yield':
+        if self.output_variable == "pv_yield":
             self.forecast_len = self.forecast_len_5
             self.history_len = self.history_len_5
         else:
@@ -58,7 +58,7 @@ class BaseModel(pl.LightningModule):
         y_hat = self(batch)
 
         # get the true result out. Select the first data point, as this is the pv system in the center of the image
-        y = batch[self.output_variable][0: self.batch_size, -self.forecast_len:, 0]
+        y = batch[self.output_variable][0 : self.batch_size, -self.forecast_len :, 0]
 
         # calculate mse, mae
         mse_loss = F.mse_loss(y_hat, y)
@@ -85,10 +85,12 @@ class BaseModel(pl.LightningModule):
             mae_each_forecast_horizon_metric = mae_each_forecast_horizon(output=y_hat, target=y)
 
             metrics_mse = {
-                f"MSE_forecast_horizon_{i}/{tag}": mse_each_forecast_horizon_metric[i] for i in range(self.forecast_len_30)
+                f"MSE_forecast_horizon_{i}/{tag}": mse_each_forecast_horizon_metric[i]
+                for i in range(self.forecast_len_30)
             }
             metrics_mae = {
-                f"MSE_forecast_horizon_{i}/{tag}": mae_each_forecast_horizon_metric[i] for i in range(self.forecast_len_30)
+                f"MSE_forecast_horizon_{i}/{tag}": mae_each_forecast_horizon_metric[i]
+                for i in range(self.forecast_len_30)
             }
 
             self.log_dict(

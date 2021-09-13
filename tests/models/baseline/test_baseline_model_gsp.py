@@ -10,7 +10,7 @@ from nowcasting_dataset.data_sources.nwp_data_source import NWP_VARIABLE_NAMES
 
 def test_init():
 
-    m = Model(output_variable='gsp_yield')
+    m = Model(output_variable="gsp_yield")
 
 
 def test_model_forward():
@@ -25,15 +25,19 @@ def test_model_forward():
     )
 
     # start model
-    model = Model(forecast_minutes=data_configuration['forecast_minutes'],
-                  history_minutes=data_configuration['history_minutes'],
-                  output_variable='gsp_yield')
+    model = Model(
+        forecast_minutes=data_configuration["forecast_minutes"],
+        history_minutes=data_configuration["history_minutes"],
+        output_variable="gsp_yield",
+    )
 
     # set up fake data
-    train_dataset = iter(FakeDataset(
-        batch_size=data_configuration["batch_size"],
-        seq_length_30=model.history_len_30 + model.forecast_len_30 + 1,
-    ))
+    train_dataset = iter(
+        FakeDataset(
+            batch_size=data_configuration["batch_size"],
+            seq_length_30=model.history_len_30 + model.forecast_len_30 + 1,
+        )
+    )
     # satellite data
     x = next(train_dataset)
 
@@ -42,8 +46,8 @@ def test_model_forward():
 
     # check out put is the correct shape
     assert len(y.shape) == 2
-    assert y.shape[0] == data_configuration['batch_size']
-    assert y.shape[1] == data_configuration['forecast_minutes'] // 30
+    assert y.shape[0] == data_configuration["batch_size"]
+    assert y.shape[1] == data_configuration["forecast_minutes"] // 30
 
 
 def test_trainer():
@@ -59,9 +63,11 @@ def test_trainer():
     )
 
     # start model
-    model = Model(forecast_minutes=data_configuration['forecast_minutes'],
-                  history_minutes=data_configuration['history_minutes'],
-                  output_variable='gsp_yield')
+    model = Model(
+        forecast_minutes=data_configuration["forecast_minutes"],
+        history_minutes=data_configuration["history_minutes"],
+        output_variable="gsp_yield",
+    )
 
     # create fake data loader
     train_dataset = FakeDataset(

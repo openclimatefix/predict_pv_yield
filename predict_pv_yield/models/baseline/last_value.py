@@ -9,14 +9,9 @@ _LOG.setLevel(logging.DEBUG)
 
 
 class Model(BaseModel):
-    name = 'last_value'
+    name = "last_value"
 
-    def __init__(
-        self,
-        forecast_minutes: int = 12,
-        history_minutes: int = 6,
-        output_variable='pv_yield'
-    ):
+    def __init__(self, forecast_minutes: int = 12, history_minutes: int = 6, output_variable="pv_yield"):
         """
         Simple baseline model that takes the last pv yield value and copies it forward
         """

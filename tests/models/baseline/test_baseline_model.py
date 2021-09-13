@@ -25,13 +25,15 @@ def test_model_forward():
     )
 
     # start model
-    model = Model(forecast_minutes=data_configuration['forecast_minutes'])
+    model = Model(forecast_minutes=data_configuration["forecast_minutes"])
 
     # set up fake data
-    train_dataset = iter(FakeDataset(
-        batch_size=data_configuration["batch_size"],
-        seq_length_30=model.history_len_5 + model.forecast_len_5 + 1,
-    ))
+    train_dataset = iter(
+        FakeDataset(
+            batch_size=data_configuration["batch_size"],
+            seq_length_30=model.history_len_5 + model.forecast_len_5 + 1,
+        )
+    )
     # satellite data
     x = next(train_dataset)
 
@@ -40,8 +42,8 @@ def test_model_forward():
 
     # check out put is the correct shape
     assert len(y.shape) == 2
-    assert y.shape[0] == data_configuration['batch_size']
-    assert y.shape[1] == data_configuration['forecast_minutes'] // 5
+    assert y.shape[0] == data_configuration["batch_size"]
+    assert y.shape[1] == data_configuration["forecast_minutes"] // 5
 
 
 def test_trainer():
@@ -57,7 +59,7 @@ def test_trainer():
     )
 
     # start model
-    model = Model(forecast_minutes=data_configruation['forecast_minutes'])
+    model = Model(forecast_minutes=data_configruation["forecast_minutes"])
 
     # create fake data loader
     train_dataset = FakeDataset(

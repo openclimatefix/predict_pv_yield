@@ -13,7 +13,7 @@ _LOG = logging.getLogger("predict_pv_yield")
 
 class Model(BaseModel):
 
-    name = 'conv3d'
+    name = "conv3d"
 
     def __init__(
         self,
@@ -29,7 +29,7 @@ class Model(BaseModel):
         fc1_output_features: int = 128,
         fc2_output_features: int = 128,
         fc3_output_features: int = 64,
-        output_variable: str = 'pv_yield'
+        output_variable: str = "pv_yield",
     ):
         """
         3d conv model, that takes in different data streams
@@ -60,7 +60,7 @@ class Model(BaseModel):
         self.include_nwp = include_nwp
         self.include_time = include_time
         self.number_of_conv3d_layers = number_of_conv3d_layers
-        self.number_of_nwp_features = 10*19*2*2
+        self.number_of_nwp_features = 10 * 19 * 2 * 2
         self.fc1_output_features = fc1_output_features
         self.fc2_output_features = fc2_output_features
         self.fc3_output_features = fc3_output_features
@@ -90,7 +90,7 @@ class Model(BaseModel):
             layer = nn.Conv3d(
                 in_channels=conv3d_channels, out_channels=conv3d_channels, kernel_size=(3, 3, 3), padding=0
             )
-            setattr(self, f'conv3d_{i + 1}', layer)
+            setattr(self, f"conv3d_{i + 1}", layer)
 
         self.fc1 = nn.Linear(in_features=self.cnn_output_size, out_features=self.fc1_output_features)
         self.fc2 = nn.Linear(in_features=self.fc1_output_features, out_features=self.fc2_output_features)
@@ -122,7 +122,7 @@ class Model(BaseModel):
         # :) Pass data through the network :)
         out = F.relu(self.sat_conv0(sat_data))
         for i in range(0, self.number_of_conv3d_layers - 1):
-            layer = getattr(self, f'conv3d_{i + 1}')
+            layer = getattr(self, f"conv3d_{i + 1}")
             out = F.relu(layer(out))
 
         out = out.reshape(batch_size, self.cnn_output_size)
@@ -134,7 +134,7 @@ class Model(BaseModel):
 
         # add pv yield
         if self.include_pv_yield:
-            pv_yield_history = x['pv_yield'][:, : self.history_len_30 + 1].nan_to_num(nan=0.0)
+            pv_yield_history = x["pv_yield"][:, : self.history_len_30 + 1].nan_to_num(nan=0.0)
 
             pv_yield_history = pv_yield_history.reshape(
                 pv_yield_history.shape[0], pv_yield_history.shape[1] * pv_yield_history.shape[2]
@@ -144,7 +144,7 @@ class Model(BaseModel):
         # *********************** NWP Data ************************************
         if self.include_nwp:
             # Shape: batch_size, channel, seq_length, width, height
-            nwp_data = x['nwp']
+            nwp_data = x["nwp"]
             nwp_data = nwp_data.flatten(start_dim=1)
 
             # fully connected layer
