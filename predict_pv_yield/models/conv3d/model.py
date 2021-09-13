@@ -1,6 +1,5 @@
 import logging
 
-import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 from torch import nn

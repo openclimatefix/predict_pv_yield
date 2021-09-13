@@ -7,7 +7,7 @@ from predict_pv_yield.data.dataloader import FakeDataset
 
 def test_init():
 
-    config_file = f"tests/configs/model/conv3d_gsp.yaml"
+    config_file = "tests/configs/model/conv3d_gsp.yaml"
     config = load_config(config_file)
 
     _ = Model(**config)
@@ -15,7 +15,7 @@ def test_init():
 
 def test_model_forward():
 
-    config_file = f"tests/configs/model/conv3d_gsp.yaml"
+    config_file = "tests/configs/model/conv3d_gsp.yaml"
     config = load_config(config_file)
 
     # start model
@@ -42,7 +42,7 @@ def test_model_forward():
 
 def test_train():
 
-    config_file = f"tests/configs/model/conv3d_gsp.yaml"
+    config_file = "tests/configs/model/conv3d_gsp.yaml"
     config = load_config(config_file)
 
     # start model

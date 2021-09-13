@@ -10,7 +10,7 @@ from nowcasting_dataset.data_sources.nwp_data_source import NWP_VARIABLE_NAMES
 
 def test_init():
 
-    m = Model()
+    _ = Model()
 
 
 def test_model_forward():
@@ -72,4 +72,4 @@ def test_trainer():
     trainer = pl.Trainer(gpus=0, max_epochs=1)
 
     # test over training set
-    r = trainer.test(model, train_dataloader)
+    _ = trainer.test(model, train_dataloader)
