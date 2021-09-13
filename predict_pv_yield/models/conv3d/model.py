@@ -20,8 +20,8 @@ class Model(BaseModel):
         include_pv_yield: bool = True,
         include_nwp: bool = True,
         include_time: bool = True,
-        forecast_len: int = 6,
-        history_len: int = 12,
+        forecast_minutes: int = 30,
+        history_minutes: int = 60,
         number_of_conv3d_layers: int = 4,
         conv3d_channels: int = 32,
         image_size_pixels: int = 64,
@@ -43,8 +43,8 @@ class Model(BaseModel):
         include_pv_yield: include pv yield data
         include_nwp: include nwp data
         include_time: include hour of data, and day of year as sin and cos components
-        forecast_len: the amount of timesteps that should be forecasted
-        history_len: the amount of historical timesteps that are used
+        forecast_len: the amount of minutes that should be forecasted
+        history_len: the amount of historical minutes that are used
         number_of_conv3d_layers, number of convolution 3d layers that are use
         conv3d_channels, the amount of convolution 3d channels
         image_size_pixels: the input satellite image size
@@ -54,8 +54,6 @@ class Model(BaseModel):
         fc3_output_features: number of fully connected outputs nodes out of the the third fully connected layer
         """
 
-        self.forecast_len = forecast_len
-        self.history_len = history_len
         self.include_pv_yield = include_pv_yield
         self.include_nwp = include_nwp
         self.include_time = include_time
@@ -64,6 +62,8 @@ class Model(BaseModel):
         self.fc1_output_features = fc1_output_features
         self.fc2_output_features = fc2_output_features
         self.fc3_output_features = fc3_output_features
+        self.forecast_minutes = forecast_minutes
+        self.history_minutes = history_minutes
 
         super().__init__()
 
@@ -74,7 +74,7 @@ class Model(BaseModel):
         self.cnn_output_size = (
             conv3d_channels
             * ((image_size_pixels - 2 * self.number_of_conv3d_layers) ** 2)
-            * (self.forecast_len + self.history_len + 1 - 2 * self.number_of_conv3d_layers)
+            * (self.forecast_len_5 + self.history_len_5 + 1 - 2 * self.number_of_conv3d_layers)
         )
 
         self.sat_conv0 = nn.Conv3d(
@@ -102,7 +102,7 @@ class Model(BaseModel):
             fc3_in_features += 4
 
         self.fc3 = nn.Linear(in_features=fc3_in_features, out_features=self.fc3_output_features)
-        self.fc4 = nn.Linear(in_features=self.fc3_output_features, out_features=self.forecast_len)
+        self.fc4 = nn.Linear(in_features=self.fc3_output_features, out_features=self.forecast_len_5)
         # self.fc5 = nn.Linear(in_features=32, out_features=8)
         # self.fc6 = nn.Linear(in_features=8, out_features=1)
 
@@ -131,7 +131,7 @@ class Model(BaseModel):
 
         # add pv yield
         if self.include_pv_yield:
-            pv_yield_history = x["pv_yield"][:, : self.history_len + 1].nan_to_num(nan=0.0)
+            pv_yield_history = x["pv_yield"][:, : self.history_len_5 + 1].nan_to_num(nan=0.0)
 
             pv_yield_history = pv_yield_history.reshape(
                 pv_yield_history.shape[0], pv_yield_history.shape[1] * pv_yield_history.shape[2]
@@ -153,10 +153,10 @@ class Model(BaseModel):
         # ########## include time variables #########
         if self.include_time:
             # just take the value now
-            x_sin_hour = x["hour_of_day_sin"][:, self.history_len + 1].unsqueeze(dim=1)
-            x_cos_hour = x["hour_of_day_cos"][:, self.history_len + 1].unsqueeze(dim=1)
-            x_sin_day = x["day_of_year_sin"][:, self.history_len + 1].unsqueeze(dim=1)
-            x_cos_day = x["day_of_year_cos"][:, self.history_len + 1].unsqueeze(dim=1)
+            x_sin_hour = x["hour_of_day_sin"][:, self.history_len_5 + 1].unsqueeze(dim=1)
+            x_cos_hour = x["hour_of_day_cos"][:, self.history_len_5 + 1].unsqueeze(dim=1)
+            x_sin_day = x["day_of_year_sin"][:, self.history_len_5 + 1].unsqueeze(dim=1)
+            x_cos_day = x["day_of_year_cos"][:, self.history_len_5 + 1].unsqueeze(dim=1)
 
             out = torch.cat((out, x_sin_hour, x_cos_hour, x_sin_day, x_cos_day), dim=1)
 
@@ -164,6 +164,6 @@ class Model(BaseModel):
         out = F.relu(self.fc3(out))
         out = self.fc4(out)
 
-        out = out.reshape(batch_size, self.forecast_len)
+        out = out.reshape(batch_size, self.forecast_len_5)
 
         return out

@@ -26,7 +26,7 @@ def test_model_forward():
         width=config["image_size_pixels"],
         height=config["image_size_pixels"],
         number_sat_channels=config["number_sat_channels"],
-        seq_length=config["history_len"] + config["forecast_len"] + 1,
+        seq_length=model.history_len_5 + model.forecast_len_5 + 1,
     )
 
     x = next(iter(train_dataset))
@@ -37,7 +37,7 @@ def test_model_forward():
     # check out put is the correct shape
     assert len(y.shape) == 2
     assert y.shape[0] == 32
-    assert y.shape[1] == config["forecast_len"]
+    assert y.shape[1] == model.forecast_len_5
 
 
 def test_train():
@@ -53,7 +53,7 @@ def test_train():
         width=config["image_size_pixels"],
         height=config["image_size_pixels"],
         number_sat_channels=config["number_sat_channels"],
-        seq_length=config["history_len"] + config["forecast_len"] + 1,
+        seq_length=model.history_len_5 + model.forecast_len_5 + 1,
     )
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=None)
 

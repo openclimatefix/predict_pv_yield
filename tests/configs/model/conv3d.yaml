@@ -2,8 +2,8 @@ _target_: predict_pv_yield.models.conv3d.model.Model
 
 include_pv_yield: False
 include_nwp: False
-forecast_len: 6
-history_len: 12
+forecast_minutes: 30
+history_minutes: 60
 number_of_conv3d_layers: 4
 conv3d_channels: 32
 image_size_pixels: 16 # this is made smaller for testing

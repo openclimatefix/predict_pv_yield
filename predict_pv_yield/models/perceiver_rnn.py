@@ -14,8 +14,8 @@ params = dict(
     # TODO: Everything that relates to the dataset should come automatically
     # from a yaml file stored with the dataset.
     batch_size=32,
-    history_len=6,  #: Number of timesteps of history, not including t0.
-    forecast_len=12,  #: Number of timesteps of forecast.
+    history_minutes=60,  #: Number of timesteps of history, not including t0.
+    forecast_minutes=30,  #: Number of timesteps of forecast.
     image_size_pixels=64,
     nwp_channels=("t", "dswrf", "prate", "r", "sde", "si10", "vis", "lcc", "mcc", "hcc"),
     sat_channels=(
@@ -41,7 +41,7 @@ SAT_Y_MEAN = np.float32(519000)
 SAT_Y_STD = np.float32(406454.17945938)
 
 
-TOTAL_SEQ_LEN = params["history_len"] + params["forecast_len"] + 1
+TOTAL_SEQ_LEN = params["history_minutes"] // 5 + params["forecast_minutes"] // 5 + 1
 NWP_SIZE = len(params["nwp_channels"]) * 2 * 2  # channels x width x height
 N_DATETIME_FEATURES = 4
 PERCEIVER_OUTPUT_SIZE = 512
@@ -53,16 +53,16 @@ class PerceiverRNN(BaseModel):
 
     name='perceiver_rnn'
 
-    def __init__(self, history_len: int,
-                 forecast_len: int,
+    def __init__(self, history_minutes: int,
+                 forecast_minutes: int,
                  nwp_channels: Iterable[str] = params["nwp_channels"],
                  batch_size: int = 32,
                  num_latents: int = 128,
                  latent_dim: int = 64,
                  embedding_dem:int = 16,
                  ):
-        self.history_len = history_len
-        self.forecast_len = forecast_len
+        self.history_minutes = history_minutes
+        self.forecast_minutes = forecast_minutes
         self.nwp_channels = nwp_channels
         self.batch_size = batch_size
         self.num_latents = num_latents
@@ -173,11 +173,11 @@ class PerceiverRNN(BaseModel):
         )
 
         # take the history of the pv yield of this system,
-        pv_yield_history = x["pv_yield"][0: self.batch_size][:, : self.history_len + 1, 0].unsqueeze(-1)
-        encoder_input = torch.cat((rnn_input[:, : self.history_len + 1], pv_yield_history), dim=2)
+        pv_yield_history = x["pv_yield"][0: self.batch_size][:, : self.history_len_5 + 1, 0].unsqueeze(-1)
+        encoder_input = torch.cat((rnn_input[:, : self.history_len_5 + 1], pv_yield_history), dim=2)
 
         encoder_output, encoder_hidden = self.encoder_rnn(encoder_input)
-        decoder_output, _ = self.decoder_rnn(rnn_input[:, -self.forecast_len :], encoder_hidden)
+        decoder_output, _ = self.decoder_rnn(rnn_input[:, -self.forecast_len_5 :], encoder_hidden)
         # decoder_output is shape batch_size, seq_len, rnn_hidden_size
 
         decoder_output = F.relu(self.decoder_fc1(decoder_output))

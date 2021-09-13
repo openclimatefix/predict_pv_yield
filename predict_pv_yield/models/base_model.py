@@ -26,7 +26,14 @@ class BaseModel(pl.LightningModule):
 
     def __init__(self):
         super().__init__()
-        self.weighted_losses = WeightedLosses(forecast_length=self.forecast_len)
+
+        self.history_len_5 = self.history_minutes // 5 # the number of historic timestemps for 5 minutes data
+        self.forecast_len_5 = self.forecast_minutes // 5 # the number of forecast timestemps for 5 minutes data
+
+        self.history_len_30 = self.history_minutes // 30 # the number of historic timestemps for 5 minutes data
+        self.forecast_len_30 = self.forecast_minutes // 30 # the number of forecast timestemps for 5 minutes data
+
+        self.weighted_losses = WeightedLosses(forecast_length=self.forecast_len_5)
 
     def _training_or_validation_step(self, batch, tag: str):
         """
@@ -38,7 +45,7 @@ class BaseModel(pl.LightningModule):
         y_hat = self(batch)
 
         # get the true result out. Select the first data point, as this is the pv system in the center of the image
-        y = batch["pv_yield"][0 : self.batch_size, -self.forecast_len :, 0]
+        y = batch["pv_yield"][0 : self.batch_size, -self.forecast_len_5 :, 0]
 
         # calculate mse, mae
         mse_loss = F.mse_loss(y_hat, y)
@@ -65,10 +72,10 @@ class BaseModel(pl.LightningModule):
             mae_each_forecast_horizon_metric = mae_each_forecast_horizon(output=y_hat, target=y)
 
             metrics_mse = {
-                f"MSE_forecast_horizon_{i}/{tag}": mse_each_forecast_horizon_metric[i] for i in range(self.forecast_len)
+                f"MSE_forecast_horizon_{i}/{tag}": mse_each_forecast_horizon_metric[i] for i in range(self.forecast_len_5)
             }
             metrics_mae = {
-                f"MSE_forecast_horizon_{i}/{tag}": mae_each_forecast_horizon_metric[i] for i in range(self.forecast_len)
+                f"MSE_forecast_horizon_{i}/{tag}": mae_each_forecast_horizon_metric[i] for i in range(self.forecast_len_5)
             }
 
             self.log_dict(
@@ -104,8 +111,8 @@ class BaseModel(pl.LightningModule):
                 fig = plot_example(
                     batch,
                     model_output,
-                    history_len=self.history_len,
-                    forecast_len=self.forecast_len,
+                    history_len=self.history_len_5,
+                    forecast_len=self.forecast_len_5,
                     nwp_channels=NWP_VARIABLE_NAMES,
                     example_i=example_i,
                     epoch=self.current_epoch,
@@ -128,7 +135,7 @@ class BaseModel(pl.LightningModule):
                 ]
                 time_hat = [
                     pd.to_datetime(x, unit="s")
-                    for x in batch["sat_datetime_index"][0 : self.batch_size, self.history_len + 1 :].cpu().numpy()
+                    for x in batch["sat_datetime_index"][0 : self.batch_size, self.history_len_5 + 1 :].cpu().numpy()
                 ]
 
                 # plot and save to logger

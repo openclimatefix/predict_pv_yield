@@ -34,20 +34,20 @@ def test_model_forward():
 
     data_configuration = dict(
         batch_size=32,
-        history_len=6,  #: Number of timesteps of history, not including t0.
-        forecast_len=12,  #: Number of timesteps of forecast.
+        history_minutes=30,  #: Number of minutes of history, not including t0.
+        forecast_minutes=60,  #: Number of minutes of forecast.
         image_size_pixels=16,
         nwp_channels=NWP_VARIABLE_NAMES,
         sat_channels=SAT_VARIABLE_NAMES,
     )
 
     # start model
-    model = Model()
+    model = Model(forecast_minutes=data_configuration['forecast_minutes'])
 
     # set up fake data
     train_dataset = iter(FakeDataset(
         batch_size=data_configuration["batch_size"],
-        seq_length=data_configuration["history_len"] + data_configuration["forecast_len"] + 1,
+        seq_length=model.history_len_5 + model.forecast_len_5 + 1,
     ))
     # satellite data
     x = next(train_dataset)
@@ -58,7 +58,7 @@ def test_model_forward():
     # check out put is the correct shape
     assert len(y.shape) == 2
     assert y.shape[0] == data_configuration['batch_size']
-    assert y.shape[1] == data_configuration['forecast_len']
+    assert y.shape[1] == data_configuration['forecast_minutes'] // 5
 
 
 def test_trainer():
@@ -66,20 +66,20 @@ def test_trainer():
     # set up data configuration
     data_configruation = dict(
         batch_size=32,
-        history_len=6,  #: Number of timesteps of history, not including t0.
-        forecast_len=12,  #: Number of timesteps of forecast.
+        history_minutes=30,  #: Number of minutes of history, not including t0.
+        forecast_minutes=60,  #: Number of minutes of forecast.
         image_size_pixels=16,
         nwp_channels=NWP_VARIABLE_NAMES,
         sat_channels=SAT_VARIABLE_NAMES,
     )
 
     # start model
-    model = Model(forecast_len=data_configruation['forecast_len'])
+    model = Model(forecast_minutes=data_configruation['forecast_minutes'])
 
     # create fake data loader
     train_dataset = FakeDataset(
         batch_size=data_configruation["batch_size"],
-        seq_length=data_configruation["history_len"] + data_configruation["forecast_len"] + 1,
+        seq_length=model.history_len_5 + model.forecast_len_5 + 1,
     )
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=None)
 

@@ -13,15 +13,15 @@ class Model(BaseModel):
 
     def __init__(
         self,
-        forecast_len: int = 12,
-        history_len: int = 6,
+        forecast_minutes: int = 12,
+        history_minutes: int = 6,
     ):
         """
         Simple baseline model that takes the last pv yield value and copies it forward
         """
 
-        self.forecast_len = forecast_len
-        self.history_len = history_len
+        self.forecast_minutes = forecast_minutes
+        self.history_minutes = history_minutes
 
         super().__init__()
 
@@ -31,10 +31,10 @@ class Model(BaseModel):
 
         # take the last value non forecaster value and the first in the pv yeild
         # (this is the pv site we are preditcting for)
-        y_hat = pv_yield[:, -self.forecast_len - 1, 0]
+        y_hat = pv_yield[:, -self.forecast_len_5 - 1, 0]
 
         # expand the last valid forward n predict steps
-        out = y_hat.unsqueeze(1).repeat(1, self.forecast_len)
+        out = y_hat.unsqueeze(1).repeat(1, self.forecast_len_5)
         # shape: batch_size, forecast_len
 
         return out
