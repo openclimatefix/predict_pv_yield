@@ -3,7 +3,7 @@ import torch
 import torch.nn.functional as F
 
 from predict_pv_yield.visualisation.visualisation import plot_example
-from predict_pv_yield.visualisation.line import plot_batch_results
+from nowcasting_utils.visualization.line import plot_batch_results
 from nowcasting_dataset.data_sources.nwp_data_source import NWP_VARIABLE_NAMES
 from nowcasting_utils.loss import WeightedLosses
 from nowcasting_utils.metrics import mae_each_forecast_horizon, mse_each_forecast_horizon
