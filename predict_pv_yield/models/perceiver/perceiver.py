@@ -60,6 +60,7 @@ class PerceiverRNN(BaseModel):
                  num_latents: int = 128,
                  latent_dim: int = 64,
                  embedding_dem:int = 16,
+                 output_variable:str ='pv_yield'
                  ):
         self.history_minutes = history_minutes
         self.forecast_minutes = forecast_minutes
@@ -68,6 +69,7 @@ class PerceiverRNN(BaseModel):
         self.num_latents = num_latents
         self.latent_dim = latent_dim
         self.embedding_dem = embedding_dem
+        self.output_variable = output_variable
 
         super().__init__()
 
@@ -177,10 +179,10 @@ class PerceiverRNN(BaseModel):
         encoder_input = torch.cat((rnn_input[:, : self.history_len_5 + 1], pv_yield_history), dim=2)
 
         encoder_output, encoder_hidden = self.encoder_rnn(encoder_input)
-        decoder_output, _ = self.decoder_rnn(rnn_input[:, -self.forecast_len_5 :], encoder_hidden)
+        decoder_output, _ = self.decoder_rnn(rnn_input[:, -self.forecast_len :], encoder_hidden)
         # decoder_output is shape batch_size, seq_len, rnn_hidden_size
 
         decoder_output = F.relu(self.decoder_fc1(decoder_output))
         decoder_output = self.decoder_fc2(decoder_output)
 
-        return decoder_output.squeeze()
+        return decoder_output.squeeze(dim=-1)

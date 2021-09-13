@@ -1,4 +1,4 @@
-from predict_pv_yield.models.perceiver_rnn import PerceiverRNN, params, TOTAL_SEQ_LEN
+from predict_pv_yield.models.perceiver.perceiver import PerceiverRNN, params, TOTAL_SEQ_LEN
 import torch
 
 

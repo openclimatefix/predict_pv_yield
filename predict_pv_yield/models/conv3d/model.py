@@ -29,6 +29,7 @@ class Model(BaseModel):
         fc1_output_features: int = 128,
         fc2_output_features: int = 128,
         fc3_output_features: int = 64,
+        output_variable: str = 'pv_yield'
     ):
         """
         3d conv model, that takes in different data streams
@@ -52,6 +53,7 @@ class Model(BaseModel):
         fc1_output_features: number of fully connected outputs nodes out of the the first fully connected layer
         fc2_output_features: number of fully connected outputs nodes out of the the second fully connected layer
         fc3_output_features: number of fully connected outputs nodes out of the the third fully connected layer
+        output_variable: the output variable to be predicted
         """
 
         self.include_pv_yield = include_pv_yield
@@ -64,8 +66,11 @@ class Model(BaseModel):
         self.fc3_output_features = fc3_output_features
         self.forecast_minutes = forecast_minutes
         self.history_minutes = history_minutes
+        self.output_variable = output_variable
 
         super().__init__()
+
+        print(f'{self.forecast_len}')
 
         conv3d_channels = conv3d_channels
 
@@ -94,7 +99,7 @@ class Model(BaseModel):
 
         fc3_in_features = self.fc2_output_features
         if include_pv_yield:
-            fc3_in_features += 128 * 7  # 7 could be (history_len + 1)
+            fc3_in_features += 128 * (self.history_len + 1)
         if include_nwp:
             self.fc_nwp = nn.Linear(in_features=self.number_of_nwp_features, out_features=128)
             fc3_in_features += 128
@@ -102,7 +107,7 @@ class Model(BaseModel):
             fc3_in_features += 4
 
         self.fc3 = nn.Linear(in_features=fc3_in_features, out_features=self.fc3_output_features)
-        self.fc4 = nn.Linear(in_features=self.fc3_output_features, out_features=self.forecast_len_5)
+        self.fc4 = nn.Linear(in_features=self.fc3_output_features, out_features=self.forecast_len)
         # self.fc5 = nn.Linear(in_features=32, out_features=8)
         # self.fc6 = nn.Linear(in_features=8, out_features=1)
 
@@ -131,7 +136,7 @@ class Model(BaseModel):
 
         # add pv yield
         if self.include_pv_yield:
-            pv_yield_history = x["pv_yield"][:, : self.history_len_5 + 1].nan_to_num(nan=0.0)
+            pv_yield_history = x['pv_yield'][:, : self.history_len_30 + 1].nan_to_num(nan=0.0)
 
             pv_yield_history = pv_yield_history.reshape(
                 pv_yield_history.shape[0], pv_yield_history.shape[1] * pv_yield_history.shape[2]
@@ -164,6 +169,6 @@ class Model(BaseModel):
         out = F.relu(self.fc3(out))
         out = self.fc4(out)
 
-        out = out.reshape(batch_size, self.forecast_len_5)
+        out = out.reshape(batch_size, self.forecast_len)
 
         return out
