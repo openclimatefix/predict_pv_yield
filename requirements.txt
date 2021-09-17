@@ -1,5 +1,5 @@
-git+git://github.com/openclimatefix/nowcasting_dataset@main#egg=nowcasting_dataset
-git+git://github.com/openclimatefix/nowcasting_utils@main#egg=nowcasting_utils
+git+https://github.com/openclimatefix/nowcasting_dataset.git@issue/134-prepare-ml-test#egg=nowcasting_dataset
+git+https://github.com/openclimatefix/nowcasting_utils@main#egg=nowcasting_utils
 numpy
 pandas
 matplotlib
