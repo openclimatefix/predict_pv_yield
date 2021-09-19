@@ -146,11 +146,11 @@ class BaseModel(pl.LightningModule):
                 y = batch[self.output_variable][0 : self.batch_size, :, 0].cpu().numpy()
                 y_hat = model_output[0 : self.batch_size].cpu().numpy()
                 time = [
-                    pd.to_datetime(x, unit="s") for x in batch["sat_datetime_index"][0 : self.batch_size].cpu().numpy()
+                    pd.to_datetime(x, unit="s") for x in batch["gsp_datetime_index"][0 : self.batch_size].cpu().numpy()
                 ]
                 time_hat = [
                     pd.to_datetime(x, unit="s")
-                    for x in batch["sat_datetime_index"][0 : self.batch_size, self.history_len_5 + 1 :].cpu().numpy()
+                    for x in batch["gsp_datetime_index"][0 : self.batch_size, self.history_len_30 + 1 :].cpu().numpy()
                 ]
 
                 # plot and save to logger

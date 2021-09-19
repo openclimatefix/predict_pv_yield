@@ -6,5 +6,5 @@ n_val_data: 1000
 cloud:  "gcp"
 num_workers: 8
 pin_memory: True
-data_path: "gs://solar-pv-nowcasting-data/prepared_ML_training_data/v4/"
+data_path: "gs://solar-pv-nowcasting-data/prepared_ML_training_data/v6/"
 fake_data: False

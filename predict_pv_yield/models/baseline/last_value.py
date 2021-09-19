@@ -24,11 +24,11 @@ class Model(BaseModel):
 
     def forward(self, x):
         # Shape: batch_size, seq_length, n_sites
-        pv_yield = x["pv_yield"]
+        gsp_yield = x["gsp_vield"]
 
         # take the last value non forecaster value and the first in the pv yeild
         # (this is the pv site we are preditcting for)
-        y_hat = pv_yield[:, -self.forecast_len - 1, 0]
+        y_hat = gsp_yield[:, -self.forecast_len - 1, 0]
 
         # expand the last valid forward n predict steps
         out = y_hat.unsqueeze(1).repeat(1, self.forecast_len)

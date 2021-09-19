@@ -2,3 +2,4 @@ _target_: predict_pv_yield.models.baseline.last_value.Model
 
 forecast_minutes: 30
 history_minutes: 60
+output_variable: gsp_yield
