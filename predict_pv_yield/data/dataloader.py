@@ -1,5 +1,5 @@
 import os
-from nowcasting_dataset.dataset import NetCDFDataset, worker_init_fn
+from nowcasting_dataset.dataset.datasets import NetCDFDataset, worker_init_fn
 from typing import Tuple
 import logging
 import torch

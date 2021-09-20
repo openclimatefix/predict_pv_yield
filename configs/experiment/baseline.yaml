@@ -6,9 +6,9 @@
 defaults:
   - override /trainer: default.yaml # choose trainer from 'configs/trainer/'
   - override /model: baseline.yaml
-  - override /datamodule: netcdf_datamodule.yaml
+  - override /datamodule: netcdf_datamodule_gcp.yaml
   - override /callbacks: default.yaml
-  - override /logger: npetune.yaml
+  - override /logger: neptune.yaml
 
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
