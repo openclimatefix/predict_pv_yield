@@ -24,7 +24,7 @@ class Model(BaseModel):
 
     def forward(self, x):
         # Shape: batch_size, seq_length, n_sites
-        gsp_yield = x["gsp_vield"]
+        gsp_yield = x[self.output_variable]
 
         # take the last value non forecaster value and the first in the pv yeild
         # (this is the pv site we are preditcting for)
