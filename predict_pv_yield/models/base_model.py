@@ -126,11 +126,12 @@ class BaseModel(pl.LightningModule):
                 fig = plot_example(
                     batch,
                     model_output,
-                    history_len=self.history_len_5,
-                    forecast_len=self.forecast_len_5,
+                    history_minutes=self.history_len_5*5,
+                    forecast_minutes=self.forecast_len_5*5,
                     nwp_channels=NWP_VARIABLE_NAMES,
                     example_i=example_i,
                     epoch=self.current_epoch,
+                    output_variable='gsp_yield'
                 )
 
                 # save fig to log
