@@ -152,7 +152,7 @@ class FakeDataset(torch.utils.data.Dataset):
             "day_of_year_sin": torch.randn(self.batch_size, self.seq_length_5),
             "day_of_year_cos": torch.randn(self.batch_size, self.seq_length_5),
             "gsp_yield": torch.randn(self.batch_size, self.seq_length_30, 32),
-            'gsp_system_id': torch.randn(self.batch_size, 32),
+            'gsp_id': torch.randn(self.batch_size, 32),
         }
 
         # add a nan

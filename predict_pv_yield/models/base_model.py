@@ -133,7 +133,7 @@ class BaseModel(pl.LightningModule):
                     nwp_channels=NWP_VARIABLE_NAMES,
                     example_i=example_i,
                     epoch=self.current_epoch,
-                    output_variable='gsp_yield'
+                    output_variable=self.output_variable
                 )
 
                 # save fig to log
