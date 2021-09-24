@@ -42,9 +42,11 @@ class BaseModel(pl.LightningModule):
         if self.output_variable == "pv_yield":
             self.forecast_len = self.forecast_len_5
             self.history_len = self.history_len_5
+            self.number_of_samples_per_batch = 128
         else:
             self.forecast_len = self.forecast_len_30
             self.history_len = self.history_len_30
+            self.number_of_samples_per_batch = 32
 
         self.weighted_losses = WeightedLosses(forecast_length=self.forecast_len)
 

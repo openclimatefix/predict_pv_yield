@@ -96,7 +96,7 @@ class Model(BaseModel):
 
         fc3_in_features = self.fc2_output_features
         if include_pv_yield:
-            fc3_in_features += 128 * (self.history_len + 1)
+            fc3_in_features += self.number_of_samples_per_batch * (self.history_len_30 + 1)
         if include_nwp:
             self.fc_nwp = nn.Linear(in_features=self.number_of_nwp_features, out_features=128)
             fc3_in_features += 128
@@ -133,7 +133,7 @@ class Model(BaseModel):
 
         # add pv yield
         if self.include_pv_yield:
-            pv_yield_history = x["pv_yield"][:, : self.history_len_30 + 1].nan_to_num(nan=0.0)
+            pv_yield_history = x[self.output_variable][:, : self.history_len_30 + 1].nan_to_num(nan=0.0)
 
             pv_yield_history = pv_yield_history.reshape(
                 pv_yield_history.shape[0], pv_yield_history.shape[1] * pv_yield_history.shape[2]
