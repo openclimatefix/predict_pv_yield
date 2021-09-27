@@ -1,5 +1,7 @@
 from predict_pv_yield.models.perceiver.perceiver import PerceiverRNN, params, TOTAL_SEQ_LEN
 import torch
+from nowcasting_dataset.dataset.validate import FakeDataset
+from nowcasting_dataset.config.model import Configuration
 
 
 def test_init_model():
