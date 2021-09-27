@@ -13,3 +13,5 @@ MAE = 0.0562
 
 ran not using nwp data, or datetimte features
 https://app.neptune.ai/o/OpenClimateFix/org/predict-pv-yield/e/PRED-314/monitoring
+
+MAE = 0.0401
