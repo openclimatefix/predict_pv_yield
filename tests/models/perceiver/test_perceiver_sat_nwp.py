@@ -1,18 +1,18 @@
-from predict_pv_yield.models.perceiver.perceiver_nwp_sat import PerceiverSatNWP, params, TOTAL_SEQ_LEN
+from predict_pv_yield.models.perceiver.perceiver_nwp_sat import Model, params, TOTAL_SEQ_LEN
 from predict_pv_yield.data.dataloader import FakeDataset
 import torch
 
 
 def test_init_model():
     """Initilize the model"""
-    _ = PerceiverSatNWP(
+    _ = Model(
         history_minutes=3, forecast_minutes=3, nwp_channels=params["nwp_channels"], output_variable="gsp_yield"
     )
 
 
 def test_model_forward():
 
-    model = PerceiverSatNWP(
+    model = Model(
         history_minutes=params["history_minutes"],
         forecast_minutes=params["forecast_minutes"],
         nwp_channels=params["nwp_channels"],
