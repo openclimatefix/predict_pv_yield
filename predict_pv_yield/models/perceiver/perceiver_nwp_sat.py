@@ -49,9 +49,9 @@ FC_OUTPUT_SIZE = 8
 RNN_HIDDEN_SIZE = 16
 
 
-class PerceiverRNN(BaseModel):
+class Model(BaseModel):
 
-    name = "perceiver_rnn"
+    name = "perceiver_nwp_sat"
 
     def __init__(
         self,
@@ -76,7 +76,7 @@ class PerceiverRNN(BaseModel):
         super().__init__()
 
         self.perceiver = Perceiver(
-            input_channels=len(params["sat_channels"]),
+            input_channels=len(params["sat_channels"]) + len(nwp_channels),
             input_axis=2,
             num_freq_bands=6,
             max_freq=10,
@@ -101,13 +101,13 @@ class PerceiverRNN(BaseModel):
         # TODO: Get rid of RNNs!
         self.encoder_rnn = nn.GRU(
             # plus 1 for history
-            input_size=FC_OUTPUT_SIZE + N_DATETIME_FEATURES + 1 + NWP_SIZE,
+            input_size=FC_OUTPUT_SIZE + N_DATETIME_FEATURES + 1,
             hidden_size=RNN_HIDDEN_SIZE,
             num_layers=2,
             batch_first=True,
         )
         self.decoder_rnn = nn.GRU(
-            input_size=FC_OUTPUT_SIZE + N_DATETIME_FEATURES + NWP_SIZE,
+            input_size=FC_OUTPUT_SIZE + N_DATETIME_FEATURES,
             hidden_size=RNN_HIDDEN_SIZE,
             num_layers=2,
             batch_first=True,
@@ -128,8 +128,22 @@ class PerceiverRNN(BaseModel):
         #                                 0           1       2      3
         sat_data = sat_data.reshape(new_batch_size, width, height, n_chans)
 
+        # *********************** NWP Data ************************************
+        # Shape: batch_size, channel, seq_length, width, height
+        nwp_data = x["nwp"][0 : self.batch_size].float()
+        # Perciever expects seq_len to be dim 1, and channels at the end
+        nwp_data = nwp_data.permute(0, 2, 3, 4, 1)
+        batch_size, nwp_seq_len, nwp_width, nwp_height, n_nwp_chans = nwp_data.shape
+        nwp_data = nwp_data.reshape(new_batch_size, nwp_width, nwp_height, n_nwp_chans)
+
+        assert nwp_width == width
+        assert nwp_height == height
+
+        data = torch.cat((sat_data, nwp_data), dim=-1)
+
+        # Perceiver
         # Pass data through the network :)
-        out = self.perceiver(sat_data)
+        out = self.perceiver(data)
 
         out = out.reshape(new_batch_size, PERCEIVER_OUTPUT_SIZE)
         out = F.relu(self.fc1(out))
@@ -157,19 +171,12 @@ class PerceiverRNN(BaseModel):
         # gets what we know about the future: satellite, NWP, and
         # datetime features.
 
-        # *********************** NWP Data ************************************
-        # Shape: batch_size, channel, seq_length, width, height
-        nwp_data = x["nwp"][0 : self.batch_size].float()
-        # RNN expects seq_len to be dim 1.
-        nwp_data = nwp_data.permute(0, 2, 1, 3, 4)
-        batch_size, nwp_seq_len, n_nwp_chans, nwp_width, nwp_height = nwp_data.shape
-        nwp_data = nwp_data.reshape(batch_size, nwp_seq_len, n_nwp_chans * nwp_width * nwp_height)
+        ####### Time inputs
 
         # Concat
         rnn_input = torch.cat(
             (
                 out,
-                nwp_data,
                 x["hour_of_day_sin"][0 : self.batch_size].unsqueeze(-1),
                 x["hour_of_day_cos"][0 : self.batch_size].unsqueeze(-1),
                 x["day_of_year_sin"][0 : self.batch_size].unsqueeze(-1),
@@ -180,12 +187,13 @@ class PerceiverRNN(BaseModel):
 
         if self.output_variable == 'pv_yield':
             # take the history of the pv yield of this system,
-            pv_yield_history = x["pv_yield"][0: self.batch_size][:, : self.history_len_5 + 1, 0].unsqueeze(-1)
+            pv_yield_history = x["pv_yield"][0 : self.batch_size][:, : self.history_len_5 + 1, 0].unsqueeze(-1)
             encoder_input = torch.cat((rnn_input[:, : self.history_len_5 + 1], pv_yield_history), dim=2)
         elif self.output_variable == 'gsp_yield':
             # take the history of the gsp yield of this system,
             gsp_history = x[self.output_variable][0: self.batch_size][:, : self.history_len_30 + 1, 0].unsqueeze(-1)
             encoder_input = torch.cat((rnn_input[:, : self.history_len_30 + 1], gsp_history), dim=2)
+
 
         encoder_output, encoder_hidden = self.encoder_rnn(encoder_input)
         decoder_output, _ = self.decoder_rnn(rnn_input[:, -self.forecast_len :], encoder_hidden)
