@@ -12,7 +12,7 @@ _LOG = logging.getLogger("predict_pv_yield")
 
 class Model(BaseModel):
 
-    name = "conv3d"
+    name = "conv3d_sat_nwp"
 
     def __init__(
         self,
@@ -34,12 +34,13 @@ class Model(BaseModel):
         """
         3d conv model, that takes in different data streams
 
-        architecture is roughly satellite image time series goes into many 3d convolution layers.
-        Final convolutional layer goes to full connected layer. This is joined by other data inputs like
+        architecture is roughly
+        1. satellite image time series goes into many 3d convolution layers.
+        2. nwp time series goes into many 3d convolution layers.
+        3. Final convolutional layer goes to full connected layer. This is joined by other data inputs like
         - pv yield
-        - nwp data
         - time variables
-        Then there ~4 fully connected layers which end up forecasting the pv yield intp the future
+        Then there ~4 fully connected layers which end up forecasting the pv yield / gsp into the future
 
         include_pv_yield: include pv yield data
         include_nwp: include nwp data
@@ -54,7 +55,7 @@ class Model(BaseModel):
         fc2_output_features: number of fully connected outputs nodes out of the the second fully connected layer
         fc3_output_features: number of fully connected outputs nodes out of the the third fully connected layer
         output_variable: the output variable to be predicted
-        number_nwp_channels:
+        number_nwp_channels: The number of nwp channels there are
         """
 
         self.include_pv_yield = include_pv_yield
