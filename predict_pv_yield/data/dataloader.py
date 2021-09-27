@@ -123,7 +123,7 @@ class NetCDFDataModule(LightningDataModule):
 class FakeDataset(torch.utils.data.Dataset):
     """Fake dataset."""
 
-    def __init__(self, batch_size=32, seq_length_5=19, seq_length_30=4, width=16, height=16, number_sat_channels=8, length=10):
+    def __init__(self, batch_size=32, seq_length_5=19, seq_length_30=4, width=16, height=16, number_sat_channels=8, length=10, nwp_image_size=2):
         self.batch_size = batch_size
         self.seq_length_5 = seq_length_5  # the sequence data in 5 minute steps
         self.seq_length_30 = seq_length_30  # the sequence data in 30 minute steps
@@ -131,6 +131,7 @@ class FakeDataset(torch.utils.data.Dataset):
         self.height = height
         self.number_sat_channels = number_sat_channels
         self.length = length
+        self.nwp_image_size = nwp_image_size
 
     def __len__(self):
         return self.length
@@ -146,7 +147,7 @@ class FakeDataset(torch.utils.data.Dataset):
             ),
             "pv_yield": torch.randn(self.batch_size, self.seq_length_5, 128),
             'pv_system_id': torch.randn(self.batch_size, 128),
-            "nwp": torch.randn(self.batch_size, 10, self.seq_length_5, 2, 2),
+            "nwp": torch.randn(self.batch_size, 10, self.seq_length_5, self.nwp_image_size, self.nwp_image_size),
             "hour_of_day_sin": torch.randn(self.batch_size, self.seq_length_5),
             "hour_of_day_cos": torch.randn(self.batch_size, self.seq_length_5),
             "day_of_year_sin": torch.randn(self.batch_size, self.seq_length_5),
