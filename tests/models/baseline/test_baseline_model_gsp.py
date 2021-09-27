@@ -55,7 +55,7 @@ def test_trainer():
     )
 
     # create fake data loader
-    train_dataset = iter(FakeDataset(configuration=configuration))
+    train_dataset = FakeDataset(configuration=configuration)
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=None)
 
     # set up trainer
