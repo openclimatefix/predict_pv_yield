@@ -80,7 +80,6 @@ class Model(BaseModel):
             * ((image_size_pixels - 2 * self.number_of_conv3d_layers) ** 2)
             * (self.forecast_len_5 + self.history_len_5 + 1 - 2 * self.number_of_conv3d_layers)
         )
-        print(self.cnn_output_size)
 
         # conv0
         self.sat_conv0 = nn.Conv3d(
