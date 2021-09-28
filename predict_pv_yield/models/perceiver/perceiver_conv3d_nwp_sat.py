@@ -156,8 +156,6 @@ class Model(BaseModel):
         #                                 0           1       2      3
         sat_data = sat_data.reshape(new_batch_size, width, height, n_chans)
 
-        print(sat_data.shape)
-
         # *********************** NWP Data ************************************
         # Shape: batch_size, channel, seq_length, width, height
         nwp_data = x["nwp"][0 : self.batch_size].float()
