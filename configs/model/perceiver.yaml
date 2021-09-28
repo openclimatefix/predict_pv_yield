@@ -6,3 +6,4 @@ batch_size: 8
 num_latents: 128
 latent_dim: 64
 embedding_dem: 16
+output_variable: gsp_yield
