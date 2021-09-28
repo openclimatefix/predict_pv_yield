@@ -167,14 +167,10 @@ class Model(BaseModel):
         batch_size, nwp_seq_len, nwp_width, nwp_height, n_nwp_chans = nwp_data.shape
         nwp_data = nwp_data.reshape(new_batch_size, nwp_width, nwp_height, n_nwp_chans)
 
-        print(nwp_data.shape)
-
         assert nwp_width == width
         assert nwp_height == height
 
         data = torch.cat((sat_data, nwp_data), dim=-1)
-
-        print(data.shape)
 
         # Perceiver
         # Pass data through the network :)
@@ -228,7 +224,6 @@ class Model(BaseModel):
             # take the history of the gsp yield of this system,
             gsp_history = x[self.output_variable][0: self.batch_size][:, : self.history_len_30 + 1, 0].unsqueeze(-1)
             encoder_input = torch.cat((rnn_input[:, : self.history_len_30 + 1], gsp_history), dim=2)
-
 
         encoder_output, encoder_hidden = self.encoder_rnn(encoder_input)
         decoder_output, _ = self.decoder_rnn(rnn_input[:, -self.forecast_len :], encoder_hidden)
