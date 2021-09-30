@@ -1,7 +1,7 @@
 _target_: predict_pv_yield.models.conv3d.model.Model
 
 include_pv_yield: False
-include_nwp: False
+include_nwp: True
 forecast_minutes: 30
 history_minutes: 60
 number_of_conv3d_layers: 4
@@ -11,3 +11,4 @@ number_sat_channels: 12
 fc1_output_features: 16
 fc2_output_features: 16
 fc3_output_features: 16
+output_variable: gsp_yield

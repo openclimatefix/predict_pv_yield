@@ -1,17 +1,17 @@
-from predict_pv_yield.models.perceiver_rnn import PerceiverRNN, params, TOTAL_SEQ_LEN
+from predict_pv_yield.models.perceiver.perceiver import PerceiverRNN, params, TOTAL_SEQ_LEN
 import torch
 
 
 def test_init_model():
     """Initilize the model"""
-    _ = PerceiverRNN(history_len=3, forecast_len=3, nwp_channels=params["nwp_channels"])
+    _ = PerceiverRNN(history_minutes=3, forecast_minutes=3, nwp_channels=params["nwp_channels"])
 
 
 def test_model_forward():
 
     model = PerceiverRNN(
-        history_len=params["history_len"],
-        forecast_len=params["forecast_len"],
+        history_minutes=params["history_minutes"],
+        forecast_minutes=params["forecast_minutes"],
         nwp_channels=params["nwp_channels"],
     )  # doesnt do anything
 
@@ -46,4 +46,4 @@ def test_model_forward():
     # check out put is the correct shape
     assert len(y.shape) == 2
     assert y.shape[0] == batch_size
-    assert y.shape[1] == params["forecast_len"]
+    assert y.shape[1] == params["forecast_minutes"] // 5

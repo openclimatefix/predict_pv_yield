@@ -11,3 +11,4 @@ number_sat_channels: 12
 fc1_output_features: 16
 fc2_output_features: 16
 fc3_output_features: 16
+output_variable: gsp_yield
