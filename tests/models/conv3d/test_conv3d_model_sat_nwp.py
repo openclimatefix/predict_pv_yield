@@ -2,7 +2,8 @@ from predict_pv_yield.models.conv3d.model_sat_nwp import Model
 import torch
 import pytorch_lightning as pl
 from predict_pv_yield.utils import load_config
-from predict_pv_yield.data.dataloader import FakeDataset
+from nowcasting_dataset.dataset.validate import FakeDataset
+from nowcasting_dataset.config.model import Configuration
 
 
 def test_init():
@@ -21,14 +22,14 @@ def test_model_forward():
     # start model
     model = Model(**config)
 
+    dataset_configuration = Configuration()
+    dataset_configuration.process.nwp_image_size_pixels = 16
+    dataset_configuration.process.satellite_image_size_pixels = config['image_size_pixels']
+    dataset_configuration.process.history_minutes = config['history_minutes']
+    dataset_configuration.process.forecast_minutes = config['forecast_minutes']
+
     # create fake data loader
-    train_dataset = FakeDataset(
-        width=config["image_size_pixels"],
-        height=config["image_size_pixels"],
-        number_sat_channels=config["number_sat_channels"],
-        seq_length_5=model.history_len_5 + model.forecast_len_5 + 1,
-        nwp_image_size=config["image_size_pixels"],
-    )
+    train_dataset = FakeDataset(configuration=dataset_configuration)
 
     x = next(iter(train_dataset))
 
@@ -46,17 +47,17 @@ def test_train():
     config_file = "tests/configs/model/conv3d_sat_nwp.yaml"
     config = load_config(config_file)
 
+    dataset_configuration = Configuration()
+    dataset_configuration.process.nwp_image_size_pixels = 16
+    dataset_configuration.process.satellite_image_size_pixels = config['image_size_pixels']
+    dataset_configuration.process.history_minutes = config['history_minutes']
+    dataset_configuration.process.forecast_minutes = config['forecast_minutes']
+
     # start model
     model = Model(**config)
 
     # create fake data loader
-    train_dataset = FakeDataset(
-        width=config["image_size_pixels"],
-        height=config["image_size_pixels"],
-        number_sat_channels=config["number_sat_channels"],
-        seq_length_5=model.history_len_5 + model.forecast_len_5 + 1,
-        nwp_image_size=config["image_size_pixels"]
-    )
+    train_dataset = FakeDataset(configuration=dataset_configuration)
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=None)
 
     # fit model

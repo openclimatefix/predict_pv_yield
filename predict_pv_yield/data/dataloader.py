@@ -1,5 +1,7 @@
 import os
 from nowcasting_dataset.dataset.datasets import NetCDFDataset, worker_init_fn
+from nowcasting_dataset.dataset.validate import FakeDataset
+from nowcasting_dataset.config.model import Configuration
 from typing import Tuple
 import logging
 import torch
@@ -81,7 +83,7 @@ class NetCDFDataModule(LightningDataModule):
 
     def train_dataloader(self):
         if self.fake_data:
-            train_dataset = FakeDataset()
+            train_dataset = FakeDataset(configuration=Configuration())
         else:
             train_dataset = NetCDFDataset(
                 self.n_train_data,
@@ -94,7 +96,7 @@ class NetCDFDataModule(LightningDataModule):
 
     def val_dataloader(self):
         if self.fake_data:
-            val_dataset = FakeDataset()
+            val_dataset = FakeDataset(configuration=Configuration())
         else:
             val_dataset = NetCDFDataset(
                 self.n_val_data,
@@ -107,7 +109,7 @@ class NetCDFDataModule(LightningDataModule):
 
     def test_dataloader(self):
         if self.fake_data:
-            test_dataset = FakeDataset()
+            test_dataset = FakeDataset(configuration=Configuration())
         else:
             # TODO need to change this to a test folder
             test_dataset = NetCDFDataset(
@@ -119,55 +121,3 @@ class NetCDFDataModule(LightningDataModule):
 
         return torch.utils.data.DataLoader(test_dataset, **self.dataloader_config)
 
-
-class FakeDataset(torch.utils.data.Dataset):
-    """Fake dataset."""
-
-    def __init__(self, batch_size=32, seq_length_5=19, seq_length_30=4, width=16, height=16, number_sat_channels=8, length=10, nwp_image_size=2):
-        self.batch_size = batch_size
-        self.seq_length_5 = seq_length_5  # the sequence data in 5 minute steps
-        self.seq_length_30 = seq_length_30  # the sequence data in 30 minute steps
-        self.width = width
-        self.height = height
-        self.number_sat_channels = number_sat_channels
-        self.length = length
-        self.nwp_image_size = nwp_image_size
-
-    def __len__(self):
-        return self.length
-
-    def per_worker_init(self, worker_id: int):
-        pass
-
-    def __getitem__(self, idx):
-
-        x = {
-            "sat_data": torch.randn(
-                self.batch_size, self.seq_length_5, self.width, self.height, self.number_sat_channels
-            ),
-            "pv_yield": torch.randn(self.batch_size, self.seq_length_5, 128),
-            'pv_system_id': torch.randn(self.batch_size, 128),
-            "nwp": torch.randn(self.batch_size, 10, self.seq_length_5, self.nwp_image_size, self.nwp_image_size),
-            "hour_of_day_sin": torch.randn(self.batch_size, self.seq_length_5),
-            "hour_of_day_cos": torch.randn(self.batch_size, self.seq_length_5),
-            "day_of_year_sin": torch.randn(self.batch_size, self.seq_length_5),
-            "day_of_year_cos": torch.randn(self.batch_size, self.seq_length_5),
-            "gsp_yield": torch.randn(self.batch_size, self.seq_length_30, 32),
-            'gsp_id': torch.randn(self.batch_size, 32),
-        }
-
-        # add a nan
-        x["pv_yield"][0, 0, :] = float("nan")
-
-        # add fake x and y coords, and make sure they are sorted
-        x['sat_x_coords'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length_5))
-        x['sat_y_coords'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length_5), descending=True)
-        x['gsp_system_x_coords'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length_30))
-        x['gsp_system_y_coords'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length_30), descending=True)
-
-        # add sorted (fake) time series
-        x['sat_datetime_index'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length_5))
-        x['nwp_target_time'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length_5))
-        x['gsp_datetime_index'], _ = torch.sort(torch.randn(self.batch_size, self.seq_length_30))
-
-        return x
