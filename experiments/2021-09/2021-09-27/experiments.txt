@@ -1,6 +1,6 @@
 # Baseline
 
-Ran baseline line on new v6 GCP dataset
+Ran baseline on new v6 GCP dataset
 
 https://app.neptune.ai/o/OpenClimateFix/org/predict-pv-yield/e/PRED-283/monitoring
 
