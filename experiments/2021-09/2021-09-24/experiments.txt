@@ -11,7 +11,7 @@ MAE = 0.0562
 
 # Conv3d
 
-ran not using nwp data, or datetimte features
+ran not using nwp data, or datetime features
 https://app.neptune.ai/o/OpenClimateFix/org/predict-pv-yield/e/PRED-314/monitoring
 
 MAE = 0.0401
