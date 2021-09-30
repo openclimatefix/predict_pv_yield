@@ -33,3 +33,4 @@ python-dotenv
 hydra-optuna-sweeper
 psutil
 plotly
+jsonschema<=3.2.0
