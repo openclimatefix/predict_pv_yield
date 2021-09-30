@@ -1,6 +1,6 @@
 # Baseline
 
-Ran baseline line on new v6 GCP dataset
+Ran baseline on new v6 GCP dataset
 
 https://app.neptune.ai/o/OpenClimateFix/org/predict-pv-yield/e/PRED-283/monitoring
 
@@ -18,7 +18,7 @@ MAE = 0.0401
 
 # Conv3d (Sat and NWP)
 
-Using both sat and nwp into tow seperate convoultion nets.
+Using both sat and nwp into two separate convolution nets.
 
 https://app.neptune.ai/OpenClimateFix/predict-pv-yield/e/PRED-320
 
