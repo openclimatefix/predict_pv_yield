@@ -18,7 +18,7 @@ MAE = 0.0401
 
 # Conv3d (Sat and NWP)
 
-Using both sat and nwp into tow seperate convoultion nets.
+Using both sat and nwp into two separate convolution nets.
 
 https://app.neptune.ai/OpenClimateFix/predict-pv-yield/e/PRED-320
 
