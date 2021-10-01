@@ -73,7 +73,7 @@ class NetCDFDataModule(LightningDataModule):
         self.pin_memory = pin_memory
         self.fake_data = fake_data
 
-        filename = f'{data_path}/configuration.yaml'
+        filename = os.path.join(data_path, 'configuration.yaml')
         _LOG.debug(f'Will be loading the configuration file {filename}')
         self.configuration = load_yaml_configuration(filename=filename)
 
