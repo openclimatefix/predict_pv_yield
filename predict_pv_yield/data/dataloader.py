@@ -64,7 +64,6 @@ class NetCDFDataModule(LightningDataModule):
         """
         super().__init__()
 
-        self.configuration = load_yaml_configuration(filename=f'{data_path}/configuration.yaml')
         self.temp_path = temp_path
         self.data_path = data_path
         self.cloud = cloud
