@@ -81,7 +81,8 @@ class Model(BaseModel):
         latent_dim: int = 64,
         embedding_dem: int = 16,
         output_variable: str = "pv_yield",
-        conv3d_channels: int = 16
+        conv3d_channels: int = 16,
+        use_future_satellite_images: bool = True,  # option not to use future sat images
     ):
         """
         Idea is to have a conv3d (+max pool) layer before both sat and nwp data go into perceiver model.
@@ -94,6 +95,7 @@ class Model(BaseModel):
         self.latent_dim = latent_dim
         self.embedding_dem = embedding_dem
         self.output_variable = output_variable
+        self.use_future_satellite_images = use_future_satellite_images
 
         super().__init__()
 
@@ -146,6 +148,10 @@ class Model(BaseModel):
         # Shape: batch_size, seq_length, width, height, channel
         # TODO: Use optical flow, not actual sat images of the future!
         sat_data = x["sat_data"][0 : self.batch_size]
+
+        if not self.use_future_satellite_images:
+            sat_data = sat_data[:, :self.history_len_5 + 1]
+
         sat_data = sat_data.permute(0, 4, 1, 2, 3)
         sat_data = self.sat_conv3d_maxpool(sat_data)
         sat_data = sat_data.permute(0, 2, 3, 4, 1)
