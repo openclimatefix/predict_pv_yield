@@ -8,3 +8,4 @@ latent_dim: 24
 embedding_dem: 0
 output_variable: gsp_yield
 conv3d_channels: 8
+use_future_satellite_images: 0

@@ -150,7 +150,7 @@ class Model(BaseModel):
         sat_data = x["sat_data"][0 : self.batch_size]
 
         if not self.use_future_satellite_images:
-            sat_data = sat_data[:, :self.history_len_5 + 1]
+            sat_data[:, -self.forecast_len_5] = 0  # This might not be the best way to do it
 
         sat_data = sat_data.permute(0, 4, 1, 2, 3)
         sat_data = self.sat_conv3d_maxpool(sat_data)
@@ -171,8 +171,8 @@ class Model(BaseModel):
         batch_size, nwp_seq_len, nwp_width, nwp_height, n_nwp_chans = nwp_data.shape
         nwp_data = nwp_data.reshape(new_batch_size, nwp_width, nwp_height, n_nwp_chans)
 
-        assert nwp_width == width
-        assert nwp_height == height
+        assert nwp_width == width, f'widths should be the same({nwp_width},{width})'
+        assert nwp_height == height, f'heights should be the same({nwp_height},{height})'
 
         data = torch.cat((sat_data, nwp_data), dim=-1)
 

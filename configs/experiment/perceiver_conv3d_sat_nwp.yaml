@@ -17,7 +17,7 @@ seed: 518
 
 trainer:
   min_epochs: 1
-  max_epochs: 10
+  max_epochs: 50
 
 datamodule:
   n_train_data: 10000

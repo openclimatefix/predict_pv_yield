@@ -15,7 +15,11 @@ def test_train():
     initialize(config_path="../configs", job_name="test_app")
     config = compose(
         config_name="config",
-        overrides=["logger=csv", "experiment=example_simple", "datamodule.fake_data=true", "trainer.fast_dev_run=true"],
+        overrides=["logger=csv",
+                   "experiment=example_simple",
+                   "datamodule.fake_data=true",
+                   "datamodule.data_path=tests/configs/dataset",
+                   "trainer.fast_dev_run=true", ],
     )
 
     train(config=config)

@@ -1,8 +1,7 @@
 import os
 from nowcasting_dataset.dataset.datasets import NetCDFDataset, worker_init_fn
 from nowcasting_dataset.dataset.validate import FakeDataset
-from nowcasting_dataset.config.load import load_configuration_from_gcs
-from nowcasting_dataset.config.model import Configuration
+from nowcasting_dataset.config.load import load_yaml_configuration
 from typing import Tuple
 import logging
 import torch
@@ -22,9 +21,9 @@ def get_dataloaders(
     data_path="prepared_ML_training_data/v4/",
 ) -> Tuple:
 
-    configuration = load_configuration_from_gcs(gcp_dir=data_path)
+    configuration = load_yaml_configuration(filename=f'{data_path}/configuration.yaml')
 
-    data_module = NetCDFDataModule(configuration=configuration,
+    data_module = NetCDFDataModule(
         temp_path=temp_path, data_path=data_path, cloud=cloud, n_train_data=n_train_data, n_val_data=n_validation_data
     )
 
@@ -51,7 +50,6 @@ class NetCDFDataModule(LightningDataModule):
 
     def __init__(
         self,
-        configuration: Configuration,
         temp_path: str = ".",
         n_train_data: int = 24900,
         n_val_data: int = 1000,
@@ -66,7 +64,7 @@ class NetCDFDataModule(LightningDataModule):
         """
         super().__init__()
 
-        self.configuration = configuration
+        self.configuration = load_yaml_configuration(filename=f'{data_path}/configuration.yaml')
         self.temp_path = temp_path
         self.data_path = data_path
         self.cloud = cloud
