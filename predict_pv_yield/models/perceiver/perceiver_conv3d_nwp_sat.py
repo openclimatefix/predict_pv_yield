@@ -150,7 +150,7 @@ class Model(BaseModel):
         sat_data = x["sat_data"][0 : self.batch_size]
 
         if not self.use_future_satellite_images:
-            sat_data[:, -self.forecast_len_5] = 0  # This might not be the best way to do it
+            sat_data[:, -self.forecast_len_5: ] = 0  # This might not be the best way to do it
 
         sat_data = sat_data.permute(0, 4, 1, 2, 3)
         sat_data = self.sat_conv3d_maxpool(sat_data)
