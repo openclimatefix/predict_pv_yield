@@ -1,5 +1,5 @@
 from predict_pv_yield.models.perceiver.perceiver import PerceiverRNN, params
-from nowcasting_dataset.dataset.validate import FakeDataset
+from nowcasting_dataloader.fake import FakeDataset
 from nowcasting_dataset.config.model import Configuration
 
 
@@ -14,7 +14,6 @@ def test_model_forward():
     dataset_configuration.process.batch_size = 2
     dataset_configuration.process.nwp_image_size_pixels = 2
     dataset_configuration.process.satellite_image_size_pixels = 16
-    dataset_configuration.process.nwp_image_size_pixels = 2
     dataset_configuration.process.history_minutes = params['history_minutes']
     dataset_configuration.process.forecast_minutes = params['forecast_minutes']
 

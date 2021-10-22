@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from torch import nn
 
 from predict_pv_yield.models.base_model import BaseModel
+from nowcasting_dataloader.batch import BatchML
 
 logging.basicConfig()
 _LOG = logging.getLogger("predict_pv_yield")
@@ -128,9 +129,13 @@ class Model(BaseModel):
         # self.fc6 = nn.Linear(in_features=8, out_features=1)
 
     def forward(self, x):
+
+        if type(x) == dict:
+            x = BatchML(**x)
+
         # ******************* Satellite imagery *************************
         # Shape: batch_size, seq_length, width, height, channel
-        sat_data = x["sat_data"]
+        sat_data = x.satellite.data
         batch_size, seq_len, width, height, n_chans = sat_data.shape
 
         # Conv3d expects channels to be the 2nd dim, https://pytorch.org/docs/stable/generated/torch.nn.Conv3d.html

@@ -7,6 +7,7 @@ import torch.nn.functional as F
 from perceiver_pytorch import Perceiver
 
 from predict_pv_yield.models.base_model import BaseModel
+from nowcasting_dataloader.batch import BatchML
 
 
 params = dict(
@@ -116,11 +117,15 @@ class PerceiverRNN(BaseModel):
         self.decoder_fc1 = nn.Linear(in_features=RNN_HIDDEN_SIZE, out_features=8)
         self.decoder_fc2 = nn.Linear(in_features=8, out_features=1)
 
-    def forward(self, x):
+    def forward(self, x: BatchML):
+
+        if type(x) == dict:
+            x = BatchML(**x)
+
         # ******************* Satellite imagery *************************
         # Shape: batch_size, seq_length, width, height, channel
         # TODO: Use optical flow, not actual sat images of the future!
-        sat_data = x["sat_data"][0 : self.batch_size]
+        sat_data = x.satellite.data[0 : self.batch_size]
         batch_size, seq_len, width, height, n_chans = sat_data.shape
 
         # Stack timesteps as examples (to make a large batch)

@@ -17,10 +17,10 @@ def test_model_forward():
 
     dataset_configuration = Configuration()
     dataset_configuration.process.batch_size = 2
-    dataset_configuration.process.nwp_image_size_pixels = 16
-    dataset_configuration.process.satellite_image_size_pixels = 16
-    dataset_configuration.process.history_minutes = params['history_minutes']
-    dataset_configuration.process.forecast_minutes = params['forecast_minutes']
+    dataset_configuration.input_data.nwp.nwp_image_size_pixels = 16
+    dataset_configuration.input_data.satellite.satellite_image_size_pixels = 16
+    dataset_configuration.input_data.default_history_minutes = params['history_minutes']
+    dataset_configuration.input_data.default_forecast_minutes = params['forecast_minutes']
 
     model = Model(
         history_minutes=params["history_minutes"],
@@ -48,10 +48,10 @@ def test_model_forward_no_forward_satelite():
 
     dataset_configuration = Configuration()
     dataset_configuration.process.batch_size = 2
-    dataset_configuration.process.nwp_image_size_pixels = 16
-    dataset_configuration.process.satellite_image_size_pixels = 16
-    dataset_configuration.process.history_minutes = params['history_minutes']
-    dataset_configuration.process.forecast_minutes = params['forecast_minutes']
+    dataset_configuration.input_data.nwp.nwp_image_size_pixels = 16
+    dataset_configuration.input_data.satellite.satellite_image_size_pixels = 16
+    dataset_configuration.input_data.default_history_minutes = params['history_minutes']
+    dataset_configuration.input_data.default_forecast_minutes = params['forecast_minutes']
 
     model = Model(
         history_minutes=params["history_minutes"],

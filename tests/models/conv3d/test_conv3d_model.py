@@ -2,7 +2,7 @@ from predict_pv_yield.models.conv3d.model import Model
 import torch
 import pytorch_lightning as pl
 from predict_pv_yield.utils import load_config
-from nowcasting_dataset.dataset.validate import FakeDataset
+from nowcasting_dataloader.fake import FakeDataset
 from nowcasting_dataset.config.model import Configuration
 
 
@@ -20,10 +20,11 @@ def test_model_forward():
     config = load_config(config_file)
 
     dataset_configuration = Configuration()
-    dataset_configuration.process.nwp_image_size_pixels = 2
-    dataset_configuration.process.satellite_image_size_pixels = config['image_size_pixels']
-    dataset_configuration.process.history_minutes = config['history_minutes']
-    dataset_configuration.process.forecast_minutes = config['forecast_minutes']
+    dataset_configuration.input_data.nwp.nwp_image_size_pixels = 2
+    dataset_configuration.input_data.satellite.satellite_image_size_pixels = config['image_size_pixels']
+    dataset_configuration.input_data.default_history_minutes = config['history_minutes']
+    dataset_configuration.input_data.default_forecast_minutes = config['forecast_minutes']
+
 
     # start model
     model = Model(**config)
@@ -47,10 +48,11 @@ def test_train():
     config = load_config(config_file)
 
     dataset_configuration = Configuration()
-    dataset_configuration.process.nwp_image_size_pixels = 2
-    dataset_configuration.process.satellite_image_size_pixels = config['image_size_pixels']
-    dataset_configuration.process.history_minutes = config['history_minutes']
-    dataset_configuration.process.forecast_minutes = config['forecast_minutes']
+    dataset_configuration.input_data.nwp.nwp_image_size_pixels = 2
+    dataset_configuration.input_data.satellite.satellite_image_size_pixels = config['image_size_pixels']
+    dataset_configuration.input_data.default_history_minutes = config['history_minutes']
+    dataset_configuration.input_data.default_forecast_minutes = config['forecast_minutes']
+
 
     # start model
     model = Model(**config)

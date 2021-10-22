@@ -1,6 +1,6 @@
 import os
-from nowcasting_dataset.dataset.datasets import NetCDFDataset, worker_init_fn
-from nowcasting_dataset.dataset.validate import FakeDataset
+from nowcasting_dataloader.datasets import NetCDFDataset, worker_init_fn
+from nowcasting_dataloader.fake import FakeDataset
 from nowcasting_dataset.config.load import load_yaml_configuration
 from typing import Tuple
 import logging

@@ -4,9 +4,10 @@ import torch.nn.functional as F
 
 from nowcasting_utils.visualization.visualization import plot_example
 from nowcasting_utils.visualization.line import plot_batch_results
-from nowcasting_dataset.data_sources.nwp_data_source import NWP_VARIABLE_NAMES
+from nowcasting_dataset.data_sources.nwp.nwp_data_source import NWP_VARIABLE_NAMES
 from nowcasting_utils.models.loss import WeightedLosses
 from nowcasting_utils.models.metrics import mae_each_forecast_horizon, mse_each_forecast_horizon
+from nowcasting_dataloader.batch import BatchML
 
 import pandas as pd
 
@@ -56,11 +57,17 @@ class BaseModel(pl.LightningModule):
         tag: either 'Train', 'Validation' , 'Test'
         """
 
+        batch = BatchML(**batch)
+
         # put the batch data through the model
         y_hat = self(batch)
 
         # get the true result out. Select the first data point, as this is the pv system in the center of the image
-        y = batch[self.output_variable][0 : self.batch_size, -self.forecast_len :, 0]
+        if self.output_variable == 'gsp_yield':
+            y = batch.gsp.gsp_yield
+        else:
+            y = batch.pv.pv_yield
+        y = y[0 : self.batch_size, -self.forecast_len :, 0]
 
         # calculate mse, mae
         mse_loss = F.mse_loss(y_hat, y)

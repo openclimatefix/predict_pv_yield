@@ -7,6 +7,7 @@ import torch.nn.functional as F
 from perceiver_pytorch import Perceiver
 
 from predict_pv_yield.models.base_model import BaseModel
+from nowcasting_dataloader.batch import BatchML
 
 
 params = dict(
@@ -144,10 +145,14 @@ class Model(BaseModel):
         self.decoder_fc2 = nn.Linear(in_features=8, out_features=1)
 
     def forward(self, x):
+
+        if type(x) == dict:
+            x = BatchML(**x)
+
         # ******************* Satellite imagery *************************
         # Shape: batch_size, seq_length, width, height, channel
         # TODO: Use optical flow, not actual sat images of the future!
-        sat_data = x["sat_data"][0 : self.batch_size]
+        sat_data = x.satellite.data[0 : self.batch_size]
 
         if not self.use_future_satellite_images:
             sat_data[:, -self.forecast_len_5: ] = 0  # This might not be the best way to do it
