@@ -114,8 +114,8 @@ class BaseModel(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         INTERESTING_EXAMPLES = (1, 5, 6, 7, 9, 11, 17, 19)
-        name = f"validation/plot/epoch{self.current_epoch}"
-        if batch_idx == 0:
+        name = f"validation/plot/epoch_{self.current_epoch}_{batch_idx}"
+        if batch_idx in [0, 1, 2, 3, 4]:
 
             # get model outputs
             model_output = self(batch)

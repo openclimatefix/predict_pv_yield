@@ -1,11 +1,12 @@
 import os
 from nowcasting_dataset.dataset.datasets import NetCDFDataset, worker_init_fn
 from nowcasting_dataset.dataset.validate import FakeDataset
-from nowcasting_dataset.config.model import Configuration
+from nowcasting_dataset.config.load import load_yaml_configuration
 from typing import Tuple
 import logging
 import torch
 from pytorch_lightning import LightningDataModule
+
 
 
 _LOG = logging.getLogger(__name__)
@@ -19,6 +20,8 @@ def get_dataloaders(
     temp_path=".",
     data_path="prepared_ML_training_data/v4/",
 ) -> Tuple:
+
+    configuration = load_yaml_configuration(filename=f'{data_path}/configuration.yaml')
 
     data_module = NetCDFDataModule(
         temp_path=temp_path, data_path=data_path, cloud=cloud, n_train_data=n_train_data, n_val_data=n_validation_data
@@ -70,6 +73,10 @@ class NetCDFDataModule(LightningDataModule):
         self.pin_memory = pin_memory
         self.fake_data = fake_data
 
+        filename = os.path.join(data_path, 'configuration.yaml')
+        _LOG.debug(f'Will be loading the configuration file {filename}')
+        self.configuration = load_yaml_configuration(filename=filename)
+
         self.dataloader_config = dict(
             pin_memory=self.pin_memory,
             num_workers=self.num_workers,
@@ -83,33 +90,35 @@ class NetCDFDataModule(LightningDataModule):
 
     def train_dataloader(self):
         if self.fake_data:
-            train_dataset = FakeDataset(configuration=Configuration())
+            train_dataset = FakeDataset(configuration=self.configuration)
         else:
             train_dataset = NetCDFDataset(
                 self.n_train_data,
                 os.path.join(self.data_path, "train"),
                 os.path.join(self.temp_path, "train"),
                 cloud=self.cloud,
+                configuration=self.configuration
             )
 
         return torch.utils.data.DataLoader(train_dataset, **self.dataloader_config)
 
     def val_dataloader(self):
         if self.fake_data:
-            val_dataset = FakeDataset(configuration=Configuration())
+            val_dataset = FakeDataset(configuration=self.configuration)
         else:
             val_dataset = NetCDFDataset(
                 self.n_val_data,
                 os.path.join(self.data_path, "validation"),
                 os.path.join(self.temp_path, "validation"),
                 cloud=self.cloud,
+                configuration=self.configuration
             )
 
         return torch.utils.data.DataLoader(val_dataset, **self.dataloader_config)
 
     def test_dataloader(self):
         if self.fake_data:
-            test_dataset = FakeDataset(configuration=Configuration())
+            test_dataset = FakeDataset(configuration=self.configuration)
         else:
             # TODO need to change this to a test folder
             test_dataset = NetCDFDataset(
@@ -117,6 +126,7 @@ class NetCDFDataModule(LightningDataModule):
                 os.path.join(self.data_path, "validation"),
                 os.path.join(self.temp_path, "validation"),
                 cloud=self.cloud,
+                configuration=self.configuration
             )
 
         return torch.utils.data.DataLoader(test_dataset, **self.dataloader_config)

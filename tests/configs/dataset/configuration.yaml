@@ -1,0 +1,32 @@
+general:
+  description: example configuration
+  name: example
+input_data:
+  nwp_zarr_path: tests/data/nwp_data/test.zarr
+  satellite_zarr_path: tests/data/sat_data.zarr
+  solar_pv_data_filename: tests/data/pv_data/test.nc
+  solar_pv_metadata_filename: tests/data/pv_metadata/UK_PV_metadata.csv
+  gsp_zarr_path: tests/data/gsp/test.zarr
+  topographic_filename: tests/data/europe_dem_2km_osgb.tif
+  sun_zarr_path: tests/data/sun/test.zarr
+output_data:
+  filepath: not used by unittests!
+process:
+  batch_size: 32
+  forecast_minutes: 60
+  history_minutes: 30
+  satellite_image_size_pixels: 64
+  nwp_image_size_pixels: 2
+  nwp_channels:
+    - t
+    - dswrf
+    - prate
+    - r
+    - sde
+    - si10
+    - vis
+    - lcc
+    - mcc
+    - hcc
+  sat_channels:
+    - HRV

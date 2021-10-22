@@ -22,4 +22,4 @@ Using both sat and nwp into two separate convolution nets.
 
 https://app.neptune.ai/OpenClimateFix/predict-pv-yield/e/PRED-320
 
-# TODO Currently running
+MAE = 0.0376 - this was after 10 epochs, and I think it was still going down.
