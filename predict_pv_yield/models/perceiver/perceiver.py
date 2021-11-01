@@ -142,7 +142,7 @@ class PerceiverRNN(BaseModel):
         # ********************** Embedding of PV system ID ********************
         if self.embedding_dem:
             pv_row = (
-                x["pv_system_row_number"][0 : self.batch_size, 0].type(torch.IntTensor).repeat_interleave(TOTAL_SEQ_LEN)
+                x.pv.pv_system_row_number[0 : self.batch_size, 0].type(torch.IntTensor).repeat_interleave(TOTAL_SEQ_LEN)
             )
             pv_row = pv_row.to(out.device)
             pv_embedding = self.pv_system_id_embedding(pv_row)
@@ -163,8 +163,9 @@ class PerceiverRNN(BaseModel):
         # datetime features.
 
         # *********************** NWP Data ************************************
-        # Shape: batch_size, channel, seq_length, width, height
-        nwp_data = x["nwp"][0 : self.batch_size].float()
+        # Shape: batch_size, seq_length, width, height, channel
+        nwp_data = x.nwp.data[0 : self.batch_size].float()
+        nwp_data = nwp_data.permute(0, 4, 1, 2, 3)
         # RNN expects seq_len to be dim 1.
         nwp_data = nwp_data.permute(0, 2, 1, 3, 4)
         batch_size, nwp_seq_len, n_nwp_chans, nwp_width, nwp_height = nwp_data.shape
@@ -175,21 +176,21 @@ class PerceiverRNN(BaseModel):
             (
                 out,
                 nwp_data,
-                x["hour_of_day_sin"][0 : self.batch_size].unsqueeze(-1),
-                x["hour_of_day_cos"][0 : self.batch_size].unsqueeze(-1),
-                x["day_of_year_sin"][0 : self.batch_size].unsqueeze(-1),
-                x["day_of_year_cos"][0 : self.batch_size].unsqueeze(-1),
+                x.datetime.hour_of_day_sin[0 : self.batch_size].unsqueeze(-1),
+                x.datetime.hour_of_day_cos[0 : self.batch_size].unsqueeze(-1),
+                x.datetime.day_of_year_sin[0 : self.batch_size].unsqueeze(-1),
+                x.datetime.day_of_year_cos[0 : self.batch_size].unsqueeze(-1),
             ),
             dim=2,
         )
 
         if self.output_variable == 'pv_yield':
             # take the history of the pv yield of this system,
-            pv_yield_history = x["pv_yield"][0: self.batch_size][:, : self.history_len_5 + 1, 0].unsqueeze(-1)
+            pv_yield_history = x.pv.pv_yield[0: self.batch_size][:, : self.history_len_5 + 1, 0].unsqueeze(-1)
             encoder_input = torch.cat((rnn_input[:, : self.history_len_5 + 1], pv_yield_history), dim=2)
         elif self.output_variable == 'gsp_yield':
             # take the history of the gsp yield of this system,
-            gsp_history = x[self.output_variable][0: self.batch_size][:, : self.history_len_30 + 1, 0].unsqueeze(-1)
+            gsp_history = x.gsp.gsp_yield[0: self.batch_size][:, : self.history_len_30 + 1, 0].unsqueeze(-1)
             encoder_input = torch.cat((rnn_input[:, : self.history_len_30 + 1], gsp_history), dim=2)
 
         encoder_output, encoder_hidden = self.encoder_rnn(encoder_input)

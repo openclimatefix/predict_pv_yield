@@ -13,14 +13,9 @@ def test_init_model():
     )
 
 
-def test_model_forward():
+def test_model_forward(configuration_perceiver):
 
-    dataset_configuration = Configuration()
-    dataset_configuration.process.batch_size = 2
-    dataset_configuration.input_data.nwp.nwp_image_size_pixels = 16
-    dataset_configuration.input_data.satellite.satellite_image_size_pixels = 16
-    dataset_configuration.input_data.default_history_minutes = params['history_minutes']
-    dataset_configuration.input_data.default_forecast_minutes = params['forecast_minutes']
+    dataset_configuration = configuration_perceiver
 
     model = Model(
         history_minutes=params["history_minutes"],
@@ -30,10 +25,10 @@ def test_model_forward():
     )  # doesnt do anything
 
     # set up fake data
-    train_dataset = iter(FakeDataset(configuration=dataset_configuration))
-
-    # satellite data
-    x = next(train_dataset)
+    train_dataset = FakeDataset(configuration=dataset_configuration)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=None)
+    # get data
+    x = next(iter(train_dataloader))
 
     # run data through model
     y = model(x)
@@ -44,14 +39,9 @@ def test_model_forward():
     assert y.shape[1] == params["forecast_minutes"] // 30
 
 
-def test_model_forward_no_forward_satelite():
+def test_model_forward_no_forward_satelite(configuration_perceiver):
 
-    dataset_configuration = Configuration()
-    dataset_configuration.process.batch_size = 2
-    dataset_configuration.input_data.nwp.nwp_image_size_pixels = 16
-    dataset_configuration.input_data.satellite.satellite_image_size_pixels = 16
-    dataset_configuration.input_data.default_history_minutes = params['history_minutes']
-    dataset_configuration.input_data.default_forecast_minutes = params['forecast_minutes']
+    dataset_configuration = configuration_perceiver
 
     model = Model(
         history_minutes=params["history_minutes"],
@@ -61,11 +51,10 @@ def test_model_forward_no_forward_satelite():
         use_future_satellite_images=False
     )  # doesnt do anything
 
-    # set up fake data
-    train_dataset = iter(FakeDataset(configuration=dataset_configuration))
-
-    # satellite data
-    x = next(train_dataset)
+    train_dataset = FakeDataset(configuration=dataset_configuration)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=None)
+    # get data
+    x = next(iter(train_dataloader))
 
     # run data through model
     y = model(x)

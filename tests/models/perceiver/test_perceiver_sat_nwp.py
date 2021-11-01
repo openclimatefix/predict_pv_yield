@@ -10,7 +10,12 @@ def test_init_model():
     )
 
 
-def test_model_forward():
+def test_model_forward(configuration_perceiver):
+
+    dataset_configuration = configuration_perceiver
+    dataset_configuration.process.batch_size = 2
+    dataset_configuration.input_data.nwp.nwp_image_size_pixels = 16
+    dataset_configuration.input_data.satellite.satellite_image_size_pixels = 16
 
     model = Model(
         history_minutes=params["history_minutes"],
@@ -19,32 +24,12 @@ def test_model_forward():
         output_variable="gsp_yield",
     )  # doesnt do anything
 
-    # setup parameters TODO, should take this from a config file
     batch_size = 2
-    seq_length = TOTAL_SEQ_LEN
-    seq_length_30 = 4
-    width = 16  # this doesnt seem to matter
-    height = 16  # this doesnt seem to matterO
-    channel = len(params["sat_channels"])
-    nwp_channels = len(params["nwp_channels"])
-
     # set up fake data
-    # satelite data
-    x = {"sat_data": torch.randn(batch_size, seq_length, width, height, channel)}
-
-    # numerical weather predictions
-    x["nwp"] = torch.randn(batch_size, nwp_channels, seq_length, width, height)
-
-    # setup fake hour of the day, an dat of the year parameters
-    for time_variable in ["hour_of_day_sin", "hour_of_day_cos", "day_of_year_sin", "day_of_year_cos"]:
-        x[time_variable] = torch.randn(batch_size, seq_length)
-
-    # setup pv index number, make suer model can handle it as floats
-    x["pv_system_row_number"] = torch.randint(high=940, size=(batch_size, 1)).type(torch.FloatTensor)
-
-    # pv yield data
-    x["pv_yield"] = torch.randn(batch_size, seq_length, 1)
-    x["gsp_yield"] = torch.randn(batch_size, 4, 1)
+    train_dataset = FakeDataset(configuration=dataset_configuration)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=None)
+    # get data
+    x = next(iter(train_dataloader))
 
     # run data through model
     y = model(x)

@@ -1,6 +1,7 @@
 from predict_pv_yield.models.perceiver.perceiver import PerceiverRNN, params
 from predict_pv_yield.data.dataloader import FakeDataset
 from nowcasting_dataset.config.model import Configuration
+import torch
 
 
 def test_init_model():
@@ -10,15 +11,12 @@ def test_init_model():
     )
 
 
-def test_model_forward():
+def test_model_forward(configuration_perceiver):
 
-    dataset_configuration = Configuration()
+    dataset_configuration = configuration_perceiver
     dataset_configuration.process.batch_size = 2
     dataset_configuration.input_data.nwp.nwp_image_size_pixels = 2
     dataset_configuration.input_data.satellite.satellite_image_size_pixels = 16
-    dataset_configuration.input_data.nwp.nwp_image_size_pixels = 2
-    dataset_configuration.input_data.default_forecast_minutes = params['history_minutes']
-    dataset_configuration.input_data.default_forecast_minutes = params['forecast_minutes']
 
     model = PerceiverRNN(
         history_minutes=params["history_minutes"],
@@ -28,11 +26,10 @@ def test_model_forward():
     )  # doesnt do anything
 
     # set up fake data
-    train_dataset = iter(
-        FakeDataset(configuration=dataset_configuration)
-    )
-    # satellite data
-    x = next(train_dataset)
+    train_dataset = FakeDataset(configuration=dataset_configuration)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=None)
+    # get data
+    x = next(iter(train_dataloader))
 
     # run data through model
     y = model(x)

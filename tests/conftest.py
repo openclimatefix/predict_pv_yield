@@ -30,3 +30,18 @@ def configuration_conv3d():
     dataset_configuration.input_data.default_forecast_minutes = config['forecast_minutes']
 
     return dataset_configuration
+
+
+@pytest.fixture()
+def configuration_perceiver():
+
+    dataset_configuration = Configuration()
+    dataset_configuration.input_data = dataset_configuration.input_data.set_all_to_defaults()
+    dataset_configuration.process.batch_size = 2
+    dataset_configuration.input_data.nwp.nwp_image_size_pixels = 16
+    dataset_configuration.input_data.satellite.satellite_image_size_pixels = 16
+    dataset_configuration.input_data.default_history_minutes = 60
+    dataset_configuration.input_data.default_forecast_minutes = 30
+
+
+    return dataset_configuration
