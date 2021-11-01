@@ -167,8 +167,11 @@ class Model(BaseModel):
 
         # *********************** NWP Data ************************************
         if self.include_nwp:
-            # Shape: batch_size, channel, seq_length, width, height
-            nwp_data = x["nwp"]
+
+            # Shape: batch_size, seq_length, width, height, channel
+            nwp_data = x.nwp.data
+            nwp_data = nwp_data.permute(0, 4, 1, 3, 2)
+            # Now shape: batch_size, n_chans, seq_len, height, width
 
             out_nwp = F.relu(self.nwp_conv0(nwp_data))
             for i in range(0, self.number_of_conv3d_layers - 1):
@@ -186,10 +189,10 @@ class Model(BaseModel):
         # ########## include time variables #########
         if self.include_time:
             # just take the value now
-            x_sin_hour = x["hour_of_day_sin"][:, self.history_len_5 + 1].unsqueeze(dim=1)
-            x_cos_hour = x["hour_of_day_cos"][:, self.history_len_5 + 1].unsqueeze(dim=1)
-            x_sin_day = x["day_of_year_sin"][:, self.history_len_5 + 1].unsqueeze(dim=1)
-            x_cos_day = x["day_of_year_cos"][:, self.history_len_5 + 1].unsqueeze(dim=1)
+            x_sin_hour = x.datetime.hour_of_day_sin[:, self.history_len_5 + 1].unsqueeze(dim=1)
+            x_cos_hour = x.datetime.hour_of_day_cos[:, self.history_len_5 + 1].unsqueeze(dim=1)
+            x_sin_day = x.datetime.day_of_year_sin[:, self.history_len_5 + 1].unsqueeze(dim=1)
+            x_cos_day = x.datetime.day_of_year_cos[:, self.history_len_5 + 1].unsqueeze(dim=1)
 
             # join up
             out = torch.cat((out, x_sin_hour, x_cos_hour, x_sin_day, x_cos_day), dim=1)

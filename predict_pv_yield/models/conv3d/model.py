@@ -159,10 +159,10 @@ class Model(BaseModel):
         # ########## include time variables #########
         if self.include_time:
             # just take the value now
-            x_sin_hour = x["hour_of_day_sin"][:, self.history_len_5 + 1].unsqueeze(dim=1)
-            x_cos_hour = x["hour_of_day_cos"][:, self.history_len_5 + 1].unsqueeze(dim=1)
-            x_sin_day = x["day_of_year_sin"][:, self.history_len_5 + 1].unsqueeze(dim=1)
-            x_cos_day = x["day_of_year_cos"][:, self.history_len_5 + 1].unsqueeze(dim=1)
+            x_sin_hour = x.datetime.hour_of_day_sin[:, self.history_len_5 + 1].unsqueeze(dim=1)
+            x_cos_hour = x.datetime.hour_of_day_cos[:, self.history_len_5 + 1].unsqueeze(dim=1)
+            x_sin_day = x.datetime.day_of_year_sin[:, self.history_len_5 + 1].unsqueeze(dim=1)
+            x_cos_day = x.datetime.day_of_year_cos[:, self.history_len_5 + 1].unsqueeze(dim=1)
 
             out = torch.cat((out, x_sin_hour, x_cos_hour, x_sin_day, x_cos_day), dim=1)
 

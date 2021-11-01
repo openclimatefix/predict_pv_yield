@@ -10,22 +10,17 @@ def test_init():
     _ = Model()
 
 
-def test_model_forward():
-    configuration = Configuration()
-    configuration.process.batch_size = 32
-    configuration.input_data.default_history_minutes = 30
-    configuration.input_data.default_forecast_minutes = 60
-    configuration.input_data.nwp.nwp_image_size_pixels = 16
+def test_model_forward(configuration):
 
     # start model
     model = Model(forecast_minutes=configuration.input_data.default_forecast_minutes)
 
-    # set up fake data
-    train_dataset = iter(
-        FakeDataset(configuration=configuration)
-    )
+    # create fake data loader
+    train_dataset = FakeDataset(configuration=configuration)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=None)
+
     # satellite data
-    x = next(train_dataset)
+    x = next(iter(train_dataloader))
 
     # run data through model
     y = model(x)
@@ -36,12 +31,7 @@ def test_model_forward():
     assert y.shape[1] == configuration.input_data.default_forecast_minutes // 5
 
 
-def test_trainer():
-    configuration = Configuration()
-    configuration.process.batch_size = 32
-    configuration.input_data.default_history_minutes = 30
-    configuration.input_data.default_forecast_minutes = 60
-    configuration.input_data.nwp.nwp_image_size_pixels = 16
+def test_trainer(configuration):
 
     # start model
     model = Model(forecast_minutes=configuration.input_data.default_forecast_minutes)

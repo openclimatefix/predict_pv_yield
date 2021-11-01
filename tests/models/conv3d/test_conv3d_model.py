@@ -14,24 +14,20 @@ def test_init():
     _ = Model(**config)
 
 
-def test_model_forward():
+def test_model_forward(configuration_conv3d):
 
     config_file = "tests/configs/model/conv3d.yaml"
     config = load_config(config_file)
 
-    dataset_configuration = Configuration()
-    dataset_configuration.input_data.nwp.nwp_image_size_pixels = 2
-    dataset_configuration.input_data.satellite.satellite_image_size_pixels = config['image_size_pixels']
-    dataset_configuration.input_data.default_history_minutes = config['history_minutes']
-    dataset_configuration.input_data.default_forecast_minutes = config['forecast_minutes']
-
+    dataset_configuration = configuration_conv3d
 
     # start model
     model = Model(**config)
 
     # create fake data loader
-    train_dataset = iter(FakeDataset(configuration=dataset_configuration))
-    x = next(train_dataset)
+    train_dataset = FakeDataset(configuration=dataset_configuration)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=None)
+    x = next(iter(train_dataloader))
 
     # run data through model
     y = model(x)
@@ -42,17 +38,12 @@ def test_model_forward():
     assert y.shape[1] == model.forecast_len_5
 
 
-def test_train():
+def test_train(configuration_conv3d):
 
     config_file = "tests/configs/model/conv3d.yaml"
     config = load_config(config_file)
 
-    dataset_configuration = Configuration()
-    dataset_configuration.input_data.nwp.nwp_image_size_pixels = 2
-    dataset_configuration.input_data.satellite.satellite_image_size_pixels = config['image_size_pixels']
-    dataset_configuration.input_data.default_history_minutes = config['history_minutes']
-    dataset_configuration.input_data.default_forecast_minutes = config['forecast_minutes']
-
+    dataset_configuration = configuration_conv3d
 
     # start model
     model = Model(**config)
