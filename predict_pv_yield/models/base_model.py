@@ -57,7 +57,8 @@ class BaseModel(pl.LightningModule):
         tag: either 'Train', 'Validation' , 'Test'
         """
 
-        batch = BatchML(**batch)
+        if type(batch) == dict:
+            batch = BatchML(**batch)
 
         # put the batch data through the model
         y_hat = self(batch)
@@ -119,7 +120,11 @@ class BaseModel(pl.LightningModule):
         else:
             return self._training_or_validation_step(batch, tag="Train")
 
-    def validation_step(self, batch, batch_idx):
+    def validation_step(self, batch: BatchML, batch_idx):
+
+        if type(batch) == dict:
+            batch = BatchML(**batch)
+
         INTERESTING_EXAMPLES = (1, 5, 6, 7, 9, 11, 17, 19)
         name = f"validation/plot/epoch_{self.current_epoch}_{batch_idx}"
         if batch_idx in [0, 1, 2, 3, 4]:
@@ -132,35 +137,39 @@ class BaseModel(pl.LightningModule):
 
             for example_i in INTERESTING_EXAMPLES:
                 # 1. Plot example
-                fig = plot_example(
-                    batch,
-                    model_output,
-                    history_minutes=self.history_len_5*5,
-                    forecast_minutes=self.forecast_len_5*5,
-                    nwp_channels=NWP_VARIABLE_NAMES,
-                    example_i=example_i,
-                    epoch=self.current_epoch,
-                    output_variable=self.output_variable
-                )
+                if 0:
+                    fig = plot_example(
+                        batch,
+                        model_output,
+                        history_minutes=self.history_len_5*5,
+                        forecast_minutes=self.forecast_len_5*5,
+                        nwp_channels=NWP_VARIABLE_NAMES,
+                        example_i=example_i,
+                        epoch=self.current_epoch,
+                        output_variable=self.output_variable
+                    )
 
-                # save fig to log
-                self.logger.experiment[-1].log_image(name, fig)
-                try:
-                    fig.close()
-                except Exception as _:
-                    # could not close figure
-                    pass
+                    # save fig to log
+                    self.logger.experiment[-1].log_image(name, fig)
+                    try:
+                        fig.close()
+                    except Exception as _:
+                        # could not close figure
+                        pass
 
                 # 2. plot summary batch of predictions and results
                 # make x,y data
-                y = batch[self.output_variable][0 : self.batch_size, :, 0].cpu().numpy()
+                if self.output_variable == 'gsp_yield':
+                    y = batch.gsp.gsp_yield[0: self.batch_size, :, 0].cpu().numpy()
+                else:
+                    y = batch.pv.pv_yield[0 : self.batch_size, :, 0].cpu().numpy()
                 y_hat = model_output[0 : self.batch_size].cpu().numpy()
                 time = [
-                    pd.to_datetime(x, unit="s") for x in batch["gsp_datetime_index"][0 : self.batch_size].cpu().numpy()
+                    pd.to_datetime(x, unit="s") for x in batch.gsp.gsp_datetime_index[0 : self.batch_size].cpu().numpy()
                 ]
                 time_hat = [
                     pd.to_datetime(x, unit="s")
-                    for x in batch["gsp_datetime_index"][0 : self.batch_size, self.history_len_30 + 1 :].cpu().numpy()
+                    for x in batch.gsp.gsp_datetime_index[0 : self.batch_size, self.history_len_30 + 1 :].cpu().numpy()
                 ]
 
                 # plot and save to logger
