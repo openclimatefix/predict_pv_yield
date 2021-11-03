@@ -123,7 +123,7 @@ class Model(BaseModel):
             x = BatchML(**x)
 
         # ******************* Satellite imagery *************************
-        # Shape: batch_size, seq_length, width, height, channel
+        # Shape: batch_size, channel, seq_length, height, width
         # TODO: Use optical flow, not actual sat images of the future!
         sat_data = x.satellite.data[0 : self.batch_size]
         batch_size, seq_len, width, height, n_chans = sat_data.shape
@@ -136,7 +136,6 @@ class Model(BaseModel):
         # *********************** NWP Data ************************************
         # Shape: batch_size, seq_length, width, height, channel
         nwp_data = x.nwp.data[0: self.batch_size].float()
-        nwp_data = nwp_data.permute(0, 4, 1, 2, 3)
         # Perciever expects seq_len to be dim 1, and channels at the end
         nwp_data = nwp_data.permute(0, 2, 3, 4, 1)
         print(nwp_data.shape)

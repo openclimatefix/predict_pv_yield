@@ -134,13 +134,9 @@ class Model(BaseModel):
             x = BatchML(**x)
 
         # ******************* Satellite imagery *************************
-        # Shape: batch_size, seq_length, width, height, channel
+        # Shape: batch_size, channel, seq_length, height, width
         sat_data = x.satellite.data
-        batch_size, seq_len, width, height, n_chans = sat_data.shape
-
-        # Conv3d expects channels to be the 2nd dim, https://pytorch.org/docs/stable/generated/torch.nn.Conv3d.html
-        sat_data = sat_data.permute(0, 4, 1, 3, 2)
-        # Now shape: batch_size, n_chans, seq_len, height, width
+        batch_size, n_chans, seq_len, height, width = sat_data.shape
 
         # :) Pass data through the network :)
         out = F.relu(self.sat_conv0(sat_data))
@@ -168,10 +164,8 @@ class Model(BaseModel):
         # *********************** NWP Data ************************************
         if self.include_nwp:
 
-            # Shape: batch_size, seq_length, width, height, channel
+            # shape: batch_size, n_chans, seq_len, height, width
             nwp_data = x.nwp.data
-            nwp_data = nwp_data.permute(0, 4, 1, 3, 2)
-            # Now shape: batch_size, n_chans, seq_len, height, width
 
             out_nwp = F.relu(self.nwp_conv0(nwp_data))
             for i in range(0, self.number_of_conv3d_layers - 1):
