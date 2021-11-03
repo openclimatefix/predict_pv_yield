@@ -13,7 +13,7 @@ h5netcdf
 gcsfs
 scikit-image
 torch
-pytorch-lightning
+pytorch-lightning<1.5.0
 perceiver_pytorch
 dask
 pvlib
