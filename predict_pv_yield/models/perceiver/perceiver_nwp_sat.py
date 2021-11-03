@@ -44,7 +44,6 @@ SAT_Y_STD = np.float32(406454.17945938)
 
 TOTAL_SEQ_LEN = params["history_minutes"] // 5 + params["forecast_minutes"] // 5 + 1
 NWP_SIZE = len(params["nwp_channels"]) * 2 * 2  # channels x width x height
-N_DATETIME_FEATURES = 4
 PERCEIVER_OUTPUT_SIZE = 512
 FC_OUTPUT_SIZE = 8
 RNN_HIDDEN_SIZE = 16
@@ -102,13 +101,13 @@ class Model(BaseModel):
         # TODO: Get rid of RNNs!
         self.encoder_rnn = nn.GRU(
             # plus 1 for history
-            input_size=FC_OUTPUT_SIZE + N_DATETIME_FEATURES + 1,
+            input_size=FC_OUTPUT_SIZE + 1,
             hidden_size=RNN_HIDDEN_SIZE,
             num_layers=2,
             batch_first=True,
         )
         self.decoder_rnn = nn.GRU(
-            input_size=FC_OUTPUT_SIZE + N_DATETIME_FEATURES,
+            input_size=FC_OUTPUT_SIZE,
             hidden_size=RNN_HIDDEN_SIZE,
             num_layers=2,
             batch_first=True,
@@ -126,7 +125,8 @@ class Model(BaseModel):
         # Shape: batch_size, channel, seq_length, height, width
         # TODO: Use optical flow, not actual sat images of the future!
         sat_data = x.satellite.data[0 : self.batch_size]
-        batch_size, seq_len, width, height, n_chans = sat_data.shape
+        batch_size, n_chans, seq_len, width, height = sat_data.shape
+        sat_data = sat_data.permute(0, 2, 3, 4, 1)
 
         # Stack timesteps as examples (to make a large batch)
         new_batch_size = batch_size * seq_len
@@ -134,7 +134,7 @@ class Model(BaseModel):
         sat_data = sat_data.reshape(new_batch_size, width, height, n_chans)
 
         # *********************** NWP Data ************************************
-        # Shape: batch_size, seq_length, width, height, channel
+        # Shape: batch_size, channel, seq_length, height, width
         nwp_data = x.nwp.data[0: self.batch_size].float()
         # Perciever expects seq_len to be dim 1, and channels at the end
         nwp_data = nwp_data.permute(0, 2, 3, 4, 1)
@@ -183,10 +183,6 @@ class Model(BaseModel):
         rnn_input = torch.cat(
             (
                 out,
-                x.datetime.hour_of_day_sin[0 : self.batch_size].unsqueeze(-1),
-                x.datetime.hour_of_day_cos[0 : self.batch_size].unsqueeze(-1),
-                x.datetime.day_of_year_sin[0 : self.batch_size].unsqueeze(-1),
-                x.datetime.day_of_year_cos[0 : self.batch_size].unsqueeze(-1),
             ),
             dim=2,
         )

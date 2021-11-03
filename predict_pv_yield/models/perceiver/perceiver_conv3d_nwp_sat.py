@@ -129,13 +129,13 @@ class Model(BaseModel):
         # TODO: Get rid of RNNs!
         self.encoder_rnn = nn.GRU(
             # plus 1 for history
-            input_size=FC_OUTPUT_SIZE + N_DATETIME_FEATURES + 1,
+            input_size=FC_OUTPUT_SIZE + 1,
             hidden_size=RNN_HIDDEN_SIZE,
             num_layers=2,
             batch_first=True,
         )
         self.decoder_rnn = nn.GRU(
-            input_size=FC_OUTPUT_SIZE + N_DATETIME_FEATURES,
+            input_size=FC_OUTPUT_SIZE,
             hidden_size=RNN_HIDDEN_SIZE,
             num_layers=2,
             batch_first=True,
@@ -216,10 +216,6 @@ class Model(BaseModel):
         rnn_input = torch.cat(
             (
                 out,
-                x.datetime.hour_of_day_sin[0 : self.batch_size].unsqueeze(-1),
-                x.datetime.hour_of_day_cos[0 : self.batch_size].unsqueeze(-1),
-                x.datetime.day_of_year_sin[0 : self.batch_size].unsqueeze(-1),
-                x.datetime.day_of_year_cos[0 : self.batch_size].unsqueeze(-1),
             ),
             dim=2,
         )

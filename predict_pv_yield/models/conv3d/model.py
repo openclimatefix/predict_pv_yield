@@ -19,7 +19,6 @@ class Model(BaseModel):
         self,
         include_pv_yield: bool = True,
         include_nwp: bool = True,
-        include_time: bool = True,
         forecast_minutes: int = 30,
         history_minutes: int = 60,
         number_of_conv3d_layers: int = 4,
@@ -43,7 +42,6 @@ class Model(BaseModel):
 
         include_pv_yield: include pv yield data
         include_nwp: include nwp data
-        include_time: include hour of data, and day of year as sin and cos components
         forecast_len: the amount of minutes that should be forecasted
         history_len: the amount of historical minutes that are used
         number_of_conv3d_layers, number of convolution 3d layers that are use
@@ -58,7 +56,6 @@ class Model(BaseModel):
 
         self.include_pv_yield = include_pv_yield
         self.include_nwp = include_nwp
-        self.include_time = include_time
         self.number_of_conv3d_layers = number_of_conv3d_layers
         self.number_of_nwp_features = 10 * 19 * 2 * 2
         self.fc1_output_features = fc1_output_features
@@ -101,8 +98,6 @@ class Model(BaseModel):
         if include_nwp:
             self.fc_nwp = nn.Linear(in_features=self.number_of_nwp_features, out_features=128)
             fc3_in_features += 128
-        if include_time:
-            fc3_in_features += 4
 
         self.fc3 = nn.Linear(in_features=fc3_in_features, out_features=self.fc3_output_features)
         self.fc4 = nn.Linear(in_features=self.fc3_output_features, out_features=self.forecast_len)
@@ -151,16 +146,6 @@ class Model(BaseModel):
 
             # join with other FC layer
             out = torch.cat((out, out_nwp), dim=1)
-
-        # ########## include time variables #########
-        if self.include_time:
-            # just take the value now
-            x_sin_hour = x.datetime.hour_of_day_sin[:, self.history_len_5 + 1].unsqueeze(dim=1)
-            x_cos_hour = x.datetime.hour_of_day_cos[:, self.history_len_5 + 1].unsqueeze(dim=1)
-            x_sin_day = x.datetime.day_of_year_sin[:, self.history_len_5 + 1].unsqueeze(dim=1)
-            x_cos_day = x.datetime.day_of_year_cos[:, self.history_len_5 + 1].unsqueeze(dim=1)
-
-            out = torch.cat((out, x_sin_hour, x_cos_hour, x_sin_day, x_cos_day), dim=1)
 
         # Fully connected layers.
         out = F.relu(self.fc3(out))
