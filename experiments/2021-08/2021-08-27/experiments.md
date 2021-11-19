@@ -1,8 +1,8 @@
 # Daily Experiments
 
-Ran hydra for the first time, for hyper parameters optermization. 
+Ran hydra for the first time, for hyper parameters optermization.
 It did 2 full runs, then I think ran out of memory caused a funny error.
-Now have install 'psutil' so that cpu and memory is logged to neptune. 
+Now have install 'psutil' so that cpu and memory is logged to neptune.
 
 https://app.neptune.ai/o/OpenClimateFix/org/predict-pv-yield/e/PRED-160/monitoring
 Validation error after 10 epochs - 0.073

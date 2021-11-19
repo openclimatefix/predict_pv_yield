@@ -1,4 +1,4 @@
-Weights stored here are from 
+Weights stored here are from
 
 https://app.neptune.ai/o/OpenClimateFix/org/predict-pv-yield/e/PRED-189/charts
 

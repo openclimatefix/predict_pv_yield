@@ -130,4 +130,3 @@ class NetCDFDataModule(LightningDataModule):
             )
 
         return torch.utils.data.DataLoader(test_dataset, **self.dataloader_config)
-

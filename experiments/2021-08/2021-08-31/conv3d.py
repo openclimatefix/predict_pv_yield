@@ -16,6 +16,3 @@ model = Model(conv3d_channels=32,
 model.load_from_checkpoint(weights)
 
 train_dataset, validation_dataset = get_dataloaders()
-
-
-

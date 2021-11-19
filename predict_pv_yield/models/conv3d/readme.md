@@ -1,6 +1,6 @@
 # Convolution 3d network
 
-Idea is to use convolution 3d networks. 
+Idea is to use convolution 3d networks.
 
 ![](architect.png)
 
