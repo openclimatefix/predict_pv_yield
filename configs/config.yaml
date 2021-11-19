@@ -4,7 +4,7 @@
 defaults:
   - trainer: default.yaml
   - model: conv3d.yaml
-  - datamodule: netcdf_datamodule_gcp.yaml
+  - datamodule: netcdf_datamodule.yaml
   - callbacks: default.yaml # set this to null if you don't want to use callbacks
   - logger: neptune # set logger here or use command line (e.g. `python run.py logger=wandb`)
 
