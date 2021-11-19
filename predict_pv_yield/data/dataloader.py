@@ -12,6 +12,8 @@ from pytorch_lightning import LightningDataModule
 _LOG = logging.getLogger(__name__)
 _LOG.setLevel(logging.DEBUG)
 
+torch.set_default_dtype(torch.float32)
+
 
 def get_dataloaders(
     n_train_data: int = 24900,
