@@ -6,7 +6,7 @@
 defaults:
   - override /trainer: default.yaml # choose trainer from 'configs/trainer/'
   - override /model: perceiver.yaml
-  - override /datamodule: netcdf_datamodule_gcp.yaml
+  - override /datamodule: netcdf_datamodule.yaml
   - override /callbacks: default.yaml
   - override /logger: neptune.yaml
 
