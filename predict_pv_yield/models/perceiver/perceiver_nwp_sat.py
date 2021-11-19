@@ -9,6 +9,8 @@ from perceiver_pytorch import Perceiver
 from predict_pv_yield.models.base_model import BaseModel
 from nowcasting_dataloader.batch import BatchML
 
+from nowcasting_dataset.consts import NWP_VARIABLE_NAMES, SAT_VARIABLE_NAMES
+
 
 params = dict(
     # DATA
@@ -18,21 +20,8 @@ params = dict(
     history_minutes=60,  #: Number of timesteps of history, not including t0.
     forecast_minutes=30,  #: Number of timesteps of forecast.
     image_size_pixels=64,
-    nwp_channels=("t", "dswrf", "prate", "r", "sde", "si10", "vis", "lcc", "mcc", "hcc"),
-    sat_channels=(
-        "HRV",
-        "IR_016",
-        "IR_039",
-        "IR_087",
-        "IR_097",
-        "IR_108",
-        "IR_120",
-        "IR_134",
-        "VIS006",
-        "VIS008",
-        "WV_062",
-        "WV_073",
-    ),
+    nwp_channels=NWP_VARIABLE_NAMES,
+    sat_channels=SAT_VARIABLE_NAMES[1:],
 )
 
 

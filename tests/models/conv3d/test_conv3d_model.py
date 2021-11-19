@@ -6,6 +6,7 @@ from nowcasting_dataloader.fake import FakeDataset
 from nowcasting_dataset.config.model import Configuration
 
 
+
 def test_init():
 
     config_file = "configs/model/conv3d.yaml"
@@ -50,6 +51,7 @@ def test_train(configuration_conv3d):
 
     # create fake data loader
     train_dataset = FakeDataset(configuration=dataset_configuration)
+    train_dataset.length=2
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=None)
 
     # fit model

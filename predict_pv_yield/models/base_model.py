@@ -63,6 +63,7 @@ class BaseModel(pl.LightningModule):
         # put the batch data through the model
         y_hat = self(batch)
 
+
         # get the true result out. Select the first data point, as this is the pv system in the center of the image
         if self.output_variable == 'gsp_yield':
             y = batch.gsp.gsp_yield
@@ -175,7 +176,10 @@ class BaseModel(pl.LightningModule):
                 # plot and save to logger
                 fig = plot_batch_results(model_name=self.name, y=y, y_hat=y_hat, x=time, x_hat=time_hat)
                 fig.write_html(f"temp.html")
-                self.logger.experiment[-1].log_artifact(f"temp.html", f"{name}.html")
+                try:
+                    self.logger.experiment[-1].log_artifact(f"temp.html", f"{name}.html")
+                except:
+                    pass
 
         return self._training_or_validation_step(batch, tag="Validation")
 
