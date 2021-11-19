@@ -74,5 +74,3 @@ def test_model_forward_no_forward_satelite():
     assert len(y.shape) == 2
     assert y.shape[0] == dataset_configuration.process.batch_size
     assert y.shape[1] == params["forecast_minutes"] // 30
-
-

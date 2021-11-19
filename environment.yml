@@ -5,7 +5,7 @@ channels:
 dependencies:
   - python>=3.9
   - pip
-  
+
   # Scientific Python
   - numpy
   - pandas
@@ -14,10 +14,10 @@ dependencies:
   - ipykernel
   - pyproj
   - h5netcdf
-  
+
   # Cloud & distributed compute
   - gcsfs
-  
+
   # Machine learning
   - pytorch::pytorch  # explicitly specify pytorch channel to prevent conda from using conda-forge for pytorch, and hence installing the CPU-only version.
   - pytorch-lightning
@@ -27,7 +27,7 @@ dependencies:
   - flake8
   - jedi
   - mypy
-  
+
   - pip:
     - neptune-client[pytorch-lightning]
     - tilemapbase  # For plotting human-readable geographical maps.

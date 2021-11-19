@@ -16,4 +16,3 @@ pip install -e .
 ```
 
 Also download `nowcasting_dataset` and install in the `predict_pv_yield` conda environment using `pip install -e .` from within the `nowcasting_dataset` directory.
-
