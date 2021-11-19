@@ -12,8 +12,11 @@ from pytorch_lightning import (
 from pytorch_lightning.loggers import LightningLoggerBase
 
 from predict_pv_yield import utils
+import torch
 
 log = utils.get_logger(__name__)
+
+torch.set_default_dtype(torch.float32)
 
 
 def train(config: DictConfig) -> Optional[float]:
