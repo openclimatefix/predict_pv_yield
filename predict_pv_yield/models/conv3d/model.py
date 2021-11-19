@@ -110,7 +110,7 @@ class Model(BaseModel):
             x = BatchML(**x)
         # ******************* Satellite imagery *************************
         # Shape: batch_size, channel, seq_length, height, width
-        sat_data = x.satellite.data
+        sat_data = x.satellite.data.float()
         batch_size, n_chans, seq_len, height, width = sat_data.shape
 
         # :) Pass data through the network :)
@@ -128,7 +128,7 @@ class Model(BaseModel):
 
         # add pv yield
         if self.include_pv_yield:
-            pv_yield_history = x[self.output_variable][:, : self.history_len_30 + 1].nan_to_num(nan=0.0)
+            pv_yield_history = x[self.output_variable][:, : self.history_len_30 + 1].nan_to_num(nan=0.0).float()
 
             pv_yield_history = pv_yield_history.reshape(
                 pv_yield_history.shape[0], pv_yield_history.shape[1] * pv_yield_history.shape[2]
@@ -138,7 +138,7 @@ class Model(BaseModel):
         # *********************** NWP Data ************************************
         if self.include_nwp:
             # Shape: batch_size, channel, seq_length, height, width
-            nwp_data = x["nwp"]
+            nwp_data = x["nwp"].float()
             nwp_data = nwp_data.flatten(start_dim=1)
 
             # fully connected layer
