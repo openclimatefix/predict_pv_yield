@@ -10,6 +10,7 @@ from nowcasting_utils.models.metrics import mae_each_forecast_horizon, mse_each_
 from nowcasting_dataloader.batch import BatchML
 
 import pandas as pd
+import numpy as np
 
 import logging
 
@@ -35,6 +36,11 @@ class BaseModel(pl.LightningModule):
 
         self.history_len_30 = self.history_minutes // 30  # the number of historic timestemps for 5 minutes data
         self.forecast_len_30 = self.forecast_minutes // 30  # the number of forecast timestemps for 5 minutes data
+
+        # the number of historic timesteps for 60 minutes data
+        # Note that ceil is taken as for 30 minutes of history data, one history value will be used
+        self.history_len_60 = np.ceil(self.history_minutes / 60)
+        self.forecast_len_60 = np.ceil(self.forecast_minutes / 60) # the number of forecast timestemps for 60 minutes data
 
         if not hasattr(self, "output_variable"):
             print("setting")

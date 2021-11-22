@@ -79,6 +79,13 @@ class Model(BaseModel):
             * (self.forecast_len_5 + self.history_len_5 + 1 - 2 * self.number_of_conv3d_layers)
         )
 
+        self.nwp_cnn_output_size = (
+                conv3d_channels
+                * ((image_size_pixels - 2 * self.number_of_conv3d_layers) ** 2)
+                * (self.forecast_len_60 + self.history_len_60 + 1)
+        )
+
+
         # conv0
         self.sat_conv0 = nn.Conv3d(
             in_channels=number_sat_channels,
@@ -101,15 +108,15 @@ class Model(BaseModel):
                 in_channels=number_nwp_channels,
                 out_channels=conv3d_channels,
                 kernel_size=(3, 3, 3),
-                padding=0,
+                padding=(1, 0, 0),
             )
             for i in range(0, self.number_of_conv3d_layers - 1):
                 layer = nn.Conv3d(
-                    in_channels=conv3d_channels, out_channels=conv3d_channels, kernel_size=(3, 3, 3), padding=0
+                    in_channels=conv3d_channels, out_channels=conv3d_channels, kernel_size=(3, 3, 3), padding=(1,0,0)
                 )
                 setattr(self, f"nwp_conv{i + 1}", layer)
 
-            self.nwp_fc1 = nn.Linear(in_features=self.cnn_output_size, out_features=self.fc1_output_features)
+            self.nwp_fc1 = nn.Linear(in_features=self.nwp_cnn_output_size, out_features=self.fc1_output_features)
             self.nwp_fc2 = nn.Linear(in_features=self.fc1_output_features, out_features=self.number_of_nwp_features)
 
         fc3_in_features = self.fc2_output_features
@@ -172,6 +179,7 @@ class Model(BaseModel):
 
             # fully connected layers
             out_nwp = out_nwp.reshape(batch_size, self.cnn_output_size)
+            out_nwp = out_nwp.reshape(batch_size, self.nwp_cnn_output_size)
             out_nwp = F.relu(self.nwp_fc1(out_nwp))
             out_nwp = F.relu(self.nwp_fc2(out_nwp))
 
