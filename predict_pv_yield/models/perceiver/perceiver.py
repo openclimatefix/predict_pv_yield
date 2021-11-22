@@ -114,7 +114,7 @@ class PerceiverRNN(BaseModel):
         # ******************* Satellite imagery *************************
         # Shape: batch_size, channel, seq_length, height, width
         # TODO: Use optical flow, not actual sat images of the future!
-        sat_data = x.satellite.data[0 : self.batch_size]
+        sat_data = x.satellite.data[0 : self.batch_size].float()
         batch_size, n_chans, seq_len, width, height = sat_data.shape
 
         # Stack timesteps as examples (to make a large batch)
@@ -154,7 +154,7 @@ class PerceiverRNN(BaseModel):
 
         # *********************** NWP Data ************************************
         # Shape: batch_size, channel, seq_length, width, height
-        nwp_data = x.nwp.data[0 : self.batch_size].float()
+        nwp_data = x.nwp.data[0 : self.batch_size].float().float()
 
         # RNN expects seq_len to be dim 1.
         nwp_data = nwp_data.permute(0, 2, 1, 3, 4)
@@ -177,11 +177,11 @@ class PerceiverRNN(BaseModel):
 
         if self.output_variable == 'pv_yield':
             # take the history of the pv yield of this system,
-            pv_yield_history = x.pv.pv_yield[0: self.batch_size][:, : self.history_len_5 + 1, 0].unsqueeze(-1)
+            pv_yield_history = x.pv.pv_yield[0: self.batch_size][:, : self.history_len_5 + 1, 0].unsqueeze(-1).float()
             encoder_input = torch.cat((rnn_input[:, : self.history_len_5 + 1], pv_yield_history), dim=2)
         elif self.output_variable == 'gsp_yield':
             # take the history of the gsp yield of this system,
-            gsp_history = x.gsp.gsp_yield[0: self.batch_size][:, : self.history_len_30 + 1, 0].unsqueeze(-1)
+            gsp_history = x.gsp.gsp_yield[0: self.batch_size][:, : self.history_len_30 + 1, 0].unsqueeze(-1).float()
             encoder_input = torch.cat((rnn_input[:, : self.history_len_30 + 1], gsp_history), dim=2)
 
         encoder_output, encoder_hidden = self.encoder_rnn(encoder_input)

@@ -141,7 +141,7 @@ class Model(BaseModel):
         # ******************* Satellite imagery *************************
         # Shape: batch_size, channel, seq_length, height, width
         # TODO: Use optical flow, not actual sat images of the future!
-        sat_data = x.satellite.data[0 : self.batch_size]
+        sat_data = x.satellite.data[0 : self.batch_size].float()
 
         if not self.use_future_satellite_images:
             sat_data[:, -self.forecast_len_5: ] = 0  # This might not be the best way to do it
@@ -216,11 +216,11 @@ class Model(BaseModel):
 
         if self.output_variable == 'pv_yield':
             # take the history of the pv yield of this system,
-            pv_yield_history = x.pv.pv_yield[0 : self.batch_size][:, : self.history_len_5 + 1, 0].unsqueeze(-1)
+            pv_yield_history = x.pv.pv_yield[0 : self.batch_size][:, : self.history_len_5 + 1, 0].unsqueeze(-1).float()
             encoder_input = torch.cat((rnn_input[:, : self.history_len_5 + 1], pv_yield_history), dim=2)
         elif self.output_variable == 'gsp_yield':
             # take the history of the gsp yield of this system,
-            gsp_history = x.gsp.gsp_yield[0: self.batch_size][:, : self.history_len_30 + 1, 0].unsqueeze(-1)
+            gsp_history = x.gsp.gsp_yield[0: self.batch_size][:, : self.history_len_30 + 1, 0].unsqueeze(-1).float()
             encoder_input = torch.cat((rnn_input[:, : self.history_len_30 + 1], gsp_history), dim=2)
 
         encoder_output, encoder_hidden = self.encoder_rnn(encoder_input)
