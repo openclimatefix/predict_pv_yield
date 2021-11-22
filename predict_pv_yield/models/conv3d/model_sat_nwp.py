@@ -85,7 +85,6 @@ class Model(BaseModel):
                 * (self.forecast_len_60 + self.history_len_60 + 1)
         )
 
-
         # conv0
         self.sat_conv0 = nn.Conv3d(
             in_channels=number_sat_channels,

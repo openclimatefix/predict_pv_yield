@@ -39,8 +39,8 @@ class BaseModel(pl.LightningModule):
 
         # the number of historic timesteps for 60 minutes data
         # Note that ceil is taken as for 30 minutes of history data, one history value will be used
-        self.history_len_60 = np.ceil(self.history_minutes / 60)
-        self.forecast_len_60 = np.ceil(self.forecast_minutes / 60) # the number of forecast timestemps for 60 minutes data
+        self.history_len_60 = int(np.ceil(self.history_minutes / 60))
+        self.forecast_len_60 = self.forecast_minutes // 60 # the number of forecast timestemps for 60 minutes data
 
         if not hasattr(self, "output_variable"):
             print("setting")
