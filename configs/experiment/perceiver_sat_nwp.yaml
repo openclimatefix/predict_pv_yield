@@ -20,5 +20,6 @@ trainer:
   max_epochs: 10
 
 datamodule:
-  n_train_data: 10000
-  n_val_data: 1000
+  n_train_data: 4000
+  n_val_data: 400
+
