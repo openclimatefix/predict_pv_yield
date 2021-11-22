@@ -22,4 +22,3 @@ trainer:
 datamodule:
   n_train_data: 4000
   n_val_data: 400
-
