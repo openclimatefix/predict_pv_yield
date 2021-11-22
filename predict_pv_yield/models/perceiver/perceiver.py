@@ -20,7 +20,7 @@ params = dict(
     history_minutes=60,  #: Number of timesteps of history, not including t0.
     forecast_minutes=30,  #: Number of timesteps of forecast.
     image_size_pixels=64,
-    nwp_channels=NWP_VARIABLE_NAMES,
+    nwp_channels=NWP_VARIABLE_NAMES[0:10],
     sat_channels=SAT_VARIABLE_NAMES[1:],
 )
 
