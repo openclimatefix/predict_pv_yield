@@ -42,6 +42,6 @@ def configuration_perceiver():
     dataset_configuration.input_data.satellite.satellite_image_size_pixels = 16
     dataset_configuration.input_data.default_history_minutes = 60
     dataset_configuration.input_data.default_forecast_minutes = 30
-
+    dataset_configuration.input_data.nwp.nwp_channels = dataset_configuration.input_data.nwp.nwp_channels[0:10]
 
     return dataset_configuration

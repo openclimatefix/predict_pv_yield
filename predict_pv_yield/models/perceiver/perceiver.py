@@ -161,7 +161,7 @@ class PerceiverRNN(BaseModel):
         batch_size, nwp_seq_len, n_nwp_chans, nwp_width, nwp_height = nwp_data.shape
 
         # nwp to have the same sel_len as sat. I think there is a better solution than this
-        nwp_data_zeros = torch.zeros(size=(batch_size, seq_len - nwp_seq_len, n_nwp_chans, nwp_width, nwp_height))
+        nwp_data_zeros = torch.zeros(size=(batch_size, seq_len - nwp_seq_len, n_nwp_chans, nwp_width, nwp_height), device=nwp_data.device)
         nwp_data = torch.cat([nwp_data, nwp_data_zeros], dim=1)
 
         nwp_data = nwp_data.reshape(batch_size, seq_len, n_nwp_chans * nwp_width * nwp_height)
