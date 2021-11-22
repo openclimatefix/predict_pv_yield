@@ -1,4 +1,4 @@
-_target_: predict_pv_yield.models.perceiver.PerceiverRNN
+_target_: predict_pv_yield.models.perceiver.perceiver.Perceiver
 
 forecast_minutes: 30
 history_minutes: 60

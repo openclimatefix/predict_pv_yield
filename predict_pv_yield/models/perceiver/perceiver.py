@@ -39,9 +39,9 @@ FC_OUTPUT_SIZE = 8
 RNN_HIDDEN_SIZE = 16
 
 
-class PerceiverRNN(BaseModel):
+class Perceiver(BaseModel):
 
-    name = "perceiver_rnn"
+    name = "perceiver"
 
     def __init__(
         self,
