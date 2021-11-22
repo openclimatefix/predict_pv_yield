@@ -39,7 +39,7 @@ FC_OUTPUT_SIZE = 8
 RNN_HIDDEN_SIZE = 16
 
 
-class Perceiver(BaseModel):
+class PerceiverModel(BaseModel):
 
     name = "perceiver"
 
