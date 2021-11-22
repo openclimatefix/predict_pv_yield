@@ -178,7 +178,6 @@ class Model(BaseModel):
                 out_nwp = F.relu(layer(out_nwp))
 
             # fully connected layers
-            out_nwp = out_nwp.reshape(batch_size, self.cnn_output_size)
             out_nwp = out_nwp.reshape(batch_size, self.nwp_cnn_output_size)
             out_nwp = F.relu(self.nwp_fc1(out_nwp))
             out_nwp = F.relu(self.nwp_fc2(out_nwp))
