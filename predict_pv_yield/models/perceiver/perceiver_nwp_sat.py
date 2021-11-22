@@ -127,8 +127,12 @@ class Model(BaseModel):
         nwp_data = x.nwp.data[0: self.batch_size].float()
         # Perciever expects seq_len to be dim 1, and channels at the end
         nwp_data = nwp_data.permute(0, 2, 3, 4, 1)
-        print(nwp_data.shape)
         batch_size, nwp_seq_len, nwp_width, nwp_height, n_nwp_chans = nwp_data.shape
+
+        # nwp to have the same sel_len as sat. I think there is a better solution than this
+        nwp_data_zeros = torch.zeros(size=(batch_size, seq_len - nwp_seq_len, nwp_width, nwp_height, n_nwp_chans))
+        nwp_data = torch.cat([nwp_data, nwp_data_zeros], dim=1)
+
         nwp_data = nwp_data.reshape(new_batch_size, nwp_width, nwp_height, n_nwp_chans)
 
         assert nwp_width == width, f'data {nwp_width} should be the model {width}'
