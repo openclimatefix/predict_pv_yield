@@ -7,6 +7,9 @@ import torch.nn.functional as F
 from perceiver_pytorch import Perceiver
 
 from predict_pv_yield.models.base_model import BaseModel
+from nowcasting_dataloader.batch import BatchML
+
+from nowcasting_dataset.consts import NWP_VARIABLE_NAMES, SAT_VARIABLE_NAMES
 
 
 params = dict(
@@ -14,24 +17,11 @@ params = dict(
     # TODO: Everything that relates to the dataset should come automatically
     # from a yaml file stored with the dataset.
     batch_size=32,
-    history_minutes=60,  #: Number of timesteps of history, not including t0.
-    forecast_minutes=30,  #: Number of timesteps of forecast.
+    history_minutes=30,  #: Number of timesteps of history, not including t0.
+    forecast_minutes=120,  #: Number of timesteps of forecast.
     image_size_pixels=64,
-    nwp_channels=("t", "dswrf", "prate", "r", "sde", "si10", "vis", "lcc", "mcc", "hcc"),
-    sat_channels=(
-        "HRV",
-        "IR_016",
-        "IR_039",
-        "IR_087",
-        "IR_097",
-        "IR_108",
-        "IR_120",
-        "IR_134",
-        "VIS006",
-        "VIS008",
-        "WV_062",
-        "WV_073",
-    ),
+    nwp_channels=NWP_VARIABLE_NAMES[0:10],
+    sat_channels=SAT_VARIABLE_NAMES[1:],
 )
 
 
@@ -128,13 +118,13 @@ class Model(BaseModel):
         # TODO: Get rid of RNNs!
         self.encoder_rnn = nn.GRU(
             # plus 1 for history
-            input_size=FC_OUTPUT_SIZE + N_DATETIME_FEATURES + 1,
+            input_size=FC_OUTPUT_SIZE + 1,
             hidden_size=RNN_HIDDEN_SIZE,
             num_layers=2,
             batch_first=True,
         )
         self.decoder_rnn = nn.GRU(
-            input_size=FC_OUTPUT_SIZE + N_DATETIME_FEATURES,
+            input_size=FC_OUTPUT_SIZE,
             hidden_size=RNN_HIDDEN_SIZE,
             num_layers=2,
             batch_first=True,
@@ -144,15 +134,18 @@ class Model(BaseModel):
         self.decoder_fc2 = nn.Linear(in_features=8, out_features=1)
 
     def forward(self, x):
+
+        if type(x) == dict:
+            x = BatchML(**x)
+
         # ******************* Satellite imagery *************************
-        # Shape: batch_size, seq_length, width, height, channel
+        # Shape: batch_size, channel, seq_length, height, width
         # TODO: Use optical flow, not actual sat images of the future!
-        sat_data = x["sat_data"][0 : self.batch_size]
+        sat_data = x.satellite.data[0 : self.batch_size].float()
 
         if not self.use_future_satellite_images:
             sat_data[:, -self.forecast_len_5: ] = 0  # This might not be the best way to do it
 
-        sat_data = sat_data.permute(0, 4, 1, 2, 3)
         sat_data = self.sat_conv3d_maxpool(sat_data)
         sat_data = sat_data.permute(0, 2, 3, 4, 1)
 
@@ -163,12 +156,17 @@ class Model(BaseModel):
         sat_data = sat_data.reshape(new_batch_size, width, height, n_chans)
 
         # *********************** NWP Data ************************************
-        # Shape: batch_size, channel, seq_length, width, height
-        nwp_data = x["nwp"][0 : self.batch_size].float()
+        # Shape: batch_size, seq_length, width, height, channel
+        nwp_data = x.nwp.data[0 : self.batch_size].float()
         nwp_data = self.nwp_conv3d_maxpool(nwp_data)
         # Perciever expects seq_len to be dim 1, and channels at the end
         nwp_data = nwp_data.permute(0, 2, 3, 4, 1)
         batch_size, nwp_seq_len, nwp_width, nwp_height, n_nwp_chans = nwp_data.shape
+
+        # nwp to have the same sel_len as sat. I think there is a better solution than this
+        nwp_data_zeros = torch.zeros(size=(batch_size, seq_len - nwp_seq_len, nwp_width, nwp_height, n_nwp_chans), device=nwp_data.device)
+        nwp_data = torch.cat([nwp_data, nwp_data_zeros], dim=1)
+
         nwp_data = nwp_data.reshape(new_batch_size, nwp_width, nwp_height, n_nwp_chans)
 
         assert nwp_width == width, f'widths should be the same({nwp_width},{width})'
@@ -186,7 +184,7 @@ class Model(BaseModel):
         # ********************** Embedding of PV system ID ********************
         if self.embedding_dem:
             pv_row = (
-                x["pv_system_row_number"][0 : self.batch_size, 0].type(torch.IntTensor).repeat_interleave(TOTAL_SEQ_LEN)
+                x.pv.pv_system_row_number[0 : self.batch_size, 0].type(torch.IntTensor).repeat_interleave(TOTAL_SEQ_LEN)
             )
             pv_row = pv_row.to(out.device)
             pv_embedding = self.pv_system_id_embedding(pv_row)
@@ -212,21 +210,17 @@ class Model(BaseModel):
         rnn_input = torch.cat(
             (
                 out,
-                x["hour_of_day_sin"][0 : self.batch_size].unsqueeze(-1),
-                x["hour_of_day_cos"][0 : self.batch_size].unsqueeze(-1),
-                x["day_of_year_sin"][0 : self.batch_size].unsqueeze(-1),
-                x["day_of_year_cos"][0 : self.batch_size].unsqueeze(-1),
             ),
             dim=2,
         )
 
         if self.output_variable == 'pv_yield':
             # take the history of the pv yield of this system,
-            pv_yield_history = x["pv_yield"][0 : self.batch_size][:, : self.history_len_5 + 1, 0].unsqueeze(-1)
+            pv_yield_history = x.pv.pv_yield[0 : self.batch_size][:, : self.history_len_5 + 1, 0].unsqueeze(-1).float()
             encoder_input = torch.cat((rnn_input[:, : self.history_len_5 + 1], pv_yield_history), dim=2)
         elif self.output_variable == 'gsp_yield':
             # take the history of the gsp yield of this system,
-            gsp_history = x[self.output_variable][0: self.batch_size][:, : self.history_len_30 + 1, 0].unsqueeze(-1)
+            gsp_history = x.gsp.gsp_yield[0: self.batch_size][:, : self.history_len_30 + 1, 0].unsqueeze(-1).float()
             encoder_input = torch.cat((rnn_input[:, : self.history_len_30 + 1], gsp_history), dim=2)
 
         encoder_output, encoder_hidden = self.encoder_rnn(encoder_input)

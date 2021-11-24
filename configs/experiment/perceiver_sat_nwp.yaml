@@ -6,7 +6,7 @@
 defaults:
   - override /trainer: default.yaml # choose trainer from 'configs/trainer/'
   - override /model: perceiver_sat_nwp.yaml
-  - override /datamodule: netcdf_datamodule_gcp.yaml
+  - override /datamodule: netcdf_datamodule.yaml
   - override /callbacks: default.yaml
   - override /logger: neptune.yaml
 
@@ -20,5 +20,5 @@ trainer:
   max_epochs: 10
 
 datamodule:
-  n_train_data: 10000
-  n_val_data: 1000
+  n_train_data: 4000
+  n_val_data: 400

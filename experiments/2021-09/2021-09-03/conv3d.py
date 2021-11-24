@@ -46,4 +46,3 @@ time = [pd.to_datetime(x, unit="s") for x in x["sat_datetime_index"][:, 7:].deta
 
 fig = plot_batch_results(x=time, y=y, y_hat=y_hat, model_name=model.name)
 fig.show(renderer="browser")
-

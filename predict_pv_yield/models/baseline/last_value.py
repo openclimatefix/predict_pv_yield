@@ -1,6 +1,7 @@
 import logging
 
 from predict_pv_yield.models.base_model import BaseModel
+from nowcasting_dataloader.batch import BatchML
 
 
 logging.basicConfig()
@@ -22,9 +23,16 @@ class Model(BaseModel):
 
         super().__init__()
 
-    def forward(self, x):
+    def forward(self, x:BatchML):
+
+        if type(x) == dict:
+            x = BatchML(**x)
+
         # Shape: batch_size, seq_length, n_sites
-        gsp_yield = x[self.output_variable]
+        if self.output_variable == 'gsp_yield':
+            gsp_yield = x.gsp.gsp_yield
+        else:
+            gsp_yield = x.pv.pv_yield
 
         # take the last value non forecaster value and the first in the pv yeild
         # (this is the pv site we are preditcting for)

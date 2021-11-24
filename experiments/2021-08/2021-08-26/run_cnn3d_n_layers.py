@@ -43,4 +43,3 @@ if __name__ == "__main__":
 
 # https://app.neptune.ai/o/OpenClimateFix/org/predict-pv-yield/e/PRED-138/charts
 # ran with 10000 in train data
-

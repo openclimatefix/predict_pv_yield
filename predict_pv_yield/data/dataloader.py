@@ -1,6 +1,6 @@
 import os
-from nowcasting_dataset.dataset.datasets import NetCDFDataset, worker_init_fn
-from nowcasting_dataset.dataset.validate import FakeDataset
+from nowcasting_dataloader.datasets import NetCDFDataset, worker_init_fn
+from nowcasting_dataloader.fake import FakeDataset
 from nowcasting_dataset.config.load import load_yaml_configuration
 from typing import Tuple
 import logging
@@ -11,6 +11,8 @@ from pytorch_lightning import LightningDataModule
 
 _LOG = logging.getLogger(__name__)
 _LOG.setLevel(logging.DEBUG)
+
+torch.set_default_dtype(torch.float32)
 
 
 def get_dataloaders(
@@ -108,8 +110,8 @@ class NetCDFDataModule(LightningDataModule):
         else:
             val_dataset = NetCDFDataset(
                 self.n_val_data,
-                os.path.join(self.data_path, "validation"),
-                os.path.join(self.temp_path, "validation"),
+                os.path.join(self.data_path, "test"),
+                os.path.join(self.temp_path, "test"),
                 cloud=self.cloud,
                 configuration=self.configuration
             )
@@ -123,11 +125,10 @@ class NetCDFDataModule(LightningDataModule):
             # TODO need to change this to a test folder
             test_dataset = NetCDFDataset(
                 self.n_val_data,
-                os.path.join(self.data_path, "validation"),
-                os.path.join(self.temp_path, "validation"),
+                os.path.join(self.data_path, "test"),
+                os.path.join(self.temp_path, "test"),
                 cloud=self.cloud,
                 configuration=self.configuration
             )
 
         return torch.utils.data.DataLoader(test_dataset, **self.dataloader_config)
-
