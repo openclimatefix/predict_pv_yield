@@ -31,6 +31,7 @@ class Model(BaseModel):
         fc2_output_features: int = 128,
         fc3_output_features: int = 64,
         output_variable: str = "pv_yield",
+        embedding_dem: int = 16,
     ):
         """
         3d conv model, that takes in different data streams
@@ -70,6 +71,7 @@ class Model(BaseModel):
         self.history_minutes = history_minutes
         self.output_variable = output_variable
         self.number_nwp_channels = number_nwp_channels
+        self.embedding_dem = embedding_dem
 
         super().__init__()
 
@@ -120,11 +122,16 @@ class Model(BaseModel):
             self.nwp_fc1 = nn.Linear(in_features=self.nwp_cnn_output_size, out_features=self.fc1_output_features)
             self.nwp_fc2 = nn.Linear(in_features=self.fc1_output_features, out_features=self.number_of_nwp_features)
 
+        if self.embedding_dem:
+            self.pv_system_id_embedding = nn.Embedding(num_embeddings=940, embedding_dim=self.embedding_dem)
+
         fc3_in_features = self.fc2_output_features
         if include_pv_yield:
             fc3_in_features += self.number_of_samples_per_batch * (self.history_len_30 + 1)
         if include_nwp:
             fc3_in_features += 128
+        if self.embedding_dem:
+            fc3_in_features += self.embedding_dem
 
         self.fc3 = nn.Linear(in_features=fc3_in_features, out_features=self.fc3_output_features)
         self.fc4 = nn.Linear(in_features=self.fc3_output_features, out_features=self.forecast_len)
@@ -185,6 +192,21 @@ class Model(BaseModel):
 
             # join with other FC layer
             out = torch.cat((out, out_nwp), dim=1)
+
+        # ********************** Embedding of PV system ID ********************
+        if self.embedding_dem:
+            if self.output_variable == 'pv_yield':
+                pv_row = (
+                    x.pv.pv_system_row_number[0 : self.batch_size, 0].type(torch.IntTensor)
+                )
+                pv_row = pv_row.to(out.device)
+                pv_embedding = self.pv_system_id_embedding(pv_row)
+                out = torch.cat((out, pv_embedding), dim=1)
+            else:
+                gsp_id = x.gsp.gsp_id[0: self.batch_size, 0]
+                gsp_embedding = self.pv_system_id_embedding(gsp_id)
+                gsp_embedding = gsp_embedding.reshape(batch_size, self.embedding_dem)
+                out = torch.cat((out, gsp_embedding), dim=1)
 
         # Fully connected layers.
         out = F.relu(self.fc3(out))
