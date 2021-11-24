@@ -196,17 +196,14 @@ class Model(BaseModel):
         # ********************** Embedding of PV system ID ********************
         if self.embedding_dem:
             if self.output_variable == 'pv_yield':
-                pv_row = (
-                    x.pv.pv_system_row_number[0 : self.batch_size, 0].type(torch.IntTensor)
-                )
-                pv_row = pv_row.to(out.device)
-                pv_embedding = self.pv_system_id_embedding(pv_row)
-                out = torch.cat((out, pv_embedding), dim=1)
+                id = x.pv.pv_system_row_number[0: self.batch_size, 0]
             else:
-                gsp_id = x.gsp.gsp_id[0: self.batch_size, 0]
-                gsp_embedding = self.pv_system_id_embedding(gsp_id)
-                gsp_embedding = gsp_embedding.reshape(batch_size, self.embedding_dem)
-                out = torch.cat((out, gsp_embedding), dim=1)
+                id = x.gsp.gsp_id[0: self.batch_size, 0]
+
+            id = id.type(torch.IntTensor)
+            id = id.to(out.device)
+            id_embedding = self.pv_system_id_embedding(id)
+            out = torch.cat((out, id_embedding), dim=1)
 
         # Fully connected layers.
         out = F.relu(self.fc3(out))
