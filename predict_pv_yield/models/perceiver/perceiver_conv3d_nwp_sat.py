@@ -17,8 +17,8 @@ params = dict(
     # TODO: Everything that relates to the dataset should come automatically
     # from a yaml file stored with the dataset.
     batch_size=32,
-    history_minutes=60,  #: Number of timesteps of history, not including t0.
-    forecast_minutes=30,  #: Number of timesteps of forecast.
+    history_minutes=30,  #: Number of timesteps of history, not including t0.
+    forecast_minutes=120,  #: Number of timesteps of forecast.
     image_size_pixels=64,
     nwp_channels=NWP_VARIABLE_NAMES[0:10],
     sat_channels=SAT_VARIABLE_NAMES[1:],

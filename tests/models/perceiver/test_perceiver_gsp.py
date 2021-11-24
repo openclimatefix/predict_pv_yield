@@ -1,4 +1,4 @@
-from predict_pv_yield.models.perceiver.perceiver import PerceiverRNN, params
+from predict_pv_yield.models.perceiver.perceiver import PerceiverModel, params
 from predict_pv_yield.data.dataloader import FakeDataset
 from nowcasting_dataset.config.model import Configuration
 import torch
@@ -6,7 +6,7 @@ import torch
 
 def test_init_model():
     """Initilize the model"""
-    _ = PerceiverRNN(
+    _ = PerceiverModel(
         history_minutes=3, forecast_minutes=3, nwp_channels=params["nwp_channels"], output_variable="gsp_yield"
     )
 
@@ -18,7 +18,7 @@ def test_model_forward(configuration_perceiver):
     dataset_configuration.input_data.nwp.nwp_image_size_pixels = 2
     dataset_configuration.input_data.satellite.satellite_image_size_pixels = 16
 
-    model = PerceiverRNN(
+    model = PerceiverModel(
         history_minutes=params["history_minutes"],
         forecast_minutes=params["forecast_minutes"],
         nwp_channels=params["nwp_channels"],
