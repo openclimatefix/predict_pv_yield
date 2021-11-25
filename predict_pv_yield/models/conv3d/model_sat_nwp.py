@@ -17,7 +17,7 @@ class Model(BaseModel):
 
     def __init__(
         self,
-        include_pv_yield: bool = True,
+        include_pv_or_gsp_yield_history: bool = True,
         include_nwp: bool = True,
         forecast_minutes: int = 30,
         history_minutes: int = 60,
@@ -32,6 +32,7 @@ class Model(BaseModel):
         fc3_output_features: int = 64,
         output_variable: str = "pv_yield",
         embedding_dem: int = 16,
+        include_pv_yield_history: int = True
     ):
         """
         3d conv model, that takes in different data streams
@@ -44,7 +45,7 @@ class Model(BaseModel):
         - time variables
         Then there ~4 fully connected layers which end up forecasting the pv yield / gsp into the future
 
-        include_pv_yield: include pv yield data
+        include_pv_or_gsp_yield_history: include pv yield data
         include_nwp: include nwp data
         forecast_len: the amount of minutes that should be forecasted
         history_len: the amount of historical minutes that are used
@@ -60,7 +61,7 @@ class Model(BaseModel):
         number_nwp_channels: The number of nwp channels there are
         """
 
-        self.include_pv_yield = include_pv_yield
+        self.include_pv_or_gsp_yield_history = include_pv_or_gsp_yield_history
         self.include_nwp = include_nwp
         self.number_of_conv3d_layers = number_of_conv3d_layers
         self.number_of_nwp_features = 128
@@ -72,6 +73,7 @@ class Model(BaseModel):
         self.output_variable = output_variable
         self.number_nwp_channels = number_nwp_channels
         self.embedding_dem = embedding_dem
+        self.include_pv_yield_history = include_pv_yield_history
 
         super().__init__()
 
@@ -125,13 +127,18 @@ class Model(BaseModel):
         if self.embedding_dem:
             self.pv_system_id_embedding = nn.Embedding(num_embeddings=940, embedding_dim=self.embedding_dem)
 
+        if self.include_pv_yield_history:
+            self.pv_fc1 = nn.Linear(in_features=self.number_of_pv_samples_per_batch*self.history_len_5 + 1, out_features=128)
+
         fc3_in_features = self.fc2_output_features
-        if include_pv_yield:
+        if include_pv_or_gsp_yield_history:
             fc3_in_features += self.number_of_samples_per_batch * (self.history_len_30 + 1)
         if include_nwp:
             fc3_in_features += 128
         if self.embedding_dem:
             fc3_in_features += self.embedding_dem
+        if self.include_pv_yield_history:
+            fc3_in_features += 128
 
         self.fc3 = nn.Linear(in_features=fc3_in_features, out_features=self.fc3_output_features)
         self.fc4 = nn.Linear(in_features=self.fc3_output_features, out_features=self.forecast_len)
@@ -162,7 +169,7 @@ class Model(BaseModel):
         # which has shape (batch_size, 128)
 
         # add pv yield
-        if self.include_pv_yield:
+        if self.include_pv_or_gsp_yield_history:
             if self.output_variable == 'gsp_yield':
                 pv_yield_history = x.gsp.gsp_yield[:, : self.history_len_30 + 1].nan_to_num(nan=0.0).float()
             else:
@@ -172,6 +179,18 @@ class Model(BaseModel):
                 pv_yield_history.shape[0], pv_yield_history.shape[1] * pv_yield_history.shape[2]
             )
             # join up
+            out = torch.cat((out, pv_yield_history), dim=1)
+
+        # add the pv yield history. This can be used if trying to predict gsp
+        if self.include_pv_yield_history:
+            pv_yield_history = x.gsp.gsp_yield[:, : self.history_len_30 + 1].nan_to_num(nan=0.0).float()
+
+            pv_yield_history = pv_yield_history.reshape(
+                pv_yield_history.shape[0], pv_yield_history.shape[1] * pv_yield_history.shape[2]
+            )
+
+            pv_yield_history = F.relu(self.pv_fc1(pv_yield_history))
+
             out = torch.cat((out, pv_yield_history), dim=1)
 
         # *********************** NWP Data ************************************

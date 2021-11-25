@@ -1,6 +1,6 @@
 _target_: predict_pv_yield.models.conv3d.model.Model
 
-include_pv_yield: False
+include_pv_or_gsp_yield_history: False
 include_nwp: True
 forecast_minutes: 30
 history_minutes: 60
