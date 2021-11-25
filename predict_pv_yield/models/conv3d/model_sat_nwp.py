@@ -128,7 +128,8 @@ class Model(BaseModel):
             self.pv_system_id_embedding = nn.Embedding(num_embeddings=940, embedding_dim=self.embedding_dem)
 
         if self.include_pv_yield_history:
-            self.pv_fc1 = nn.Linear(in_features=self.number_of_pv_samples_per_batch*self.history_len_5 + 1, out_features=128)
+            self.pv_fc1 = nn.Linear(in_features=self.number_of_pv_samples_per_batch*(self.history_len_5 + 1),
+                                    out_features=128)
 
         fc3_in_features = self.fc2_output_features
         if include_pv_or_gsp_yield_history:
@@ -183,12 +184,11 @@ class Model(BaseModel):
 
         # add the pv yield history. This can be used if trying to predict gsp
         if self.include_pv_yield_history:
-            pv_yield_history = x.gsp.gsp_yield[:, : self.history_len_30 + 1].nan_to_num(nan=0.0).float()
+            pv_yield_history = x.pv.pv_yield[:, : self.history_len_5 + 1].nan_to_num(nan=0.0).float()
 
             pv_yield_history = pv_yield_history.reshape(
                 pv_yield_history.shape[0], pv_yield_history.shape[1] * pv_yield_history.shape[2]
             )
-
             pv_yield_history = F.relu(self.pv_fc1(pv_yield_history))
 
             out = torch.cat((out, pv_yield_history), dim=1)
