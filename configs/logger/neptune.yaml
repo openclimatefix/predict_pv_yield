@@ -4,5 +4,4 @@ neptune:
   _target_: neptune.new.integrations.pytorch_lightning.NeptuneLogger
   api_key: ${oc.env:NEPTUNE_API_TOKEN} # api key is loaded from environment variable
   project: OpenClimateFix/predict-pv-yield
-  close_after_fit: False
   prefix: ""

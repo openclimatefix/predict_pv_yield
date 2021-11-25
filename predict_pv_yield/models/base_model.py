@@ -172,10 +172,10 @@ class BaseModel(pl.LightningModule):
                     y = batch.pv.pv_yield[0 : self.batch_size, :, 0].cpu().numpy()
                 y_hat = model_output[0 : self.batch_size].cpu().numpy()
                 time = [
-                    pd.to_datetime(x, unit="s") for x in batch.gsp.gsp_datetime_index[0 : self.batch_size].cpu().numpy()
+                    pd.to_datetime(x, unit="ns") for x in batch.gsp.gsp_datetime_index[0 : self.batch_size].cpu().numpy()
                 ]
                 time_hat = [
-                    pd.to_datetime(x, unit="s")
+                    pd.to_datetime(x, unit="ns")
                     for x in batch.gsp.gsp_datetime_index[0 : self.batch_size, self.history_len_30 + 1 :].cpu().numpy()
                 ]
 
