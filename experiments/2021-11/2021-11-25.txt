@@ -47,5 +47,3 @@ nwp
 sat (no hrv)
 gsp history
 pv history
-
-
