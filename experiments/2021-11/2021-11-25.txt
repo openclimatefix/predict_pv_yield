@@ -22,12 +22,22 @@ https://app.neptune.ai/o/OpenClimateFix/org/predict-pv-yield/e/PRED-490/monitori
 
 this is with no nwp data NMAE/Validation ~ 0.0676
 
-4 epochs
+data:
+sat (no hrv)
+gsp history
+
+Total epochs: 4
 
 3. https://app.neptune.ai/o/OpenClimateFix/org/predict-pv-yield/e/PRED-504/monitoring
 
 this is with nwp data NMAE/Validation ~ 0.0601
-epochs: 4
+
+data:
+nwp
+sat (no hrv)
+gsp history
+
+Total epochs: 4
 
 
 4. https://app.neptune.ai/o/OpenClimateFix/org/predict-pv-yield/e/PRED-523/all
