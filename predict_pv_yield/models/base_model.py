@@ -184,7 +184,8 @@ class BaseModel(pl.LightningModule):
                 fig = plot_batch_results(model_name=self.name, y=y, y_hat=y_hat, x=time, x_hat=time_hat)
                 fig.write_html(f"temp.html")
                 try:
-                    self.logger.experiment[-1].log_artifact(f"temp.html", f"{name}.html")
+                    self.logger.experiment[-1][f'validation/plot/{self.current_epoch}_{batch_idx}'].upload(
+                        f"temp.html")
                 except:
                     pass
 
