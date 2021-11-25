@@ -1,6 +1,6 @@
 _target_: predict_pv_yield.models.conv3d.model.Model
 
-include_pv_yield: False
+include_pv_or_gsp_yield_history: False
 include_nwp: True
 forecast_minutes: 30
 history_minutes: 60
@@ -9,8 +9,9 @@ conv3d_channels: 32
 image_size_pixels: 16 # this is made smaller for testing
 nwp_image_size_pixels: 16
 number_sat_channels: 11
-number_nwp_channels: 17
+number_nwp_channels: 10
 fc1_output_features: 16
 fc2_output_features: 16
 fc3_output_features: 16
 output_variable: gsp_yield
+include_pv_yield_history: True

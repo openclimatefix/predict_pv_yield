@@ -131,12 +131,15 @@ class PerceiverModel(BaseModel):
 
         # ********************** Embedding of PV system ID ********************
         if self.embedding_dem:
-            pv_row = (
-                x.pv.pv_system_row_number[0 : self.batch_size, 0].type(torch.IntTensor).repeat_interleave(TOTAL_SEQ_LEN)
-            )
-            pv_row = pv_row.to(out.device)
-            pv_embedding = self.pv_system_id_embedding(pv_row)
-            out = torch.cat((out, pv_embedding), dim=1)
+            if self.output_variable == 'pv_yield':
+                id = x.pv.pv_system_row_number[0 : self.batch_size, 0]
+            else:
+                id = x.gsp.gsp_id[0: self.batch_size, 0]
+
+            id = id.type(torch.IntTensor).repeat_interleave(TOTAL_SEQ_LEN)
+            id = id.to(out.device)
+            id_embedding = self.pv_system_id_embedding(id)
+            out = torch.cat((out, id_embedding), dim=1)
 
         # Fully connected layers.
         out = F.relu(self.fc2(out))

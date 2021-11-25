@@ -36,6 +36,27 @@ def test_model_forward(configuration):
     assert y.shape[1] == configuration.input_data.default_forecast_minutes // 30
 
 
+def test_model_validation(configuration):
+
+    # start model
+    model = Model(
+        forecast_minutes=configuration.input_data.default_forecast_minutes,
+        history_minutes=configuration.input_data.default_history_minutes,
+        output_variable="gsp_yield",
+    )
+
+    # create fake data loader
+    train_dataset = FakeDataset(configuration=configuration)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=None)
+
+    # satellite data
+    x = next(iter(train_dataloader))
+
+    # run data through model
+    model.validation_step(x, 0)
+
+
+
 def test_trainer(configuration):
 
     # start model

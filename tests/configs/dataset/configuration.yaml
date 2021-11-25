@@ -22,6 +22,8 @@ input_data:
     sun_zarr_path: tests/data/sun/test.zarr
   topographic:
     topographic_filename: tests/data/europe_dem_2km_osgb.tif
+  default_history_minutes: 120
+  default_forecast_minutes: 30
 output_data:
   filepath: not used by unittests!
 process:

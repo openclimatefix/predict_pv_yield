@@ -54,6 +54,7 @@ class BaseModel(pl.LightningModule):
             self.forecast_len = self.forecast_len_30
             self.history_len = self.history_len_30
             self.number_of_samples_per_batch = 32
+        self.number_of_pv_samples_per_batch = 128
 
         self.weighted_losses = WeightedLosses(forecast_length=self.forecast_len)
 
@@ -172,10 +173,10 @@ class BaseModel(pl.LightningModule):
                     y = batch.pv.pv_yield[0 : self.batch_size, :, 0].cpu().numpy()
                 y_hat = model_output[0 : self.batch_size].cpu().numpy()
                 time = [
-                    pd.to_datetime(x, unit="s") for x in batch.gsp.gsp_datetime_index[0 : self.batch_size].cpu().numpy()
+                    pd.to_datetime(x, unit="ns") for x in batch.gsp.gsp_datetime_index[0 : self.batch_size].cpu().numpy()
                 ]
                 time_hat = [
-                    pd.to_datetime(x, unit="s")
+                    pd.to_datetime(x, unit="ns")
                     for x in batch.gsp.gsp_datetime_index[0 : self.batch_size, self.history_len_30 + 1 :].cpu().numpy()
                 ]
 
@@ -183,7 +184,8 @@ class BaseModel(pl.LightningModule):
                 fig = plot_batch_results(model_name=self.name, y=y, y_hat=y_hat, x=time, x_hat=time_hat)
                 fig.write_html(f"temp.html")
                 try:
-                    self.logger.experiment[-1].log_artifact(f"temp.html", f"{name}.html")
+                    self.logger.experiment[-1][f'validation/plot/{self.current_epoch}_{batch_idx}'].upload(
+                        f"temp.html")
                 except:
                     pass
 
