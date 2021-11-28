@@ -1,8 +1,10 @@
 from predict_pv_yield.models.baseline.last_value import Model
 import torch
 import pytorch_lightning as pl
+import pandas as pd
 from nowcasting_dataloader.fake import FakeDataset
 from nowcasting_dataset.config.model import Configuration
+import tempfile
 
 
 
@@ -55,6 +57,40 @@ def test_model_validation(configuration):
     # run data through model
     model.validation_step(x, 0)
 
+
+def test_validation_epoch_end(configuration):
+
+    # start model
+    model = Model(
+        forecast_minutes=configuration.input_data.default_forecast_minutes,
+        history_minutes=configuration.input_data.default_history_minutes,
+        output_variable="gsp_yield",
+    )
+
+    # create fake data loader
+    train_dataset = FakeDataset(configuration=configuration)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=None)
+
+    # satellite data
+    x = next(iter(train_dataloader))
+
+    # run data through model
+    model.validation_step(x, 0)
+    model.validation_step(x, 1)
+
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        model.results_file_name = f'{tmpdirname}/temp'
+
+        model.validation_epoch_end([])
+
+        results_df = pd.read_csv(f'{model.results_file_name}_0.csv')
+
+        assert len(results_df) == 2 * configuration.process.batch_size
+        assert results_df.loc[0,'gsp_id'] == x['gsp']['gsp_id'][0,0].numpy()
+        assert 't0_datetime_utc' in results_df.keys()
+        for i in range(model.forecast_len_30):
+            assert f'truth_{i}' in results_df.keys()
+            assert f'prediction_{i}' in results_df.keys()
 
 
 def test_trainer(configuration):

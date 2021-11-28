@@ -28,6 +28,12 @@ class BaseModel(pl.LightningModule):
     # default batch_size
     batch_size = 32
 
+    # results file name
+    results_file_name = 'results_epoch'
+
+    # list of results dataframes. This is used to save validation results
+    results_dfs = []
+
     def __init__(self):
         super().__init__()
 
@@ -189,7 +195,42 @@ class BaseModel(pl.LightningModule):
                 except:
                     pass
 
+        # ## save to file ###
+        # create dataframe with the following columns:
+        # t0_datetime_utc, gsp_id,
+        # prediction_0, prediction_1, .....
+        # truth_0, truth_1, ....
+        outputs = model_output.cpu().numpy()
+        results = pd.DataFrame(outputs, columns=[f'prediction_{i}' for i in range(model_output.shape[1])])
+        for i in range(model_output.shape[1]):
+            results[f'truth_{i}'] = batch.gsp.gsp_yield[:, 0, -self.history_len_30 + i]
+        results['t0_datetime_utc'] = batch.metadata.t0_datetime_utc
+        results['gsp_id'] = batch.gsp.gsp_id[:,0]
+
+        # append
+        if batch_idx == 0:
+            self.results_dfs = []
+        self.results_dfs.append(results)
+
         return self._training_or_validation_step(batch, tag="Validation")
+
+    def validation_epoch_end(self, outputs):
+
+        logger.info('Saving results of validation to logger')
+
+        # join all validation step results together
+        results_df = pd.concat(self.results_dfs)
+        results_df.reset_index(inplace=True)
+
+        # save to csv file
+        name_csv = f"{self.results_file_name}_{self.current_epoch}.csv"
+        results_df.to_csv(name_csv)
+
+        # upload csv to neptune
+        try:
+            self.logger.experiment[-1][f'validation/results/{self.current_epoch}'].upload(name_csv)
+        except:
+            pass
 
     def test_step(self, batch, batch_idx):
         self._training_or_validation_step(batch, tag="Test")
