@@ -206,7 +206,7 @@ class BaseModel(pl.LightningModule):
                                columns=[f'prediction_{i}' for i in range(model_output.shape[1])])
         results.index.name = 'example_index'
         for i in range(model_output.shape[1]):
-            results[f'truth_{i}'] = batch.gsp.gsp_yield[:, -self.history_len_30 + i,0].cpu()
+            results[f'truth_{i}'] = batch.gsp.gsp_yield[:, -self.forecast_len_30 + i, 0].cpu()
         results['t0_datetime_utc'] = batch.metadata.t0_datetime_utc
         results['gsp_id'] = batch.gsp.gsp_id[:,0].cpu()
         results['batch_index'] = batch_idx
