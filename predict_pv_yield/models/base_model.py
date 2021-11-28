@@ -202,7 +202,8 @@ class BaseModel(pl.LightningModule):
         # truth_0, truth_1, ....
         # get model outputs
         model_output = self(batch).cpu().numpy()
-        results = pd.DataFrame(outputs, columns=[f'prediction_{i}' for i in range(model_output.shape[1])])
+        results = pd.DataFrame(model_output,
+                               columns=[f'prediction_{i}' for i in range(model_output.shape[1])])
         results.index.name = 'example_index'
         for i in range(model_output.shape[1]):
             results[f'truth_{i}'] = batch.gsp.gsp_yield[:, -self.history_len_30 + i,0].cpu()
