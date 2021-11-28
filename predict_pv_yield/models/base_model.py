@@ -171,29 +171,29 @@ class BaseModel(pl.LightningModule):
                         # could not close figure
                         pass
 
-                # 2. plot summary batch of predictions and results
-                # make x,y data
-                if self.output_variable == 'gsp_yield':
-                    y = batch.gsp.gsp_yield[0: self.batch_size, :, 0].cpu().numpy()
-                else:
-                    y = batch.pv.pv_yield[0 : self.batch_size, :, 0].cpu().numpy()
-                y_hat = model_output[0 : self.batch_size].cpu().numpy()
-                time = [
-                    pd.to_datetime(x, unit="ns") for x in batch.gsp.gsp_datetime_index[0 : self.batch_size].cpu().numpy()
-                ]
-                time_hat = [
-                    pd.to_datetime(x, unit="ns")
-                    for x in batch.gsp.gsp_datetime_index[0 : self.batch_size, self.history_len_30 + 1 :].cpu().numpy()
-                ]
+            # 2. plot summary batch of predictions and results
+            # make x,y data
+            if self.output_variable == 'gsp_yield':
+                y = batch.gsp.gsp_yield[0: self.batch_size, :, 0].cpu().numpy()
+            else:
+                y = batch.pv.pv_yield[0 : self.batch_size, :, 0].cpu().numpy()
+            y_hat = model_output[0 : self.batch_size].cpu().numpy()
+            time = [
+                pd.to_datetime(x, unit="ns") for x in batch.gsp.gsp_datetime_index[0 : self.batch_size].cpu().numpy()
+            ]
+            time_hat = [
+                pd.to_datetime(x, unit="ns")
+                for x in batch.gsp.gsp_datetime_index[0 : self.batch_size, self.history_len_30 + 1 :].cpu().numpy()
+            ]
 
-                # plot and save to logger
-                fig = plot_batch_results(model_name=self.name, y=y, y_hat=y_hat, x=time, x_hat=time_hat)
-                fig.write_html(f"temp.html")
-                try:
-                    self.logger.experiment[-1][f'validation/plot/{self.current_epoch}_{batch_idx}'].upload(
-                        f"temp.html")
-                except:
-                    pass
+            # plot and save to logger
+            fig = plot_batch_results(model_name=self.name, y=y, y_hat=y_hat, x=time, x_hat=time_hat)
+            fig.write_html(f"temp.html")
+            try:
+                self.logger.experiment[-1][f'validation/plot/{self.current_epoch}_{batch_idx}'].upload(
+                    f"temp.html")
+            except:
+                pass
 
         # ## save to file ###
         # create dataframe with the following columns:
