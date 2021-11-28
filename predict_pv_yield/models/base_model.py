@@ -209,7 +209,7 @@ class BaseModel(pl.LightningModule):
             results[f'truth_{i}'] = batch.gsp.gsp_yield[:, -self.history_len_30 + i,0].cpu()
         results['t0_datetime_utc'] = batch.metadata.t0_datetime_utc
         results['gsp_id'] = batch.gsp.gsp_id[:,0].cpu()
-        results['batch_index'] = self.current_epoch
+        results['batch_index'] = batch_idx
 
         # append
         if batch_idx == 0:
