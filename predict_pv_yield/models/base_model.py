@@ -202,10 +202,12 @@ class BaseModel(pl.LightningModule):
         # truth_0, truth_1, ....
         outputs = model_output.cpu().numpy()
         results = pd.DataFrame(outputs, columns=[f'prediction_{i}' for i in range(model_output.shape[1])])
+        results.index.name = 'example_index'
         for i in range(model_output.shape[1]):
-            results[f'truth_{i}'] = batch.gsp.gsp_yield[:, 0, -self.history_len_30 + i]
+            results[f'truth_{i}'] = batch.gsp.gsp_yield[:, -self.history_len_30 + i,0].cpu()
         results['t0_datetime_utc'] = batch.metadata.t0_datetime_utc
-        results['gsp_id'] = batch.gsp.gsp_id[:,0]
+        results['gsp_id'] = batch.gsp.gsp_id[:,0].cpu()
+        results['batch_index'] = self.current_epoch
 
         # append
         if batch_idx == 0:
@@ -228,7 +230,7 @@ class BaseModel(pl.LightningModule):
 
         # upload csv to neptune
         try:
-            self.logger.experiment[-1][f'validation/results/{self.current_epoch}'].upload(name_csv)
+            self.logger.experiment[-1][f'validation/results/epoch_{self.current_epoch}'].upload(name_csv)
         except:
             pass
 
