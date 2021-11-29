@@ -109,4 +109,3 @@ def test_trainer_validation(configuration):
         assert 'gsp_id' in results_df.keys()
         assert "actual_gsp_pv_outturn_mw" in results_df.keys()
         assert "forecast_gsp_pv_outturn_mw" in results_df.keys()
-
