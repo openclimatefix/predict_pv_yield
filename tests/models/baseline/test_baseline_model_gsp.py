@@ -103,10 +103,10 @@ def test_trainer_validation(configuration):
         # check csv file of validation results has been made
         results_df = pd.read_csv(f'{model.results_file_name}_0.csv')
 
-        assert len(results_df) == len(train_dataloader) * configuration.process.batch_size
+        assert len(results_df) == len(train_dataloader) * configuration.process.batch_size * model.forecast_len_30
         assert 't0_datetime_utc' in results_df.keys()
+        assert 'target_datetime_utc' in results_df.keys()
         assert 'gsp_id' in results_df.keys()
-        for i in range(model.forecast_len_30):
-            assert f'truth_{i}' in results_df.keys()
-            assert f'prediction_{i}' in results_df.keys()
+        assert "actual_gsp_pv_outturn_mw" in results_df.keys()
+        assert "forecast_gsp_pv_outturn_mw" in results_df.keys()
 

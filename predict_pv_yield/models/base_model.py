@@ -8,7 +8,7 @@ from nowcasting_dataset.data_sources.nwp.nwp_data_source import NWP_VARIABLE_NAM
 from nowcasting_utils.models.loss import WeightedLosses
 from nowcasting_utils.models.metrics import mae_each_forecast_horizon, mse_each_forecast_horizon
 from nowcasting_dataloader.batch import BatchML
-from nowcasting_utils.models.validation import make_validation_results, save_validation_results_to_logger
+from nowcasting_utils.metrics.validation import make_validation_results, save_validation_results_to_logger
 
 import pandas as pd
 import numpy as np
@@ -220,14 +220,17 @@ class BaseModel(pl.LightningModule):
                 pass
 
         # save validation results
+        capacity = batch.gsp.gsp_capacity[:,-self.forecast_len_30:,0].cpu().numpy()
         predictions = model_output.cpu().numpy()
         truths = batch.gsp.gsp_yield[:, -self.forecast_len_30:, 0].cpu().numpy()
+        predictions = predictions * capacity
+        truths = truths * capacity
 
-        results = make_validation_results(truths=truths,
-                                          predictions=predictions,
+        results = make_validation_results(truths_mw=truths,
+                                          predictions_mw=predictions,
                                           gsp_ids=batch.gsp.gsp_id[:, 0].cpu(),
                                           batch_idx=batch_idx,
-                                          t0_datetimes_utc=batch.metadata.t0_datetime_utc)
+                                          t0_datetimes_utc=pd.to_datetime(batch.metadata.t0_datetime_utc))
 
         # append so in 'validation_epoch_end' the file is saved
         if batch_idx == 0:
