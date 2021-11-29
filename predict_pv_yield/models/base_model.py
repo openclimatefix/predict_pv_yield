@@ -240,9 +240,8 @@ class BaseModel(pl.LightningModule):
 
         logger.info("Validation epoch end")
 
-        name_csv = f"{self.results_file_name}_{self.current_epoch}.csv"
         save_validation_results_to_logger(results_dfs=self.results_dfs,
-                                          results_file_name=name_csv,
+                                          results_file_name=self.results_file_name,
                                           current_epoch=self.current_epoch,
                                           logger=self.logger)
 
