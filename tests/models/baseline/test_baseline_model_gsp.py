@@ -109,4 +109,3 @@ def test_trainer_validation(configuration):
         for i in range(model.forecast_len_30):
             assert f'truth_{i}' in results_df.keys()
             assert f'prediction_{i}' in results_df.keys()
-
