@@ -222,7 +222,6 @@ class BaseModel(pl.LightningModule):
         # save validation results
         predictions = model_output.cpu().numpy()
         truths = batch.gsp.gsp_yield[:, -self.forecast_len_30:, 0].cpu().numpy()
-        results["batch_index"] = batch_idx
 
         results = make_validation_results(truths=truths,
                                           predictions=predictions,
