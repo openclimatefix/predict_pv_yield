@@ -8,6 +8,7 @@ from nowcasting_dataset.data_sources.nwp.nwp_data_source import NWP_VARIABLE_NAM
 from nowcasting_utils.models.loss import WeightedLosses
 from nowcasting_utils.models.metrics import mae_each_forecast_horizon, mse_each_forecast_horizon
 from nowcasting_dataloader.batch import BatchML
+from nowcasting_utils.models.validation import make_validation_results, save_validation_results_to_logger
 
 import pandas as pd
 import numpy as np
@@ -218,28 +219,16 @@ class BaseModel(pl.LightningModule):
             except:
                 pass
 
-        # ## save to file ###
-        # create dataframe with the following columns:
-        # t0_datetime_utc, gsp_id,
-        # prediction_0, prediction_1, .....
-        # truth_0, truth_1, ....
-
-        # get model outputs and truths
-        predictions_tf = model_output.cpu().numpy()
-        truths_tf = batch.gsp.gsp_yield[:, -self.forecast_len_30:, 0].cpu().numpy()
-        predictions = pd.DataFrame(
-            predictions_tf, columns=[f"prediction_{i}" for i in range(predictions_tf.shape[1])]
-        )
-        truths = pd.DataFrame(truths_tf, columns=[f"truth_{i}" for i in range(truths_tf.shape[1])])
-
-        # join truths and predictions
-        results = pd.concat([predictions, truths], axis=1, join="inner")
-        results.index.name = "example_index"
-
-        # add metadata
-        results["t0_datetime_utc"] = batch.metadata.t0_datetime_utc
-        results["gsp_id"] = batch.gsp.gsp_id[:, 0].cpu()
+        # save validation results
+        predictions = model_output.cpu().numpy()
+        truths = batch.gsp.gsp_yield[:, -self.forecast_len_30:, 0].cpu().numpy()
         results["batch_index"] = batch_idx
+
+        results = make_validation_results(truths=truths,
+                                          predictions=predictions,
+                                          gsp_ids=batch.gsp.gsp_id[:, 0].cpu(),
+                                          batch_idx=batch_idx,
+                                          t0_datetimes_utc=batch.metadata.t0_datetime_utc)
 
         # append so in 'validation_epoch_end' the file is saved
         if batch_idx == 0:
@@ -250,23 +239,13 @@ class BaseModel(pl.LightningModule):
 
     def validation_epoch_end(self, outputs):
 
-        logger.info("Saving results of validation to logger")
+        logger.info("Validation epoch end")
 
-        # join all validation step results together
-        results_df = pd.concat(self.results_dfs)
-        results_df.reset_index(inplace=True)
-
-        # save to csv file
         name_csv = f"{self.results_file_name}_{self.current_epoch}.csv"
-        results_df.to_csv(name_csv)
-
-        # upload csv to neptune
-        try:
-            self.logger.experiment[-1][f"validation/results/epoch_{self.current_epoch}"].upload(
-                name_csv
-            )
-        except:
-            pass
+        save_validation_results_to_logger(results_dfs=self.results_dfs,
+                                          results_file_name=name_csv,
+                                          current_epoch=self.current_epoch,
+                                          logger=self.logger)
 
     def test_step(self, batch, batch_idx):
         self._training_or_validation_step(batch, tag="Test")
