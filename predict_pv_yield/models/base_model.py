@@ -226,7 +226,7 @@ class BaseModel(pl.LightningModule):
 
         # get model outputs and truths
         predictions_tf = model_output.cpu().numpy()
-        truths_tf = batch.gsp.gsp_yield[:, -self.forecast_len_30:, 0].cpu()
+        truths_tf = batch.gsp.gsp_yield[:, -self.forecast_len_30:, 0].cpu().numpy()
         predictions = pd.DataFrame(
             predictions_tf, columns=[f"prediction_{i}" for i in range(predictions_tf.shape[1])]
         )
