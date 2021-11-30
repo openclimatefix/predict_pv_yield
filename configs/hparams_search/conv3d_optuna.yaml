@@ -43,8 +43,8 @@ hydra:
     search_space:
       model.include_pv_yield_history:
         type: categorical
-        choices: [True, False ]
+        choices: [ true, false ]
       model.include_future_satellite:
         type: categorical
-        choices: [ True, False ]
+        choices: [ true, false ]
 
