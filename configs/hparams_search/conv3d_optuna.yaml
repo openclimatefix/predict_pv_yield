@@ -47,4 +47,3 @@ hydra:
       model.include_future_satellite:
         type: categorical
         choices: [ True, False ]
-
