@@ -47,3 +47,15 @@ nwp
 sat (no hrv)
 gsp history
 pv history
+
+After 1 epoch: NMAE/Validation ~ 0.0597
+
+5. https://app.neptune.ai/o/OpenClimateFix/org/predict-pv-yield/e/PRED-525/all
+
+data:
+nwp
+sat (no hrv)
+no gsp history
+pv history
+
+After X epoch: NMAE/Validation
