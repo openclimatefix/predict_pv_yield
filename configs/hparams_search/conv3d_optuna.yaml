@@ -46,9 +46,4 @@ hydra:
         choices: [ true, false ]
       model.include_future_satellite:
         type: categorical
-<<<<<<< HEAD
         choices: [ true, false ]
-
-=======
-        choices: [ True, False ]
->>>>>>> 67eff772d0d84740ab786002355ea56190c9b803
