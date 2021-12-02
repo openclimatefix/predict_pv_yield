@@ -39,6 +39,32 @@ def test_model_forward(configuration_conv3d):
     assert y.shape[1] == model.forecast_len_30
 
 
+def test_model_forward_no_satellite(configuration_conv3d):
+
+    config_file = "tests/configs/model/conv3d_sat_nwp.yaml"
+    config = load_config(config_file)
+    config['include_future_satellite'] = False
+
+    # start model
+    model = Model(**config)
+
+    dataset_configuration = configuration_conv3d
+    dataset_configuration.input_data.nwp.nwp_image_size_pixels = 16
+
+    # create fake data loader
+    train_dataset = FakeDataset(configuration=dataset_configuration)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=None)
+    x = next(iter(train_dataloader))
+
+    # run data through model
+    y = model(x)
+
+    # check out put is the correct shape
+    assert len(y.shape) == 2
+    assert y.shape[0] == 32
+    assert y.shape[1] == model.forecast_len_30
+
+
 def test_train(configuration_conv3d):
 
     config_file = "tests/configs/model/conv3d_sat_nwp.yaml"

@@ -32,7 +32,8 @@ class Model(BaseModel):
         fc3_output_features: int = 64,
         output_variable: str = "pv_yield",
         embedding_dem: int = 16,
-        include_pv_yield_history: int = True
+        include_pv_yield_history: int = True,
+        include_future_satellite: int = True,
     ):
         """
         3d conv model, that takes in different data streams
@@ -59,6 +60,7 @@ class Model(BaseModel):
         fc3_output_features: number of fully connected outputs nodes out of the the third fully connected layer
         output_variable: the output variable to be predicted
         number_nwp_channels: The number of nwp channels there are
+        include_future_satellite: option to include future satellite images, or not
         """
 
         self.include_pv_or_gsp_yield_history = include_pv_or_gsp_yield_history
@@ -74,21 +76,26 @@ class Model(BaseModel):
         self.number_nwp_channels = number_nwp_channels
         self.embedding_dem = embedding_dem
         self.include_pv_yield_history = include_pv_yield_history
+        self.include_future_satellite = include_future_satellite
 
         super().__init__()
 
         conv3d_channels = conv3d_channels
 
+        if include_future_satellite:
+            cnn_output_size_time = self.forecast_len_5 + self.history_len_5 + 1
+        else:
+            cnn_output_size_time = self.history_len_5 + 1
         self.cnn_output_size = (
             conv3d_channels
             * ((image_size_pixels - 2 * self.number_of_conv3d_layers) ** 2)
-            * (self.forecast_len_5 + self.history_len_5 + 1 - 2 * self.number_of_conv3d_layers)
+            * cnn_output_size_time
         )
 
         self.nwp_cnn_output_size = (
-                conv3d_channels
-                * ((nwp_image_size_pixels - 2 * self.number_of_conv3d_layers) ** 2)
-                * (self.forecast_len_60 + self.history_len_60 + 1)
+            conv3d_channels
+            * ((nwp_image_size_pixels - 2 * self.number_of_conv3d_layers) ** 2)
+            * (self.forecast_len_60 + self.history_len_60 + 1)
         )
 
         # conv0
@@ -96,16 +103,23 @@ class Model(BaseModel):
             in_channels=number_sat_channels,
             out_channels=conv3d_channels,
             kernel_size=(3, 3, 3),
-            padding=0,
+            padding=(1, 0, 0),
         )
         for i in range(0, self.number_of_conv3d_layers - 1):
             layer = nn.Conv3d(
-                in_channels=conv3d_channels, out_channels=conv3d_channels, kernel_size=(3, 3, 3), padding=0
+                in_channels=conv3d_channels,
+                out_channels=conv3d_channels,
+                kernel_size=(3, 3, 3),
+                padding=(1, 0, 0),
             )
             setattr(self, f"sat_conv{i + 1}", layer)
 
-        self.fc1 = nn.Linear(in_features=self.cnn_output_size, out_features=self.fc1_output_features)
-        self.fc2 = nn.Linear(in_features=self.fc1_output_features, out_features=self.fc2_output_features)
+        self.fc1 = nn.Linear(
+            in_features=self.cnn_output_size, out_features=self.fc1_output_features
+        )
+        self.fc2 = nn.Linear(
+            in_features=self.fc1_output_features, out_features=self.fc2_output_features
+        )
 
         # nwp
         if include_nwp:
@@ -117,19 +131,30 @@ class Model(BaseModel):
             )
             for i in range(0, self.number_of_conv3d_layers - 1):
                 layer = nn.Conv3d(
-                    in_channels=conv3d_channels, out_channels=conv3d_channels, kernel_size=(3, 3, 3), padding=(1,0,0)
+                    in_channels=conv3d_channels,
+                    out_channels=conv3d_channels,
+                    kernel_size=(3, 3, 3),
+                    padding=(1, 0, 0),
                 )
                 setattr(self, f"nwp_conv{i + 1}", layer)
 
-            self.nwp_fc1 = nn.Linear(in_features=self.nwp_cnn_output_size, out_features=self.fc1_output_features)
-            self.nwp_fc2 = nn.Linear(in_features=self.fc1_output_features, out_features=self.number_of_nwp_features)
+            self.nwp_fc1 = nn.Linear(
+                in_features=self.nwp_cnn_output_size, out_features=self.fc1_output_features
+            )
+            self.nwp_fc2 = nn.Linear(
+                in_features=self.fc1_output_features, out_features=self.number_of_nwp_features
+            )
 
         if self.embedding_dem:
-            self.pv_system_id_embedding = nn.Embedding(num_embeddings=940, embedding_dim=self.embedding_dem)
+            self.pv_system_id_embedding = nn.Embedding(
+                num_embeddings=940, embedding_dim=self.embedding_dem
+            )
 
         if self.include_pv_yield_history:
-            self.pv_fc1 = nn.Linear(in_features=self.number_of_pv_samples_per_batch*(self.history_len_5 + 1),
-                                    out_features=128)
+            self.pv_fc1 = nn.Linear(
+                in_features=self.number_of_pv_samples_per_batch * (self.history_len_5 + 1),
+                out_features=128,
+            )
 
         fc3_in_features = self.fc2_output_features
         if include_pv_or_gsp_yield_history:
@@ -156,6 +181,9 @@ class Model(BaseModel):
         sat_data = x.satellite.data.float()
         batch_size, n_chans, seq_len, height, width = sat_data.shape
 
+        if not self.include_future_satellite:
+            sat_data = sat_data[:, :, : self.history_len_5 + 1]
+
         # :) Pass data through the network :)
         out = F.relu(self.sat_conv0(sat_data))
         for i in range(0, self.number_of_conv3d_layers - 1):
@@ -171,10 +199,14 @@ class Model(BaseModel):
 
         # add pv yield
         if self.include_pv_or_gsp_yield_history:
-            if self.output_variable == 'gsp_yield':
-                pv_yield_history = x.gsp.gsp_yield[:, : self.history_len_30 + 1].nan_to_num(nan=0.0).float()
+            if self.output_variable == "gsp_yield":
+                pv_yield_history = (
+                    x.gsp.gsp_yield[:, : self.history_len_30 + 1].nan_to_num(nan=0.0).float()
+                )
             else:
-                pv_yield_history = x.pv.pv_yield[:, : self.history_len_30 + 1].nan_to_num(nan=0.0).float()
+                pv_yield_history = (
+                    x.pv.pv_yield[:, : self.history_len_30 + 1].nan_to_num(nan=0.0).float()
+                )
 
             pv_yield_history = pv_yield_history.reshape(
                 pv_yield_history.shape[0], pv_yield_history.shape[1] * pv_yield_history.shape[2]
@@ -184,7 +216,9 @@ class Model(BaseModel):
 
         # add the pv yield history. This can be used if trying to predict gsp
         if self.include_pv_yield_history:
-            pv_yield_history = x.pv.pv_yield[:, : self.history_len_5 + 1].nan_to_num(nan=0.0).float()
+            pv_yield_history = (
+                x.pv.pv_yield[:, : self.history_len_5 + 1].nan_to_num(nan=0.0).float()
+            )
 
             pv_yield_history = pv_yield_history.reshape(
                 pv_yield_history.shape[0], pv_yield_history.shape[1] * pv_yield_history.shape[2]
@@ -214,10 +248,10 @@ class Model(BaseModel):
 
         # ********************** Embedding of PV system ID ********************
         if self.embedding_dem:
-            if self.output_variable == 'pv_yield':
-                id = x.pv.pv_system_row_number[0: self.batch_size, 0]
+            if self.output_variable == "pv_yield":
+                id = x.pv.pv_system_row_number[0 : self.batch_size, 0]
             else:
-                id = x.gsp.gsp_id[0: self.batch_size, 0]
+                id = x.gsp.gsp_id[0 : self.batch_size, 0]
 
             id = id.type(torch.IntTensor)
             id = id.to(out.device)
