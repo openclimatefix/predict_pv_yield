@@ -141,7 +141,7 @@ class Model(BaseModel):
         # ******************* Satellite imagery *************************
         # Shape: batch_size, channel, seq_length, height, width
         # TODO: Use optical flow, not actual sat images of the future!
-        sat_data = x.hrvsatellite.data[0 : self.batch_size].float()
+        sat_data = x.satellite.data[0 : self.batch_size].float()
 
         if not self.use_future_satellite_images:
             sat_data[:, -self.forecast_len_5: ] = 0  # This might not be the best way to do it
