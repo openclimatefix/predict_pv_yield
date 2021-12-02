@@ -240,7 +240,7 @@ class Model(BaseModel):
         # add the pv yield history. This can be used if trying to predict gsp
         if self.include_pv_yield_history:
             pv_yield_history = (
-                x.pv.pv_yield.nan_to_num(nan=0.0).float()
+                x.pv.pv_yield[:self.batch_size].nan_to_num(nan=0.0).float()
             )
             # remove future pv
             pv_yield_history[:, self.history_len_5 + 1:] = 0.0
