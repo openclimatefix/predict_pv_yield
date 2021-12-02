@@ -73,6 +73,8 @@ class Model(BaseModel):
         output_variable: str = "pv_yield",
         conv3d_channels: int = 16,
         use_future_satellite_images: bool = True,  # option not to use future sat images
+        include_pv_or_gsp_yield_history: bool = True,
+        include_pv_yield_history: int = True,
     ):
         """
         Idea is to have a conv3d (+max pool) layer before both sat and nwp data go into perceiver model.
@@ -86,6 +88,8 @@ class Model(BaseModel):
         self.embedding_dem = embedding_dem
         self.output_variable = output_variable
         self.use_future_satellite_images = use_future_satellite_images
+        self.include_pv_yield_history = include_pv_yield_history
+        self.include_pv_or_gsp_yield_history = include_pv_or_gsp_yield_history
 
         super().__init__()
 
@@ -223,14 +227,25 @@ class Model(BaseModel):
             dim=2,
         )
 
-        if self.output_variable == 'pv_yield':
-            # take the history of the pv yield of this system,
-            pv_yield_history = x.pv.pv_yield[0 : self.batch_size][:, : self.history_len_5 + 1, 0].unsqueeze(-1).float()
-            encoder_input = torch.cat((rnn_input[:, : self.history_len_5 + 1], pv_yield_history), dim=2)
-        elif self.output_variable == 'gsp_yield':
-            # take the history of the gsp yield of this system,
-            gsp_history = x.gsp.gsp_yield[0: self.batch_size][:, : self.history_len_30 + 1, 0].unsqueeze(-1).float()
-            encoder_input = torch.cat((rnn_input[:, : self.history_len_30 + 1], gsp_history), dim=2)
+        if self.include_pv_or_gsp_yield_history:
+            if self.output_variable == 'pv_yield':
+                # take the history of the pv yield of this system,
+                pv_yield_history = x.pv.pv_yield[0 : self.batch_size][:, : self.history_len_5 + 1, 0].unsqueeze(-1).float()
+                encoder_input = torch.cat((rnn_input[:, : self.history_len_5 + 1], pv_yield_history), dim=2)
+            elif self.output_variable == 'gsp_yield':
+                # take the history of the gsp yield of this system,
+                gsp_history = x.gsp.gsp_yield[0: self.batch_size][:, : self.history_len_30 + 1, 0].unsqueeze(-1).float()
+                encoder_input = torch.cat((rnn_input[:, : self.history_len_30 + 1], gsp_history), dim=2)
+
+        # add the pv yield history. This can be used if trying to predict gsp
+        if self.include_pv_yield_history:
+            pv_yield_history = (
+                x.pv.pv_yield.nan_to_num(nan=0.0).float()
+            )
+            # remove future pv
+            pv_yield_history[:, self.history_len_5 + 1:] = 0.0
+
+            encoder_input = torch.cat((rnn_input, pv_yield_history), dim=2)
 
         encoder_output, encoder_hidden = self.encoder_rnn(encoder_input)
         decoder_output, _ = self.decoder_rnn(rnn_input[:, -self.forecast_len :], encoder_hidden)
