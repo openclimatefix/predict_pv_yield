@@ -176,7 +176,7 @@ class Model(BaseModel):
         sat_data_zeros = torch.zeros(size=(new_batch_size, nwp_width, nwp_height - height, n_chans),
                                      device=sat_data.device)
         sat_data = torch.cat([sat_data, sat_data_zeros], dim=2)
-        batch_size, sat_width, sat_height, sat_n_chans = sat_data.shape
+        new_batch_size, sat_width, sat_height, sat_n_chans = sat_data.shape
 
         assert nwp_width == sat_height, f'widths should be the same({nwp_width},{sat_width})'
         assert nwp_height == sat_height, f'heights should be the same({nwp_height},{sat_height})'
