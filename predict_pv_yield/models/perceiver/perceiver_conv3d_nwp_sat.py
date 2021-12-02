@@ -167,16 +167,15 @@ class Model(BaseModel):
         nwp_data_zeros = torch.zeros(size=(batch_size, seq_len - nwp_seq_len, nwp_width, nwp_height, n_nwp_chans), device=nwp_data.device)
         nwp_data = torch.cat([nwp_data, nwp_data_zeros], dim=1)
 
-        # v15 the width and height are a lot less, so lets expand them
-        nwp_data_zeros = torch.zeros(size=(batch_size, seq_len, width - nwp_width, nwp_height, n_nwp_chans),
-                                     device=nwp_data.device)
-        nwp_data = torch.cat([nwp_data, nwp_data_zeros], dim=1)
-        nwp_data_zeros = torch.zeros(size=(batch_size, seq_len, width, height - nwp_height, n_nwp_chans),
-                                     device=nwp_data.device)
-        nwp_data = torch.cat([nwp_data, nwp_data_zeros], dim=1)
-
-
         nwp_data = nwp_data.reshape(new_batch_size, nwp_width, nwp_height, n_nwp_chans)
+
+        # v15 the width and height are a lot less, so lets expand the sat data. There should be a better way
+        sat_data_zeros = torch.zeros(size=(new_batch_size, nwp_width - width, height, n_chans),
+                                     device=sat_data.device)
+        sat_data = torch.cat([sat_data, sat_data_zeros], dim=1)
+        sat_data_zeros = torch.zeros(size=(new_batch_size, nwp_width, nwp_height - height, n_chans),
+                                     device=sat_data.device)
+        sat_data = torch.cat([sat_data, sat_data_zeros], dim=1)
 
         assert nwp_width == width, f'widths should be the same({nwp_width},{width})'
         assert nwp_height == height, f'heights should be the same({nwp_height},{height})'
