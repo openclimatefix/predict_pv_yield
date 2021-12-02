@@ -72,8 +72,8 @@ class Model(BaseModel):
         embedding_dem: int = 16,
         output_variable: str = "pv_yield",
         conv3d_channels: int = 16,
-        use_future_satellite_images: bool = True,  # option not to use future sat images
-        include_pv_or_gsp_yield_history: bool = True,
+        use_future_satellite_images: bool = False,  # option not to use future sat images
+        include_pv_or_gsp_yield_history: bool = False,
         include_pv_yield_history: int = True,
     ):
         """
@@ -119,10 +119,16 @@ class Model(BaseModel):
         if self.embedding_dem:
             self.pv_system_id_embedding = nn.Embedding(num_embeddings=940, embedding_dim=self.embedding_dem)
 
+        rnn_input_size = FC_OUTPUT_SIZE
+        if self.include_pv_or_gsp_yield_history:
+            rnn_input_size += 1
+        if self.include_pv_yield_history:
+            rnn_input_size += 128
+
         # TODO: Get rid of RNNs!
         self.encoder_rnn = nn.GRU(
             # plus 1 for history
-            input_size=FC_OUTPUT_SIZE + 1,
+            input_size=rnn_input_size,
             hidden_size=RNN_HIDDEN_SIZE,
             num_layers=2,
             batch_first=True,
