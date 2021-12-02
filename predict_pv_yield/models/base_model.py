@@ -220,9 +220,9 @@ class BaseModel(pl.LightningModule):
                 pass
 
         # save validation results
-        capacity = batch.gsp.gsp_capacity[:,-self.forecast_len_30:,0].cpu().numpy()
+        capacity = batch.gsp.gsp_capacity[0 : self.batch_size,-self.forecast_len_30:,0].cpu().numpy()
         predictions = model_output.cpu().numpy()
-        truths = batch.gsp.gsp_yield[:, -self.forecast_len_30:, 0].cpu().numpy()
+        truths = batch.gsp.gsp_yield[0 : self.batch_size, -self.forecast_len_30:, 0].cpu().numpy()
         predictions = predictions * capacity
         truths = truths * capacity
 
