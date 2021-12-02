@@ -141,7 +141,7 @@ class Model(BaseModel):
         # ******************* Satellite imagery *************************
         # Shape: batch_size, channel, seq_length, height, width
         # TODO: Use optical flow, not actual sat images of the future!
-        sat_data = x.satellite.data[0 : self.batch_size].float()
+        sat_data = x.hrvsatellite.data[0 : self.batch_size].float()
 
         if not self.use_future_satellite_images:
             sat_data[:, -self.forecast_len_5: ] = 0  # This might not be the best way to do it
@@ -166,6 +166,15 @@ class Model(BaseModel):
         # nwp to have the same sel_len as sat. I think there is a better solution than this
         nwp_data_zeros = torch.zeros(size=(batch_size, seq_len - nwp_seq_len, nwp_width, nwp_height, n_nwp_chans), device=nwp_data.device)
         nwp_data = torch.cat([nwp_data, nwp_data_zeros], dim=1)
+
+        # v15 the width and height are a lot less, so lets expand them
+        nwp_data_zeros = torch.zeros(size=(batch_size, seq_len, width - nwp_width, nwp_height, n_nwp_chans),
+                                     device=nwp_data.device)
+        nwp_data = torch.cat([nwp_data, nwp_data_zeros], dim=1)
+        nwp_data_zeros = torch.zeros(size=(batch_size, seq_len, width, height - nwp_height, n_nwp_chans),
+                                     device=nwp_data.device)
+        nwp_data = torch.cat([nwp_data, nwp_data_zeros], dim=1)
+
 
         nwp_data = nwp_data.reshape(new_batch_size, nwp_width, nwp_height, n_nwp_chans)
 
