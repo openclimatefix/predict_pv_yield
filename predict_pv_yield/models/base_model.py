@@ -153,6 +153,12 @@ class BaseModel(pl.LightningModule):
             return self._training_or_validation_step(batch, tag="Train")
 
     def validation_step(self, batch: BatchML, batch_idx):
+        self.validation_or_test_step(batch, batch_idx)
+
+    def test_step(self, batch: BatchML, batch_idx):
+        self.validation_or_test_step(batch, batch_idx)
+
+    def validation_or_test_step(self, batch: BatchML, batch_idx):
 
         if type(batch) == dict:
             batch = BatchML(**batch)
@@ -249,8 +255,14 @@ class BaseModel(pl.LightningModule):
                                           current_epoch=self.current_epoch,
                                           logger=self.logger)
 
-    def test_step(self, batch, batch_idx):
-        self._training_or_validation_step(batch, tag="Test")
+    def test_epoch_end(self, outputs):
+
+        logger.info("Test epoch end")
+
+        save_validation_results_to_logger(results_dfs=self.results_dfs,
+                                          results_file_name=self.results_file_name,
+                                          current_epoch=self.current_epoch,
+                                          logger=self.logger)
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=0.0005)
