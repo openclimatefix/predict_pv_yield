@@ -14,4 +14,4 @@ fc3_output_features: 32
 output_variable: gsp_yield
 include_pv_yield_history: True
 include_future_satellite: False
-include_pv_gsp_coordiantes: True
+include_pv_gsp_coordinates: True
