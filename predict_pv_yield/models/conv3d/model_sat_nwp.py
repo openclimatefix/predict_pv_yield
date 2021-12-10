@@ -7,6 +7,8 @@ from torch import nn
 from predict_pv_yield.models.base_model import BaseModel
 from nowcasting_dataloader.batch import BatchML
 
+from nowcasting_dataset.consts import DEFAULT_N_PV_SYSTEMS_PER_EXAMPLE, DEFAULT_N_GSP_PER_EXAMPLE
+
 logging.basicConfig()
 _LOG = logging.getLogger("predict_pv_yield")
 
@@ -34,6 +36,9 @@ class Model(BaseModel):
         embedding_dem: int = 16,
         include_pv_yield_history: int = True,
         include_future_satellite: int = True,
+        include_pv_gsp_coordinates: int = True,
+        number_pv_systems: int = DEFAULT_N_PV_SYSTEMS_PER_EXAMPLE,
+        number_gsps: int = DEFAULT_N_GSP_PER_EXAMPLE,
     ):
         """
         3d conv model, that takes in different data streams
@@ -77,6 +82,10 @@ class Model(BaseModel):
         self.embedding_dem = embedding_dem
         self.include_pv_yield_history = include_pv_yield_history
         self.include_future_satellite = include_future_satellite
+        self.include_pv_gsp_coordinates = include_pv_gsp_coordinates
+        self.number_pv_systems= number_pv_systems
+        self.number_gsps = number_gsps
+
 
         super().__init__()
 
@@ -147,7 +156,7 @@ class Model(BaseModel):
 
         if self.embedding_dem:
             self.pv_system_id_embedding = nn.Embedding(
-                num_embeddings=940, embedding_dim=self.embedding_dem
+                num_embeddings=1000, embedding_dim=self.embedding_dem
             )
 
         if self.include_pv_yield_history:
@@ -155,6 +164,11 @@ class Model(BaseModel):
                 in_features=self.number_of_pv_samples_per_batch * (self.history_len_5 + 1),
                 out_features=128,
             )
+
+        if self.include_pv_gsp_coordinates:
+            self.pv_gsp_coordinates = nn.Linear(
+                in_features=2 * (self.number_pv_systems + self.number_gsps),out_features=128)
+
 
         fc3_in_features = self.fc2_output_features
         if include_pv_or_gsp_yield_history:
@@ -164,6 +178,8 @@ class Model(BaseModel):
         if self.embedding_dem:
             fc3_in_features += self.embedding_dem
         if self.include_pv_yield_history:
+            fc3_in_features += 128
+        if self.include_pv_gsp_coordinates:
             fc3_in_features += 128
 
         self.fc3 = nn.Linear(in_features=fc3_in_features, out_features=self.fc3_output_features)
@@ -245,6 +261,20 @@ class Model(BaseModel):
 
             # join with other FC layer
             out = torch.cat((out, out_nwp), dim=1)
+
+        if self.include_pv_gsp_coordinates:
+
+            pv_x_coordiantes = x.pv.pv_system_x_coords[:self.batch_size].nan_to_num(nan=0.0).float()
+            pv_y_coordiantes = x.pv.pv_system_y_coords[:self.batch_size].nan_to_num(nan=0.0).float()
+
+            gsp_x_coordiantes = x.gsp.gsp_x_coords[:self.batch_size].nan_to_num(nan=0.0).float()
+            gsp_y_coordiantes = x.gsp.gsp_y_coords[:self.batch_size].nan_to_num(nan=0.0).float()
+
+            input = torch.cat((pv_x_coordiantes, pv_y_coordiantes, gsp_x_coordiantes, gsp_y_coordiantes), dim=1)
+
+            pv_gsp_coordinates_output = self.pv_gsp_coordinates(input)
+
+            out = torch.cat((out,pv_gsp_coordinates_output), dim=1)
 
         # ********************** Embedding of PV system ID ********************
         if self.embedding_dem:

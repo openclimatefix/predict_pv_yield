@@ -9,7 +9,7 @@ from perceiver_pytorch import Perceiver
 from predict_pv_yield.models.base_model import BaseModel
 from nowcasting_dataloader.batch import BatchML
 
-from nowcasting_dataset.consts import NWP_VARIABLE_NAMES, SAT_VARIABLE_NAMES
+from nowcasting_dataset.consts import NWP_VARIABLE_NAMES, SAT_VARIABLE_NAMES, DEFAULT_N_PV_SYSTEMS_PER_EXAMPLE, DEFAULT_N_GSP_PER_EXAMPLE
 
 
 params = dict(
@@ -75,6 +75,9 @@ class Model(BaseModel):
         use_future_satellite_images: bool = False,  # option not to use future sat images
         include_pv_or_gsp_yield_history: bool = False,
         include_pv_yield_history: int = True,
+        include_pv_gsp_coordinates: int = True,
+        number_pv_systems: int = DEFAULT_N_PV_SYSTEMS_PER_EXAMPLE,
+        number_gsps: int = DEFAULT_N_GSP_PER_EXAMPLE,
     ):
         """
         Idea is to have a conv3d (+max pool) layer before both sat and nwp data go into perceiver model.
@@ -90,6 +93,9 @@ class Model(BaseModel):
         self.use_future_satellite_images = use_future_satellite_images
         self.include_pv_yield_history = include_pv_yield_history
         self.include_pv_or_gsp_yield_history = include_pv_or_gsp_yield_history
+        self.include_pv_gsp_coordinates = include_pv_gsp_coordinates
+        self.number_pv_systems= number_pv_systems
+        self.number_gsps = number_gsps
 
         super().__init__()
 
@@ -124,6 +130,8 @@ class Model(BaseModel):
             rnn_input_size += 1
         if self.include_pv_yield_history:
             rnn_input_size += 128
+        if self.include_pv_gsp_coordinates:
+            rnn_input_size += 2*(self.number_pv_systems + self.number_gsps)
 
         # TODO: Get rid of RNNs!
         self.encoder_rnn = nn.GRU(
@@ -252,6 +260,16 @@ class Model(BaseModel):
             pv_yield_history[:, self.history_len_5 + 1:] = 0.0
 
             encoder_input = torch.cat((rnn_input, pv_yield_history), dim=2)
+
+        if self.include_pv_gsp_coordinates:
+
+            pv_x_coordiantes = x.pv.pv_system_x_coords[:self.batch_size].nan_to_num(nan=0.0).float()
+            pv_y_coordiantes = x.pv.pv_system_y_coords[:self.batch_size].nan_to_num(nan=0.0).float()
+
+            gsp_x_coordiantes = x.gsp.gsp_x_coords[:self.batch_size].nan_to_num(nan=0.0).float()
+            gsp_y_coordiantes = x.gsp.gsp_y_coords[:self.batch_size].nan_to_num(nan=0.0).float()
+
+            encoder_input = torch.cat((rnn_input, pv_x_coordiantes, pv_y_coordiantes, gsp_x_coordiantes, gsp_y_coordiantes), dim=2)
 
         encoder_output, encoder_hidden = self.encoder_rnn(encoder_input)
         decoder_output, _ = self.decoder_rnn(rnn_input[:, -self.forecast_len :], encoder_hidden)

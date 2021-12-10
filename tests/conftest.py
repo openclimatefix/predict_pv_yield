@@ -2,6 +2,7 @@ import pytest
 
 from nowcasting_dataset.config.model import Configuration
 from predict_pv_yield.utils import load_config
+from nowcasting_dataset.consts import SAT_VARIABLE_NAMES
 
 
 @pytest.fixture()
@@ -28,6 +29,7 @@ def configuration_conv3d():
     dataset_configuration.input_data.satellite.satellite_image_size_pixels = config['image_size_pixels']
     dataset_configuration.input_data.default_history_minutes = config['history_minutes']
     dataset_configuration.input_data.default_forecast_minutes = config['forecast_minutes']
+    dataset_configuration.input_data.satellite.satellite_channels = SAT_VARIABLE_NAMES[1:]
 
     return dataset_configuration
 
