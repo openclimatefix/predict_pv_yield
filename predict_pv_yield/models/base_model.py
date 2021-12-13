@@ -261,7 +261,7 @@ class BaseModel(pl.LightningModule):
 
         save_validation_results_to_logger(results_dfs=self.results_dfs,
                                           results_file_name=self.results_file_name,
-                                          current_epoch=self.current_epoch,
+                                          current_epoch='test',
                                           logger=self.logger)
 
     def configure_optimizers(self):
