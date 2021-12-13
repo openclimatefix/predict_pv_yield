@@ -269,7 +269,10 @@ class Model(BaseModel):
             gsp_x_coordiantes = x.gsp.gsp_x_coords[:self.batch_size].nan_to_num(nan=0.0).float()
             gsp_y_coordiantes = x.gsp.gsp_y_coords[:self.batch_size].nan_to_num(nan=0.0).float()
 
-            encoder_input = torch.cat((rnn_input, pv_x_coordiantes, pv_y_coordiantes, gsp_x_coordiantes, gsp_y_coordiantes), dim=2)
+            input = torch.cat((pv_x_coordiantes, pv_y_coordiantes, gsp_x_coordiantes, gsp_y_coordiantes), dim=1)
+
+            # currently this doesnt work TODO
+            encoder_input = torch.cat((rnn_input, input), dim=2)
 
         encoder_output, encoder_hidden = self.encoder_rnn(encoder_input)
         decoder_output, _ = self.decoder_rnn(rnn_input[:, -self.forecast_len :], encoder_hidden)
