@@ -18,10 +18,10 @@ params = dict(
     # from a yaml file stored with the dataset.
     batch_size=32,
     history_minutes=30,  #: Number of timesteps of history, not including t0.
-    forecast_minutes=120,  #: Number of timesteps of forecast.
+    forecast_minutes=60,  #: Number of timesteps of forecast.
     image_size_pixels=64,
     nwp_channels=NWP_VARIABLE_NAMES[0:10],
-    sat_channels=SAT_VARIABLE_NAMES[1:],
+    sat_channels=SAT_VARIABLE_NAMES[1:11],
 )
 
 
@@ -69,13 +69,13 @@ class Model(BaseModel):
         batch_size: int = 32,
         num_latents: int = 128,
         latent_dim: int = 64,
-        embedding_dem: int = 16,
+        embedding_dem: int = 0,
         output_variable: str = "pv_yield",
         conv3d_channels: int = 16,
         use_future_satellite_images: bool = False,  # option not to use future sat images
         include_pv_or_gsp_yield_history: bool = False,
         include_pv_yield_history: int = True,
-        include_pv_gsp_coordinates: int = True,
+        include_pv_gsp_coordinates: int = False,
         number_pv_systems: int = DEFAULT_N_PV_SYSTEMS_PER_EXAMPLE,
         number_gsps: int = DEFAULT_N_GSP_PER_EXAMPLE,
     ):
