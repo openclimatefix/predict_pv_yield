@@ -41,3 +41,7 @@ ignore_warnings: True
 # check performance on test set, using the best model achieved during training
 # lightning chooses best model based on metric specified in checkpoint callback
 test_after_training: True
+
+# load the specific model and only run inference
+load_model: /home/ec2-user/github/predict_pv_yield/logs/runs/2021-12-13/14-52-11/checkpoints/epoch_006.ckp
+

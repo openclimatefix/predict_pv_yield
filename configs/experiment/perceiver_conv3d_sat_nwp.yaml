@@ -14,7 +14,6 @@ defaults:
 # this allows you to overwrite only specified parameters
 
 seed: 518
-load_model: /home/ec2-user/github/predict_pv_yield/logs/runs/2021-12-13/14-52-11/checkpoints/epoch_006.ckp
 
 trainer:
   min_epochs: 1
