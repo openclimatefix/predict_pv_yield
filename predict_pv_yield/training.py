@@ -77,7 +77,7 @@ def train(config: DictConfig) -> Optional[float]:
 
     # Train the model
     log.info("Starting training!")
-    if 'load_model' is config:
+    if 'load_model' in config:
         model = model.load_from_checkpoint(checkpoint_path=config['load_model'])
     elif 'validate_only' in config:
         trainer.validate(model=model, datamodule=datamodule)
