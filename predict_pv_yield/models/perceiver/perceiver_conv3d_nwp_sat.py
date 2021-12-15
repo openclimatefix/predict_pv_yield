@@ -34,7 +34,7 @@ SAT_Y_STD = np.float32(406454.17945938)
 TOTAL_SEQ_LEN = params["history_minutes"] // 5 + params["forecast_minutes"] // 5 + 1
 NWP_SIZE = len(params["nwp_channels"]) * 2 * 2  # channels x width x height
 N_DATETIME_FEATURES = 4
-PERCEIVER_OUTPUT_SIZE = 512
+PERCEIVER_OUTPUT_SIZE = 532
 FC_OUTPUT_SIZE = 8
 RNN_HIDDEN_SIZE = 16
 
@@ -105,8 +105,10 @@ class Model(BaseModel):
         self.perceiver = Perceiver(
             input_channels=2*conv3d_channels,
             input_axis=2,
-            num_freq_bands=6,
+            num_freq_bands=3,
             max_freq=10,
+            cross_dim_head=16,
+            latent_dim_head=16,
             depth=TOTAL_SEQ_LEN,
             num_latents=self.num_latents,
             latent_dim=self.latent_dim,
