@@ -1,5 +1,6 @@
 import logging
 
+import pandas as pd
 import torch
 import torch.nn.functional as F
 from torch import nn
@@ -35,10 +36,11 @@ class Model(BaseModel):
         output_variable: str = "pv_yield",
         embedding_dem: int = 16,
         include_pv_yield_history: int = True,
-        include_future_satellite: int = True,
+        include_future_satellite: int = False,
         include_pv_gsp_coordinates: int = True,
         number_pv_systems: int = DEFAULT_N_PV_SYSTEMS_PER_EXAMPLE,
         number_gsps: int = DEFAULT_N_GSP_PER_EXAMPLE,
+        include_opticalflow: int = True
     ):
         """
         3d conv model, that takes in different data streams
@@ -83,6 +85,7 @@ class Model(BaseModel):
         self.include_pv_yield_history = include_pv_yield_history
         self.include_future_satellite = include_future_satellite
         self.include_pv_gsp_coordinates = include_pv_gsp_coordinates
+        self.include_opticalflow = include_opticalflow
         self.number_pv_systems= number_pv_systems
         self.number_gsps = number_gsps
 
@@ -91,7 +94,7 @@ class Model(BaseModel):
 
         conv3d_channels = conv3d_channels
 
-        if include_future_satellite:
+        if include_future_satellite or include_opticalflow:
             cnn_output_size_time = self.forecast_len_5 + self.history_len_5 + 1
         else:
             cnn_output_size_time = self.history_len_5 + 1
@@ -199,6 +202,9 @@ class Model(BaseModel):
 
         if not self.include_future_satellite:
             sat_data = sat_data[:, :, : self.history_len_5 + 1]
+        if self.include_opticalflow:
+            optical_flow = x.opticalflow.data.float()
+            sat_data = torch.concat([sat_data,optical_flow], dim=2)
 
         # :) Pass data through the network :)
         out = F.relu(self.sat_conv0(sat_data))
