@@ -127,3 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+notebooks/results.csvvalidation_*.csv
+notebooks/results.csvtrain_*.csv
