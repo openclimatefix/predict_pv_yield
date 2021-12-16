@@ -33,6 +33,7 @@ class Model(BaseModel):
         fc1_output_features: int = 128,
         fc2_output_features: int = 128,
         fc3_output_features: int = 64,
+        number_of_nwp_features: int = 128,
         output_variable: str = "pv_yield",
         embedding_dem: int = 16,
         include_pv_yield_history: int = True,
@@ -68,12 +69,13 @@ class Model(BaseModel):
         output_variable: the output variable to be predicted
         number_nwp_channels: The number of nwp channels there are
         include_future_satellite: option to include future satellite images, or not
+        number_of_nwp_features: number npw linear features
         """
 
         self.include_pv_or_gsp_yield_history = include_pv_or_gsp_yield_history
         self.include_nwp = include_nwp
         self.number_of_conv3d_layers = number_of_conv3d_layers
-        self.number_of_nwp_features = 128
+        self.number_of_nwp_features = number_of_nwp_features
         self.fc1_output_features = fc1_output_features
         self.fc2_output_features = fc2_output_features
         self.fc3_output_features = fc3_output_features
