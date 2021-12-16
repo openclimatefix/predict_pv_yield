@@ -179,7 +179,7 @@ class Model(BaseModel):
         if include_pv_or_gsp_yield_history:
             fc3_in_features += self.number_of_samples_per_batch * (self.history_len_30 + 1)
         if include_nwp:
-            fc3_in_features += 128
+            fc3_in_features += self.number_of_nwp_features
         if self.embedding_dem:
             fc3_in_features += self.embedding_dem
         if self.include_pv_yield_history:
