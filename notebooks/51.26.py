@@ -1562,7 +1562,9 @@ class Model(pl.LightningModule):
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1e-5)
-        return optimizer
+        lr_lambda = lambda epoch: 4 / (epoch + 4)
+        scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda, verbose=True)
+        return [optimizer], [scheduler]
 
 
 # In[28]:
