@@ -1598,11 +1598,11 @@ checkpoint_callback = pl.callbacks.ModelCheckpoint(
 
 
 trainer = pl.Trainer(
-    gpus=[0, 2],
+    gpus=[0],
     logger=neptune_logger,
     # Slightly speed up training by setting find_unused_parameters=False.
     # See https://pytorch-lightning.readthedocs.io/en/latest/guides/speed.html#when-using-ddp-plugins-set-find-unused-parameters-false
-    strategy=pl.plugins.DDPPlugin(find_unused_parameters=False),
+    # strategy=pl.plugins.DDPPlugin(find_unused_parameters=False),
     callbacks=[checkpoint_callback],
 )
 
