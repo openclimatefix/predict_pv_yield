@@ -1593,8 +1593,18 @@ long_test_dataloader = data.DataLoader(
     **dataloader_kwargs
 )
 
+trainer = pl.Trainer(
+    gpus=[0],
+    logger=neptune_logger,
+    # Slightly speed up training by setting find_unused_parameters=False.
+    # See https://pytorch-lightning.readthedocs.io/en/latest/guides/speed.html#when-using-ddp-plugins-set-find-unused-parameters-false
+    # strategy=pl.plugins.DDPPlugin(find_unused_parameters=False),
+    #callbacks=[checkpoint_callback],
+)
+
+
 trainer.test(
-    model, 
-    long_test_dataloader, 
+    model,
+    long_test_dataloader,
     #ckpt_path="/home/jack/dev/ocf/predict_pv_yield/notebooks/.neptune/Untitled/PRED-693/checkpoints/epoch=43-step=369599.ckpt"
 )
