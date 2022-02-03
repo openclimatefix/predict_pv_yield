@@ -5,8 +5,8 @@ channels:
 dependencies:
   - python>=3.9
   - pip
-  - rich
-  - python-dotenv
+  #- rich
+  #- python-dotenv
 
   # Scientific Python
   - numpy
@@ -15,24 +15,27 @@ dependencies:
   - xarray
   - ipykernel
   - h5netcdf
-  - omegaconf
-  - hydra-core
+  #- omegaconf
+  #- hydra-core
+  - geopandas
+  - gcsfs
+  - fsspec
 
   # Machine learning
   - pytorch::pytorch  # explicitly specify pytorch channel to prevent conda from using conda-forge for pytorch, and hence installing the CPU-only version.
   - pytorch-lightning
 
   # Development tools
-  - pytest
-  - pytest-cov
-  - flake8
-  - jedi
-  - black
+  #- pytest
+  #- pytest-cov
+  #- flake8
+  #- jedi
+  #- black
 
   - pip:
     - neptune-client[pytorch-lightning]
-    - tilemapbase  # For plotting human-readable geographical maps.
-    - perceiver_pytorch
-    - nowcasting_dataset
+    # - tilemapbase  # For plotting human-readable geographical maps.
+    # - perceiver_pytorch
+    # - nowcasting_dataset
     - nowcasting_utils
     - nowcasting_dataloader
