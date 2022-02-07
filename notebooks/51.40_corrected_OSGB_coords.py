@@ -41,26 +41,6 @@ from itertools import chain
 import geopandas as gpd
 
 
-# In[4]:
-
-
-torch.cuda.is_available()
-
-
-# In[5]:
-
-
-torch.version.cuda
-
-
-# In[6]:
-
-
-torch.backends.cudnn.enabled
-
-
-# In[7]:
-
 
 from pathy import Pathy
 
@@ -183,8 +163,8 @@ def get_gsp_id_and_pv_system_index_for_each_pv_system(pv_system_id_tensor: torch
 
 
 #DATA_PATH = Path("/mnt/storage_ssd_4tb/data/ocf/solar_pv_nowcasting/nowcasting_dataset_pipeline/prepared_ML_training_data/v15")
-#DATA_PATH = Pathy("gs://solar-pv-nowcasting-data/prepared_ML_training_data/v15")
-DATA_PATH = Path("/mnt/ssd/data/v15")
+DATA_PATH = Pathy("gs://solar-pv-nowcasting-data/prepared_ML_training_data/v15")
+#DATA_PATH = Path("/mnt/ssd/data/v15")
 
 SATELLITE_CHANNELS = (
     "IR_016",
@@ -319,10 +299,6 @@ def copy_x_and_y_and_time_coords(data_from_all_sources: dict[str, object], data_
     data_from_all_sources[f"{data_source_name}_y_coords"] = torch.from_numpy(y_coords.values.astype(np.float32))
 
 
-# In[19]:
-
-
-len(list((DATA_PATH / "train"/ "gsp").glob("*.nc")))
 
 
 # In[20]:
@@ -364,11 +340,13 @@ class SimpleNowcastingDataset(data.Dataset):
         data_source_names: The names of the data sources.  Must also be the names of the subdirectory.  
             Must include "gsp".
         gsp_first_time_index_of_future: The index into the GSP time_index dimension that marks the start of the "future".
-        n_batches: The number of available batches.
+        n_batches: The number of available batches. If the user sets this to an int then
+            this int will be the max number of batches used per epoch.
     """
     data_path: Path
     data_source_names: Iterable[str]
     gsp_first_time_index_of_future: int = 2
+    n_batches: Optional[int] = None
     
     def __post_init__(self):
         # Sanity checks
@@ -376,28 +354,26 @@ class SimpleNowcastingDataset(data.Dataset):
         assert self.data_path.exists()
         assert len(self.data_source_names) > 0
         assert "gsp" in self.data_source_names
-        self.n_batches = self._get_number_of_batches()
+        self._set_number_of_batches()
         
-    def _get_number_of_batches(self) -> int:
-        """Get number of batches.  Check every data source."""
-        n_batches = None
+    def _set_number_of_batches(self) -> None:
+        """Set number of batches.  Check every data source."""
         for data_source_name in self.data_source_names:
             path_for_data_source = self.data_path / data_source_name
             n_batches_for_data_source = len(list(path_for_data_source.glob("*.nc")))
             print(data_source_name, "has", n_batches_for_data_source, "batches. ", end="")
-            if n_batches is None:
-                n_batches = n_batches_for_data_source
+            if self.n_batches is None:
+                self.n_batches = n_batches_for_data_source
             else:
-                if n_batches_for_data_source != n_batches:
+                if n_batches_for_data_source != self.n_batches:
                     print(
                         "Warning!", 
                         data_source_name, 
-                        "has a different number of batches to at least one other modality! We'll use the minimum of the two values.")
-                    n_batches = min(n_batches, n_batches_for_data_source)
+                        "has a different number of batches to at least one other modality or the requested number of batches! We'll use the minimum of the two values.")
+                    self.n_batches = min(self.n_batches, n_batches_for_data_source)
             print()
-        assert n_batches is not None
-        assert n_batches > 0
-        return n_batches
+        assert self.n_batches is not None
+        assert self.n_batches > 0
     
     def __len__(self) -> int:
         return self.n_batches
@@ -538,28 +514,10 @@ DATA_SOURCE_NAMES = ("gsp", "satellite", "pv", "opticalflow", "nwp")
 train_dataset = SimpleNowcastingDataset(
     data_path=DATA_PATH / "train",
     data_source_names=DATA_SOURCE_NAMES,
+    n_batches=100,
 )
 
 
-# In[25]:
-
-
-len(train_dataset)
-
-
-# In[26]:
-
-
-batch = train_dataset[1]
-
-
-# In[27]:
-
-
-batch.keys()
-
-
-# In[28]:
 
 
 def tensor_nanmin(tensor, dim):
@@ -685,55 +643,6 @@ def get_spatial_and_temporal_fourier_features(
                 batch[f"{key}_fourier_features"] = batch[f"{key}_fourier_features"].reshape(reshape + (n_fourier_features,))
 
 
-# In[31]:
-
-
-get_spatial_and_temporal_fourier_features(batch)
-
-fig, ax = plt.subplots()
-ax.scatter(batch['opticalflow_x_coords'][0], batch['opticalflow_y_coords'][0]);
-ax.scatter(batch['pv_x_coords'][0], batch["pv_y_coords"][0], color="green")
-ax.scatter(batch['nwp_x_coords'][0], batch['nwp_y_coords'][0]);
-ax.scatter(batch['gsp_x_coords'][0], batch["gsp_y_coords"][0], color='red');
-
-
-# In[32]:
-
-
-batch['opticalflow_x_coords'][0].shape
-
-
-# In[33]:
-
-
-plt.plot(batch['opticalflow_y_coords_fourier_features'][0, :, :, 0]);
-
-
-# In[34]:
-
-
-fig, ax = plt.subplots()
-ax.plot(batch["t0_datetime_features"], label=['time_of_day_sin', 'time_of_day_cos', 'day_of_year_sin', 'day_of_year_cos'])
-ax.legend();
-
-
-# In[35]:
-
-
-# shape: batch, timestep, pv system
-batch["pv"].isnan().shape
-
-
-# In[36]:
-
-
-batch["pv"].isnan().any(dim=1).shape
-
-
-# In[37]:
-
-
-len(plt.plot(batch["pv"][0]))
 
 
 # In[38]:
@@ -751,20 +660,13 @@ def plot_imagery(tensor, example_i, channel_i):
         ax.set_title(time_index)
     return fig, axes
 
-EXAMPLE_I = 1
-CHANNEL_I = 7
-plot_imagery(batch["opticalflow"], example_i=EXAMPLE_I, channel_i=CHANNEL_I);
-
-
-# ## Put the dataset into a DataLoader
-
-# In[39]:
 
 
 dataloader_kwargs = dict(
     batch_size=None,
-    num_workers=12,
+    num_workers=10,
     pin_memory=True,
+    persistent_workers=False,
 )
 
 
@@ -784,16 +686,11 @@ test_dataloader = data.DataLoader(
     SimpleNowcastingDataset(
         data_path=DATA_PATH / "test",
         data_source_names=DATA_SOURCE_NAMES,
+        n_batches=10,
     ),
     **dataloader_kwargs
 )
 
-
-# In[42]:
-
-
-for batch in train_dataloader:
-    break
 
 
 # # Define the ML model
@@ -1801,51 +1698,6 @@ model = Model()
 #model = Model.load_from_checkpoint("/home/jack/dev/ocf/predict_pv_yield/notebooks/.neptune/Untitled/PRED-747/checkpoints/epoch=44-step=377999.ckpt")
 
 
-# In[48]:
-
-
-model.device
-
-
-# In[49]:
-
-
-#list(model.parameters())
-
-
-# In[50]:
-
-
-prediction = model(batch)
-
-
-# In[51]:
-
-
-#plot_timeseries(batch, prediction)
-
-
-# In[52]:
-
-
-params = list(model.parameters())
-
-
-# In[53]:
-
-
-params[0].grad is None
-
-
-# In[54]:
-
-
-model.learnt_modality_identifier_for_gsp_id
-
-
-# In[55]:
-
-
 neptune_logger = NeptuneLogger(
     project="OpenClimateFix/predict-pv-yield",
     prefix=""
@@ -1855,7 +1707,10 @@ neptune_logger = NeptuneLogger(
 # In[56]:
 
 
-trainer = pl.Trainer(gpus=[0], logger=neptune_logger)
+trainer = pl.Trainer(
+    # gpus=[0],
+    logger=neptune_logger,
+)
 
 
 # In[ ]:
