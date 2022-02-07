@@ -31,7 +31,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import matplotlib.dates as mdates
 from itertools import chain
-
+from datetime import timedelta
 
 
 from pathy import Pathy
