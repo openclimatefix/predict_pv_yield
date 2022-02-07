@@ -25,7 +25,7 @@ from torch.utils import data
 from torch import nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
-from pytorch_lightning.loggers import NeptuneLogger
+#from pytorch_lightning.loggers import NeptuneLogger
 import einops
 
 from dataclasses import dataclass
@@ -34,50 +34,68 @@ import xarray as xr
 from concurrent import futures
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.ticker as mticker
-import matplotlib.dates as mdates
 from itertools import chain
-import geopandas as gpd
-
-
-
 from pathy import Pathy
 
 
-# In[8]:
+SAT_MEAN = {
+    "HRV": 236.13257536395903,
+    "IR_016": 291.61620182554185,
+    "IR_039": 858.8040610176552,
+    "IR_087": 738.3103442750336,
+    "IR_097": 773.0910794778366,
+    "IR_108": 607.5318145165666,
+    "IR_120": 860.6716261423857,
+    "IR_134": 925.0477987594331,
+    "VIS006": 228.02134593063957,
+    "VIS008": 257.56333202381205,
+    "WV_062": 633.5975770915588,
+    "WV_073": 543.4963868823854,
+}
 
+SAT_STD = {
+    "HRV": 935.9717382401759,
+    "IR_016": 172.01044433112992,
+    "IR_039": 96.53756504807913,
+    "IR_087": 96.21369354283686,
+    "IR_097": 86.72892737648276,
+    "IR_108": 156.20651744208888,
+    "IR_120": 104.35287930753246,
+    "IR_134": 104.36462050405994,
+    "VIS006": 150.2399269307514,
+    "VIS008": 152.16086321818398,
+    "WV_062": 111.8514878214775,
+    "WV_073": 106.8855172848904,
+}
 
-from nowcasting_dataloader.data_sources.satellite.satellite_model import SAT_MEAN, SAT_STD
-from nowcasting_dataloader.data_sources.nwp.nwp_model import NWP_MEAN, NWP_STD
+# Means and std computed with
+# nowcasting_dataset/scripts/compute_stats_from_batches.py
+# using v15 training batches on 2021-11-24.
+NWP_MEAN = {
+    "t": 285.7799539185846,
+    "dswrf": 294.6696933986283,
+    "prate": 3.6078121378638696e-05,
+    "r": 75.57106712435926,
+    "sde": 0.0024915961594965614,
+    "si10": 4.931356852411006,
+    "vis": 22321.762918384553,
+    "lcc": 47.90454236572895,
+    "mcc": 44.22781694449808,
+    "hcc": 32.87577371914454,
+}
 
-# 1. **********
-from nowcasting_utils.metrics.validation import make_validation_results
-# **********
-
-
-# In[9]:
-
-
-def save_validation_results_to_logger(
-    results_dfs: list[pd.DataFrame],
-    results_file_name: str,
-    current_epoch: Union[int, str],
-    logger: Optional[NeptuneLogger] = None,
-):
-    # join all validation step results together
-    results_df = pd.concat(results_dfs)
-    results_df.reset_index(inplace=True)
-
-    # save to csv file
-    name_csv = f"{results_file_name}_{current_epoch}.csv"
-    results_df.to_csv(name_csv)
-
-    # upload csv to neptune
-    logger.experiment[f"validation/results/epoch_{current_epoch}"].upload(name_csv)
-
-
-# In[10]:
+NWP_STD = {
+    "t": 5.017000766747606,
+    "dswrf": 233.1834250473355,
+    "prate": 0.00021690701537950742,
+    "r": 15.705370079694358,
+    "sde": 0.07560040052148084,
+    "si10": 2.664583614352396,
+    "vis": 12963.802514945439,
+    "lcc": 40.06675870700349,
+    "mcc": 41.927221148316384,
+    "hcc": 39.05157559763763,
+}
 
 
 def get_pv_system_id_index_lut():
@@ -648,17 +666,6 @@ def get_spatial_and_temporal_fourier_features(
 # In[38]:
 
 
-def plot_imagery(tensor, example_i, channel_i):
-    fig, axes = plt.subplots(ncols=4, figsize=(20, 10))
-    # axes = list(chain.from_iterable(axes))
-    # "example", "time_index", "channels_index", "y_index", "x_index"
-    data_to_plot = tensor[example_i, :4, channel_i, :, :]
-    vmin = data_to_plot.min()
-    vmax = data_to_plot.max()
-    for time_index, ax in enumerate(axes):
-        ax.imshow(data_to_plot[time_index].numpy()[::-1], vmin=vmin, vmax=vmax)
-        ax.set_title(time_index)
-    return fig, axes
 
 
 
@@ -794,108 +801,6 @@ def get_distribution(
 
 
 
-def plot_probs(pi, mu, sigma, ax, left, right, example_i=0):
-    sweep_n_steps = 100
-    sweep_start = 1
-    sweep_stop = 0
-       
-    n_timesteps = pi.shape[1]
-
-    # Define a 'sweep' matrix which we pass into log_prob to get probabilities 
-    # for a range of values at each timestep.  Those values range from sweep_start to sweep_stop
-    sweep = torch.linspace(start=sweep_start, end=sweep_stop, steps=sweep_n_steps, dtype=torch.float32, device=pi.device)
-    sweep = sweep.unsqueeze(-1).expand(sweep_n_steps, n_timesteps)
-    
-    # Get probabilities.
-    distribution = get_distribution({PI: pi, MU: mu, SIGMA: sigma}, example_i=example_i)
-    log_probs = distribution.log_prob(sweep)
-    probs = torch.exp(log_probs).detach().cpu().numpy()
-    
-    # Plot!
-    extent = (left, right, sweep_stop, sweep_start) # left, right, bottom, top
-    ax.imshow(probs, aspect='auto', interpolation='none', extent=extent, cmap='Greys')
-
-    return ax
-
-
-# In[44]:
-
-
-def plot_timeseries(batch: dict[str, torch.Tensor], network_output: dict[str, torch.Tensor]) -> plt.Figure:
-    actual = batch["gsp"].detach().cpu()
-    
-    # get the mean prediction
-    mu = network_output[MU]
-    pi = network_output[PI]
-    predicted = torch.sum((mu * pi), dim=-1).squeeze().detach().cpu()
-
-    gsp_id = batch["gsp_id"].squeeze().detach().cpu()
-    historical_pv = batch["pv"].squeeze().detach().cpu().numpy()
-    if "nwp" in batch:
-        nwp_chan = NWP_CHANNELS.index("dswrf")
-        nwp = batch["nwp"][:, :, nwp_chan].mean(dim=[2, 3]).detach().cpu().numpy()
-        nwp_time = batch["nwp_time"].squeeze().detach().cpu().numpy()
-    t0_datetimes = batch["t0_datetime_UNIX_epoch"].squeeze().detach().cpu().numpy()
-    t0_datetimes = pd.to_datetime(t0_datetimes, unit='s')
-    fig, axes = plt.subplots(nrows=8, ncols=4, figsize=(20, 20))
-    axes = list(chain.from_iterable(axes))
-    FIFTEEN_MINUTES = (15 / (60 * 24))
-    for example_i, ax in enumerate(axes):
-        t0_datetime = t0_datetimes[example_i]
-        t1_datetime = t0_datetime + pd.Timedelta("30 minutes")
-        forecast_datetimes = pd.date_range(t1_datetime, periods=4, freq="30 min")
-
-        # Plot historical PV yield
-        historical_pv_datetimes = pd.date_range(t0_datetime - pd.Timedelta("30 minutes"), periods=7, freq="5 min")
-        plot_probs(
-            pi=network_output[PI],
-            mu=network_output[MU],
-            sigma=network_output[SIGMA],
-            ax=ax,
-            left=mdates.date2num(forecast_datetimes[0]) - FIFTEEN_MINUTES,
-            right=mdates.date2num(forecast_datetimes[-1]) + FIFTEEN_MINUTES,
-            example_i=example_i,
-        )
-        ax.plot(
-            historical_pv_datetimes,
-            historical_pv[example_i],
-            color="grey",
-            alpha=0.5
-        )
-        ax.plot(
-            historical_pv_datetimes,
-            np.nanmean(historical_pv, axis=2)[example_i],
-            label="Historical mean PV",
-            linewidth=3,
-            alpha=0.8,
-            color="red",
-        )
-        
-        # Plot prediction for GSP PV yield and actual GSP PV yield
-        ax.plot(forecast_datetimes, predicted[example_i], label="Predicted GSP PV", color="orange", linewidth=3, alpha=0.8)
-        ax.plot(forecast_datetimes, actual[example_i], label="Actual GSP PV", linewidth=3, alpha=0.8)
-        
-        # Plot NWP params:
-        if "nwp" in batch:
-            ax2 = ax.twinx()
-            nwp_time_for_example = pd.to_datetime(nwp_time[example_i], unit="s")
-            ax2.plot(nwp_time_for_example, nwp[example_i], label="NWP irradiance", color="green", alpha=0.8)
-            ax2.yaxis.set_ticks([])
-            ax2.set_ylim(-2, 2)
-        
-        # Formatting
-        ax.xaxis.set_major_locator(mdates.HourLocator())
-        ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
-        ax.set_title("GSP {:.0f} on {}".format(gsp_id[example_i], t0_datetime.strftime("%Y-%m-%d")), y=0.8)
-        ax.set_ylim(0, 1)
-        ax.set_xlim(mdates.date2num(historical_pv_datetimes[0]), mdates.date2num(forecast_datetimes[-1]))
-        if example_i == 0:
-            fig.legend(framealpha=0, loc="center right")
-
-    return fig
-
-
-# In[45]:
 
 
 
@@ -1535,150 +1440,14 @@ class Model(pl.LightningModule):
         network_output = self(batch)
         distribution = get_distribution(network_output)
         neg_log_prob_loss = torch.mean(-distribution.log_prob(actual_gsp_power))
-        
-        # get the mean prediction
-        mu = network_output[MU]
-        pi = network_output[PI]
-        predicted_gsp_power = torch.sum((mu * pi), dim=-1)
-        
-        mse_loss = F.mse_loss(predicted_gsp_power, actual_gsp_power)
-        nmae_loss = F.l1_loss(predicted_gsp_power, actual_gsp_power)
-        
-        self.log_dict(
-            {
-                f"negative_log_probability/{tag}": neg_log_prob_loss,
-                f"MSE/{tag}": mse_loss,
-                f"NMAE/{tag}": nmae_loss,
-            },
-            on_step=True,
-            on_epoch=True,
-            sync_dist=True,  # Required for distributed training (even multi-GPU on signle machine)
-        )
-
-        if batch_idx < 3:
-            # Log timeseries of actual GSP power and predicted GSP power
-            figure_name = f"{tag}/plot/timeseries/epoch={self.current_epoch};batch_idx={batch_idx}"
-            fig = plot_timeseries(batch=batch, network_output=network_output)
-            self.logger.experiment[figure_name].log(fig)
-            plt.close(fig)
-            
-        # Get NMAE per GSP, per forecast timestep, per day of year, and per hour of day
-        abs_error = (predicted_gsp_power - actual_gsp_power).abs().squeeze().cpu().detach()
-        nmae_per_example = abs_error.mean(dim=1)
-        metrics = {
-            "loss": neg_log_prob_loss,
-            "NMAE": nmae_loss.detach(),
-            "NMAE_per_example": nmae_per_example,
-            "NMAE_per_forecast_timestep": pd.Series(abs_error.mean(dim=0), index=np.arange(1, 5), name=batch_idx, dtype=np.float32),
-        }
-        for key in ("gsp_id", "t0_hour_of_day", "t0_month"):
-            metrics[f"NMAE_per_{key}"] = pd.Series(
-                nmae_per_example, 
-                index=batch[key].cpu().numpy().astype(np.int32), 
-                name=batch_idx,
-                dtype=np.float32
-            ).groupby(level=0).mean()
-            
-            
-        # 3. ************ 
-        # save validation results
-        capacity = batch["capacity_mwp"].cpu().numpy()
-        predictions = predicted_gsp_power.detach().cpu().numpy().squeeze()
-        truths = actual_gsp_power.detach().cpu().numpy().squeeze()
-        predictions = predictions * capacity
-        truths = truths * capacity
-
-        results = make_validation_results(
-            truths_mw=truths,
-            predictions_mw=predictions,
-            capacity_mwp=capacity,
-            gsp_ids=batch["gsp_id"].cpu(),
-            batch_idx=batch_idx,
-            t0_datetimes_utc=pd.to_datetime(
-                batch["t0_datetime_UNIX_epoch"].cpu().numpy().squeeze(), 
-                unit="s"
-            )
-        )
-        
-        # append so in 'validation_epoch_end' the file is saved
-        if batch_idx == 0:
-            self.results_dfs = []
-        self.results_dfs.append(results)
-        
-        # ***************
-
+        metrics = {"loss": neg_log_prob_loss}
         return metrics
     
-    def _training_or_validation_epoch_end(self, step_outputs: list[dict], tag: str) -> None:
-        # step_outputs is a list of dicts.  We want a dict of lists :)
-        metric_names = step_outputs[0].keys()
-        dict_of_lists_of_metrics: dict[str, list] = {metric_name: [] for metric_name in metric_names}
-        for step_output in step_outputs:
-            for metric_name, metric_value in step_output.items():
-                dict_of_lists_of_metrics[metric_name].append(metric_value)
-
-        # Loop through the metrics we're interested in
-        metrics_we_want = set(metric_names) - set(["loss", "NMAE", "NMAE_per_example"])
-        for metric_name in metrics_we_want:
-            metric_df = pd.concat(dict_of_lists_of_metrics[metric_name], axis="columns")
-            mean_metric = metric_df.mean(axis="columns")
-            if metric_name == "NMAE_per_gsp_id":
-                mean_metric = mean_metric.sort_values()
-            else: 
-                mean_metric = mean_metric.sort_index()
-            # Plot!
-            fig, ax = plt.subplots(figsize=(40, 20))
-            mean_metric.plot.bar(ax=ax)
-            figure_name = f"{tag}/plot/{metric_name}/epoch={self.current_epoch}"
-            ax.set_ylabel("NMAE")
-            ax.set_title(figure_name)
-            self.logger.experiment[figure_name].log(fig)
-            plt.close(fig)
-            
-        # Histogram of NMAE across all examples
-        nmae_per_example = np.concatenate(dict_of_lists_of_metrics["NMAE_per_example"])
-        if not np.isnan(nmae_per_example).any():
-            fig, ax = plt.subplots(figsize=(20, 20))
-            ax.hist(nmae_per_example, bins=64)
-            ax.set_title("Histogram of NMAE across all examples")
-            ax.set_ylabel("count")
-            ax.set_xlabel("NMAE")
-            self.logger.experiment[f"{tag}/plot/hist_of_NMAE_per_example/epoch={self.current_epoch}"].log(fig)
-            plt.close(fig)
-            
-        # 4. *********
-        
-        
-        save_validation_results_to_logger(results_dfs=self.results_dfs,
-                                          results_file_name=self.results_file_name + tag,
-                                          current_epoch=self.current_epoch,
-                                          logger=self.logger)
-        
-        # ********
-
     def training_step(self, batch: dict[str, torch.Tensor], batch_idx: int):
         return self._training_or_validation_step(batch=batch, batch_idx=batch_idx, tag="train")
     
     def validation_step(self, batch: dict[str, torch.Tensor], batch_idx: int):
         return self._training_or_validation_step(batch=batch, batch_idx=batch_idx, tag="validation")
-    
-    def training_epoch_end(self, training_step_outputs):
-        self._training_or_validation_epoch_end(training_step_outputs, tag="train")
-        
-    def validation_epoch_end(self, validation_step_outputs):
-        self._training_or_validation_epoch_end(validation_step_outputs, tag="validation")
-        
-    # 4. *********
-    def test_epoch_end(self, test_step_outputs):
-        save_validation_results_to_logger(results_dfs=self.results_dfs,
-                                          results_file_name=self.results_file_name + "test",
-                                          current_epoch=self.current_epoch,
-                                          logger=self.logger)
-        
-    def test_step(self, batch, batch_idx):
-        self.validation_step(batch=batch, batch_idx=batch_idx)
-        
-    # ********
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1e-5)
@@ -1698,10 +1467,10 @@ model = Model()
 #model = Model.load_from_checkpoint("/home/jack/dev/ocf/predict_pv_yield/notebooks/.neptune/Untitled/PRED-747/checkpoints/epoch=44-step=377999.ckpt")
 
 
-neptune_logger = NeptuneLogger(
-    project="OpenClimateFix/predict-pv-yield",
-    prefix=""
-)
+#neptune_logger = NeptuneLogger(
+#    project="OpenClimateFix/predict-pv-yield",
+#    prefix=""
+#)
 
 
 # In[56]:
@@ -1709,7 +1478,7 @@ neptune_logger = NeptuneLogger(
 
 trainer = pl.Trainer(
     # gpus=[0],
-    logger=neptune_logger,
+    # logger=neptune_logger,
 )
 
 
