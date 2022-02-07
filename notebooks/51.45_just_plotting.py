@@ -845,20 +845,20 @@ def plot_timeseries(batch: dict[str, torch.Tensor], network_output: dict[str, to
         #     right=mdates.date2num(forecast_datetimes[-1]) + FIFTEEN_MINUTES,
         #     example_i=example_i,
         # )
-        ax.plot(
-            historical_pv_datetimes,
-            historical_pv[example_i],
-            color="grey",
-            alpha=0.5
-        )
-        ax.plot(
-            historical_pv_datetimes,
-            np.nanmean(historical_pv, axis=2)[example_i],
-            label="Historical mean PV",
-            linewidth=3,
-            alpha=0.8,
-            color="red",
-        )
+        # ax.plot(
+        #     historical_pv_datetimes,
+        #     historical_pv[example_i],
+        #     color="grey",
+        #     alpha=0.5
+        # )
+        # ax.plot(
+        #     historical_pv_datetimes,
+        #     np.nanmean(historical_pv, axis=2)[example_i],
+        #     label="Historical mean PV",
+        #     linewidth=3,
+        #     alpha=0.8,
+        #     color="red",
+        # )
         
         # Plot prediction for GSP PV yield and actual GSP PV yield
         ax.plot(forecast_datetimes, predicted[example_i], label="Predicted GSP PV", color="orange", linewidth=3, alpha=0.8)
