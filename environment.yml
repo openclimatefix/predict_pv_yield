@@ -15,14 +15,17 @@ dependencies:
   - xarray
   # - ipykernel
   - h5netcdf
+  - netcdf4
   #- omegaconf
   #- hydra-core
   #- geopandas
   - gcsfs
   - fsspec
+  - pathy
 
   # Machine learning
   - pytorch::pytorch  # explicitly specify pytorch channel to prevent conda from using conda-forge for pytorch, and hence installing the CPU-only version.
+  - pytorch::cpuonly
   - pytorch-lightning
   - einops
 
