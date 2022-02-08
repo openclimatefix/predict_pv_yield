@@ -1526,9 +1526,9 @@ class Model(pl.LightningModule):
         # if batch_idx < 3:
         # Log timeseries of actual GSP power and predicted GSP power
         figure_name = f"{tag}/plot/timeseries/epoch={self.current_epoch};batch_idx={batch_idx}"
-        fig = plot_timeseries(batch=batch, network_output=network_output)
-        self.logger.experiment[figure_name].log(fig)
-        plt.close(fig)
+        #fig = plot_timeseries(batch=batch, network_output=network_output)
+        #self.logger.experiment[figure_name].log(fig)
+        #plt.close(fig)
 
         return neg_log_prob_loss
   
