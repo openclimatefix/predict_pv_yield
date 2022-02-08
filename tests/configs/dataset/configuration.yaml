@@ -39,7 +39,7 @@ input_data:
 output_data:
   filepath: not used by unittests!
 process:
-  batch_size: 32
+  batch_size: 2
   local_temp_path: ~/temp/
   seed: 1234
   upload_every_n_batches: 16
