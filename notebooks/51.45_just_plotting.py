@@ -833,6 +833,7 @@ def plot_timeseries(batch: dict[str, torch.Tensor], network_output: dict[str, to
         t0_datetime = t0_datetimes[example_i]
         t1_datetime = t0_datetime + pd.Timedelta("30 minutes")
         forecast_datetimes = pd.date_range(t1_datetime, periods=4, freq="30 min")
+        forecast_datetimes = mdates.date2num(forecast_datetimes)
 
         # Plot historical PV yield
         historical_pv_datetimes = pd.date_range(t0_datetime - pd.Timedelta("30 minutes"), periods=7, freq="5 min")
