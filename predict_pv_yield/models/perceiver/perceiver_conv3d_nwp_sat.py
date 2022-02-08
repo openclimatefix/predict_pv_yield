@@ -87,6 +87,8 @@ class Model(BaseModel):
         self.output_variable = output_variable
         self.use_future_satellite_images = use_future_satellite_images
 
+        self.total_seq_length = self.history_minutes // 5 + self.forecast_minutes // 5 + 1
+
         super().__init__()
 
         self.sat_conv3d_maxpool = Conv3dMaxPool(out_channels=conv3d_channels, in_channels=len(params['sat_channels']))
@@ -97,7 +99,7 @@ class Model(BaseModel):
             input_axis=2,
             num_freq_bands=6,
             max_freq=10,
-            depth=TOTAL_SEQ_LEN,
+            depth= self.total_seq_length,
             num_latents=self.num_latents,
             latent_dim=self.latent_dim,
             num_classes=PERCEIVER_OUTPUT_SIZE,
@@ -113,7 +115,7 @@ class Model(BaseModel):
         self.fc5 = nn.Linear(in_features=32, out_features=FC_OUTPUT_SIZE)
 
         if self.embedding_dem:
-            self.pv_system_id_embedding = nn.Embedding(num_embeddings=940, embedding_dim=self.embedding_dem)
+            self.pv_system_id_embedding = nn.Embedding(num_embeddings=2048, embedding_dim=self.embedding_dem)
 
         # TODO: Get rid of RNNs!
         self.encoder_rnn = nn.GRU(
@@ -184,7 +186,7 @@ class Model(BaseModel):
         # ********************** Embedding of PV system ID ********************
         if self.embedding_dem:
             pv_row = (
-                x.pv.pv_system_row_number[0 : self.batch_size, 0].type(torch.IntTensor).repeat_interleave(TOTAL_SEQ_LEN)
+                x.pv.pv_system_row_number[0 : self.batch_size, 0].type(torch.IntTensor).repeat_interleave(self.total_seq_length)
             )
             pv_row = pv_row.to(out.device)
             pv_embedding = self.pv_system_id_embedding(pv_row)
@@ -197,7 +199,7 @@ class Model(BaseModel):
         out = F.relu(self.fc5(out))
 
         # ******************* PREP DATA FOR RNN *******************************
-        out = out.reshape(batch_size, TOTAL_SEQ_LEN, FC_OUTPUT_SIZE)
+        out = out.reshape(batch_size,  self.total_seq_length, FC_OUTPUT_SIZE)
 
         # The RNN encoder gets recent history: satellite, NWP,
         # datetime features, and recent PV history.  The RNN decoder

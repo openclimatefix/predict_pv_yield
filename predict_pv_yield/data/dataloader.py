@@ -98,7 +98,6 @@ class NetCDFDataModule(LightningDataModule):
                 self.n_train_data,
                 os.path.join(self.data_path, "train"),
                 os.path.join(self.temp_path, "train"),
-                cloud=self.cloud,
                 configuration=self.configuration
             )
 
@@ -112,7 +111,6 @@ class NetCDFDataModule(LightningDataModule):
                 self.n_val_data,
                 os.path.join(self.data_path, "test"),
                 os.path.join(self.temp_path, "test"),
-                cloud=self.cloud,
                 configuration=self.configuration
             )
 
@@ -127,7 +125,6 @@ class NetCDFDataModule(LightningDataModule):
                 self.n_val_data,
                 os.path.join(self.data_path, "test"),
                 os.path.join(self.temp_path, "test"),
-                cloud=self.cloud,
                 configuration=self.configuration
             )
 

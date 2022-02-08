@@ -10,7 +10,7 @@ def test_utils():
     """
     Test that util functions work. This just runs them. Perhaps slightly harder to check they work how they should.
     """
-    os.environ["NEPTUNE_API_TOKEN"] = "not_at_token"
+    os.environ["NEPTUNE_API_TOKEN"] = "not_a_token"
 
     hydra.core.global_hydra.GlobalHydra.instance().clear()
     initialize(config_path="../configs", job_name="test_app")

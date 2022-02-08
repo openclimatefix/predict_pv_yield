@@ -45,8 +45,8 @@ class PerceiverModel(BaseModel):
 
     def __init__(
         self,
-        history_minutes: int,
-        forecast_minutes: int,
+        history_minutes: int = params["history_minutes"],
+        forecast_minutes: int = params["forecast_minutes"],
         nwp_channels: Iterable[str] = params["nwp_channels"],
         batch_size: int = 32,
         num_latents: int = 128,
@@ -63,6 +63,8 @@ class PerceiverModel(BaseModel):
         self.embedding_dem = embedding_dem
         self.output_variable = output_variable
 
+        self.total_seq_length = self.history_minutes // 5 + self.forecast_minutes //5 + 1
+
         super().__init__()
 
         self.perceiver = Perceiver(
@@ -70,7 +72,7 @@ class PerceiverModel(BaseModel):
             input_axis=2,
             num_freq_bands=6,
             max_freq=10,
-            depth=TOTAL_SEQ_LEN,
+            depth=self.total_seq_length,
             num_latents=self.num_latents,
             latent_dim=self.latent_dim,
             num_classes=PERCEIVER_OUTPUT_SIZE,
@@ -86,7 +88,7 @@ class PerceiverModel(BaseModel):
         self.fc5 = nn.Linear(in_features=32, out_features=FC_OUTPUT_SIZE)
 
         if self.embedding_dem:
-            self.pv_system_id_embedding = nn.Embedding(num_embeddings=940, embedding_dim=self.embedding_dem)
+            self.pv_system_id_embedding = nn.Embedding(num_embeddings=2048, embedding_dim=self.embedding_dem)
 
         # TODO: Get rid of RNNs!
         self.encoder_rnn = nn.GRU(
@@ -135,10 +137,11 @@ class PerceiverModel(BaseModel):
                 id = x.pv.pv_system_row_number[0 : self.batch_size, 0]
             else:
                 id = x.gsp.gsp_id[0: self.batch_size, 0]
-
-            id = id.type(torch.IntTensor).repeat_interleave(TOTAL_SEQ_LEN)
+            id = id.type(torch.IntTensor).repeat_interleave(self.total_seq_length)
             id = id.to(out.device)
             id_embedding = self.pv_system_id_embedding(id)
+            print(f'{id_embedding.shape=}')
+            print(f'{out.shape=}')
             out = torch.cat((out, id_embedding), dim=1)
 
         # Fully connected layers.
@@ -148,7 +151,7 @@ class PerceiverModel(BaseModel):
         out = F.relu(self.fc5(out))
 
         # ******************* PREP DATA FOR RNN *******************************
-        out = out.reshape(batch_size, TOTAL_SEQ_LEN, FC_OUTPUT_SIZE)
+        out = out.reshape(batch_size, self.total_seq_length, FC_OUTPUT_SIZE)
 
         # The RNN encoder gets recent history: satellite, NWP,
         # datetime features, and recent PV history.  The RNN decoder
