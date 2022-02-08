@@ -3,7 +3,6 @@ _target_: nowcasting_dataloader.datamodules.NetCDFDataModule
 temp_path: "."
 n_train_data: 4000
 n_val_data: 400
-cloud:  "local"
 num_workers: 8
 pin_memory: True
 data_path: "/mnt/storage_ssd_4tb/data/ocf/solar_pv_nowcasting/nowcasting_dataset_pipeline/prepared_ML_training_data/v15/"
