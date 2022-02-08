@@ -25,14 +25,14 @@ dependencies:
 
   # Machine learning
   - pytorch::pytorch  # explicitly specify pytorch channel to prevent conda from using conda-forge for pytorch, and hence installing the CPU-only version.
-  - pytorch::cpuonly
+  #- pytorch::cpuonly
   - pytorch-lightning
   - einops
 
   # Development tools
   #- pytest
   #- pytest-cov
-  #- flake8
+  - flake8
   #- jedi
   #- black
 
