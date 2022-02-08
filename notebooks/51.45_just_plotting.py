@@ -865,13 +865,13 @@ def plot_timeseries(batch: dict[str, torch.Tensor], network_output: dict[str, to
         ax.plot(forecast_datetimes, actual[example_i], label="Actual GSP PV", linewidth=3, alpha=0.8)
         
         # Plot NWP params:
-        if "nwp" in batch:
-            ax2 = ax.twinx()
-            nwp_time_for_example = pd.to_datetime(nwp_time[example_i], unit="s")
+        # if "nwp" in batch:
+            # ax2 = ax.twinx()
+            # nwp_time_for_example = pd.to_datetime(nwp_time[example_i], unit="s")
             # ax2.plot(nwp_time_for_example, nwp[example_i], label="NWP irradiance", color="green", alpha=0.8)
-            ax2.yaxis.set_ticks([])
+            # ax2.yaxis.set_ticks([])
             # ax2.yaxis.set_ticks_position('none')
-            ax2.set_ylim(-2, 2)
+            # ax2.set_ylim(-2, 2)
         
         # Formatting
         ax.xaxis.set_major_locator(mdates.HourLocator())
