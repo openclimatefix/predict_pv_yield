@@ -836,33 +836,33 @@ def plot_timeseries(batch: dict[str, torch.Tensor], network_output: dict[str, to
 
         # Plot historical PV yield
         historical_pv_datetimes = pd.date_range(t0_datetime - pd.Timedelta("30 minutes"), periods=7, freq="5 min")
-        plot_probs(
-            pi=network_output[PI],
-            mu=network_output[MU],
-            sigma=network_output[SIGMA],
-            ax=ax,
-            left=mdates.date2num(forecast_datetimes[0]) - FIFTEEN_MINUTES,
-            right=mdates.date2num(forecast_datetimes[-1]) + FIFTEEN_MINUTES,
-            example_i=example_i,
-        )
-        ax.plot(
-            historical_pv_datetimes,
-            historical_pv[example_i],
-            color="grey",
-            alpha=0.5
-        )
-        ax.plot(
-            historical_pv_datetimes,
-            np.nanmean(historical_pv, axis=2)[example_i],
-            label="Historical mean PV",
-            linewidth=3,
-            alpha=0.8,
-            color="red",
-        )
+        # plot_probs(
+        #     pi=network_output[PI],
+        #     mu=network_output[MU],
+        #     sigma=network_output[SIGMA],
+        #     ax=ax,
+        #     left=mdates.date2num(forecast_datetimes[0]) - FIFTEEN_MINUTES,
+        #     right=mdates.date2num(forecast_datetimes[-1]) + FIFTEEN_MINUTES,
+        #     example_i=example_i,
+        # )
+        # ax.plot(
+        #     historical_pv_datetimes,
+        #     historical_pv[example_i],
+        #     color="grey",
+        #     alpha=0.5
+        # )
+        # ax.plot(
+        #     historical_pv_datetimes,
+        #     np.nanmean(historical_pv, axis=2)[example_i],
+        #     label="Historical mean PV",
+        #     linewidth=3,
+        #     alpha=0.8,
+        #     color="red",
+        # )
         
         # Plot prediction for GSP PV yield and actual GSP PV yield
-        ax.plot(forecast_datetimes, predicted[example_i], label="Predicted GSP PV", color="orange", linewidth=3, alpha=0.8)
-        ax.plot(forecast_datetimes, actual[example_i], label="Actual GSP PV", linewidth=3, alpha=0.8)
+        # ax.plot(forecast_datetimes, predicted[example_i], label="Predicted GSP PV", color="orange", linewidth=3, alpha=0.8)
+        # ax.plot(forecast_datetimes, actual[example_i], label="Actual GSP PV", linewidth=3, alpha=0.8)
         
         # Plot NWP params:
         # if "nwp" in batch:
@@ -1526,9 +1526,9 @@ class Model(pl.LightningModule):
         # if batch_idx < 3:
         # Log timeseries of actual GSP power and predicted GSP power
         figure_name = f"{tag}/plot/timeseries/epoch={self.current_epoch};batch_idx={batch_idx}"
-        #fig = plot_timeseries(batch=batch, network_output=network_output)
-        #self.logger.experiment[figure_name].log(fig)
-        #plt.close(fig)
+        fig = plot_timeseries(batch=batch, network_output=network_output)
+        self.logger.experiment[figure_name].log(fig)
+        plt.close(fig)
 
         return neg_log_prob_loss
   
