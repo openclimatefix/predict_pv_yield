@@ -863,8 +863,8 @@ def plot_timeseries(batch: dict[str, torch.Tensor], network_output: dict[str, to
         # Plot prediction for GSP PV yield and actual GSP PV yield
         # ax.plot(forecast_datetimes, predicted[example_i], label="Predicted GSP PV", color="orange", linewidth=3, alpha=0.8)
         # ax.plot(forecast_datetimes, actual[example_i], label="Actual GSP PV", linewidth=3, alpha=0.8)
-        ax.plot(predicted[example_i])
-        
+        ax.plot(forecast_datetimes, predicted[example_i])
+    
         # Plot NWP params:
         # if "nwp" in batch:
             # ax2 = ax.twinx()

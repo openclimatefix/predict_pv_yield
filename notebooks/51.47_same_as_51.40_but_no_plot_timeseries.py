@@ -1014,11 +1014,9 @@ class Model(pl.LightningModule):
             num_embeddings=max(pv_system_id_index_lut) + 1,
             embedding_dim=pv_system_id_embedding_dim,
         )
-
+        
         # Learnable parametrs
-        self.register_buffer(
-            "query", 
-            nn.Parameter(
+        self.query = nn.Parameter(
                 torch.randn(
                     num_elements_query, 
                     embed_dim_query
@@ -1026,11 +1024,9 @@ class Model(pl.LightningModule):
                     - num_fourier_time_features
                 )
             )
-        )
-        self.register_buffer(
-            "learnt_modality_identifier_for_optical_flow", 
-            # 36 = 4x4 patch +  + 4 channel embedding
-            nn.Parameter(
+        
+        # 36 = 4x4 patch +  + 4 channel embedding
+        self.learnt_modality_identifier_for_optical_flow = nn.Parameter(
                 torch.randn(
                     byte_array_dim 
                     - num_fourier_time_features
@@ -1040,11 +1036,9 @@ class Model(pl.LightningModule):
                     - satellite_channel_embedding_dim
                 )
             )
-        )
-        self.register_buffer(
-            "learnt_modality_identifier_for_pv_yield",
-            # 7 timesteps of PV data
-            nn.Parameter(
+
+        # 7 timesteps of PV data
+        self.learnt_modality_identifier_for_pv_yield = nn.Parameter(
                 torch.randn(
                     byte_array_dim   # 64
                     - num_fourier_time_features # 4
@@ -1054,11 +1048,9 @@ class Model(pl.LightningModule):
                     - 7
                 )
             )
-        )
-        self.register_buffer(
-            "learnt_modality_identifier_for_nwp",
-            # 4 timesteps of NWP data
-            nn.Parameter(
+        
+        # 4 timesteps of NWP data
+        self.learnt_modality_identifier_for_nwp = nn.Parameter(
                 torch.randn(
                     byte_array_dim 
                     - num_fourier_time_features
@@ -1067,15 +1059,12 @@ class Model(pl.LightningModule):
                     - nwp_channel_embedding_dim
                 )
             )
-        )
-        self.register_buffer(
-            "learnt_modality_identifier_for_t0_datetime_features", 
-            nn.Parameter(torch.randn(byte_array_dim - N_DATETIME_FEATURES))
-        )
-        self.register_buffer(
-            "learnt_modality_identifier_for_gsp_id", 
-            nn.Parameter(torch.randn(byte_array_dim - gsp_id_embedding_dim))
-        )
+        
+        self.learnt_modality_identifier_for_t0_datetime_features = nn.Parameter(
+            torch.randn(byte_array_dim - N_DATETIME_FEATURES))
+        
+        self.learnt_modality_identifier_for_gsp_id = nn.Parameter(
+            torch.randn(byte_array_dim - gsp_id_embedding_dim))
         
     def forward(self, batch: dict[str, torch.Tensor]) -> torch.Tensor:
         """
