@@ -838,29 +838,29 @@ def plot_timeseries(batch: dict[str, torch.Tensor], network_output: dict[str, to
         # Plot historical PV yield
         historical_pv_datetimes = pd.date_range(t0_datetime - pd.Timedelta("30 minutes"), periods=7, freq="5 min")
         historical_pv_datetimes = mdates.date2num(historical_pv_datetimes)
-        # plot_probs(
-        #     pi=network_output[PI],
-        #     mu=network_output[MU],
-        #     sigma=network_output[SIGMA],
-        #     ax=ax,
-        #     left=mdates.date2num(forecast_datetimes[0]) - FIFTEEN_MINUTES,
-        #     right=mdates.date2num(forecast_datetimes[-1]) + FIFTEEN_MINUTES,
-        #     example_i=example_i,
-        # )
-        # ax.plot(
-        #     historical_pv_datetimes,
-        #     historical_pv[example_i],
-        #     color="grey",
-        #     alpha=0.5
-        # )
-        # ax.plot(
-        #     historical_pv_datetimes,
-        #     np.nanmean(historical_pv, axis=2)[example_i],
-        #     label="Historical mean PV",
-        #     linewidth=3,
-        #     alpha=0.8,
-        #     color="red",
-        # )
+        plot_probs(
+            pi=network_output[PI],
+            mu=network_output[MU],
+            sigma=network_output[SIGMA],
+            ax=ax,
+            left=mdates.date2num(forecast_datetimes[0]) - FIFTEEN_MINUTES,
+            right=mdates.date2num(forecast_datetimes[-1]) + FIFTEEN_MINUTES,
+            example_i=example_i,
+        )
+        ax.plot(
+            historical_pv_datetimes,
+            historical_pv[example_i],
+            color="grey",
+            alpha=0.5
+        )
+        ax.plot(
+            historical_pv_datetimes,
+            np.nanmean(historical_pv, axis=2)[example_i],
+            label="Historical mean PV",
+            linewidth=3,
+            alpha=0.8,
+            color="red",
+        )
         
         # Plot prediction for GSP PV yield and actual GSP PV yield
         ax.plot(forecast_datetimes, predicted[example_i], label="Predicted GSP PV", color="orange", linewidth=3, alpha=0.8)
@@ -868,14 +868,14 @@ def plot_timeseries(batch: dict[str, torch.Tensor], network_output: dict[str, to
         # ax.plot(forecast_datetimes, predicted[example_i])
     
         # Plot NWP params:
-        # if "nwp" in batch:
-        #     ax2 = ax.twinx()
-        #     nwp_time_for_example = pd.to_datetime(nwp_time[example_i], unit="s")
-        #     nwp_time_for_example = mdates.date2num(nwp_time_for_example)
-        #     ax2.plot(nwp_time_for_example, nwp[example_i], label="NWP irradiance", color="green", alpha=0.8)
-        #     ax2.yaxis.set_ticks([])
-        #     ax2.yaxis.set_ticks_position('none')
-        #     ax2.set_ylim(-2, 2)
+        if "nwp" in batch:
+            ax2 = ax.twinx()
+            nwp_time_for_example = pd.to_datetime(nwp_time[example_i], unit="s")
+            nwp_time_for_example = mdates.date2num(nwp_time_for_example)
+            ax2.plot(nwp_time_for_example, nwp[example_i], label="NWP irradiance", color="green", alpha=0.8)
+            # ax2.yaxis.set_ticks([])
+            ax2.yaxis.set_ticks_position('none')
+            ax2.set_ylim(-2, 2)
         
         # Formatting
         ax.xaxis.set_major_locator(mdates.HourLocator())
