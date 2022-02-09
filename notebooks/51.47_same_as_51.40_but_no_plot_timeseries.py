@@ -833,9 +833,11 @@ def plot_timeseries(batch: dict[str, torch.Tensor], network_output: dict[str, to
         t0_datetime = t0_datetimes[example_i]
         t1_datetime = t0_datetime + pd.Timedelta("30 minutes")
         forecast_datetimes = pd.date_range(t1_datetime, periods=4, freq="30 min")
+        forecast_datetimes = mdates.date2num(forecast_datetimes)
 
         # Plot historical PV yield
         historical_pv_datetimes = pd.date_range(t0_datetime - pd.Timedelta("30 minutes"), periods=7, freq="5 min")
+        historical_pv_datetimes = mdates.date2num(historical_pv_datetimes)
         plot_probs(
             pi=network_output[PI],
             mu=network_output[MU],
@@ -869,6 +871,7 @@ def plot_timeseries(batch: dict[str, torch.Tensor], network_output: dict[str, to
             #ax2 = ax.twinx()
             ax2 = ax
             nwp_time_for_example = pd.to_datetime(nwp_time[example_i], unit="s")
+            nwp_time_for_example = mdates.date2num(nwp_time_for_example)
             ax2.plot(nwp_time_for_example, nwp[example_i], label="NWP irradiance", color="green", alpha=0.8)
             ax2.yaxis.set_ticks([])
             ax2.set_ylim(-2, 2)
@@ -878,7 +881,7 @@ def plot_timeseries(batch: dict[str, torch.Tensor], network_output: dict[str, to
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
         ax.set_title("GSP {:.0f} on {}".format(gsp_id[example_i], t0_datetime.strftime("%Y-%m-%d")), y=0.8)
         ax.set_ylim(0, 1)
-        ax.set_xlim(mdates.date2num(historical_pv_datetimes[0]), mdates.date2num(forecast_datetimes[-1]))
+        ax.set_xlim(historical_pv_datetimes[0], forecast_datetimes[-1])
         if example_i == 0:
             fig.legend(framealpha=0, loc="center right")
 
@@ -1490,12 +1493,12 @@ class Model(pl.LightningModule):
             sync_dist=True,  # Required for distributed training (even multi-GPU on signle machine)
         )
 
-        # if batch_idx < 3:
-        #     # Log timeseries of actual GSP power and predicted GSP power
-        #     figure_name = f"{tag}/plot/timeseries/epoch={self.current_epoch};batch_idx={batch_idx}"
-        #     fig = plot_timeseries(batch=batch, network_output=network_output)
-        #     self.logger.experiment[figure_name].log(fig)
-        #     plt.close(fig)
+        if batch_idx < 3:
+            # Log timeseries of actual GSP power and predicted GSP power
+            figure_name = f"{tag}/plot/timeseries/epoch={self.current_epoch};batch_idx={batch_idx}"
+            fig = plot_timeseries(batch=batch, network_output=network_output)
+            self.logger.experiment[figure_name].log(fig)
+            plt.close(fig)
             
         # Get NMAE per GSP, per forecast timestep, per day of year, and per hour of day
         abs_error = (predicted_gsp_power - actual_gsp_power).abs().squeeze().cpu().detach()
