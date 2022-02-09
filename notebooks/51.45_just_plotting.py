@@ -871,19 +871,20 @@ def plot_timeseries(batch: dict[str, torch.Tensor], network_output: dict[str, to
         # if "nwp" in batch:
         #     ax2 = ax.twinx()
         #     nwp_time_for_example = pd.to_datetime(nwp_time[example_i], unit="s")
+        #     nwp_time_for_example = mdates.date2num(nwp_time_for_example)
         #     ax2.plot(nwp_time_for_example, nwp[example_i], label="NWP irradiance", color="green", alpha=0.8)
         #     ax2.yaxis.set_ticks([])
         #     ax2.yaxis.set_ticks_position('none')
         #     ax2.set_ylim(-2, 2)
         
         # Formatting
-        # ax.xaxis.set_major_locator(mdates.HourLocator())
-        # ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
-        # ax.set_title("GSP {:.0f} on {}".format(gsp_id[example_i], t0_datetime.strftime("%Y-%m-%d")), y=0.8)
-        # ax.set_ylim(0, 1)
-        # ax.set_xlim(mdates.date2num(historical_pv_datetimes[0]), mdates.date2num(forecast_datetimes[-1]))
-        # if example_i == 0:
-        #     fig.legend(framealpha=0, loc="center right")
+        ax.xaxis.set_major_locator(mdates.HourLocator())
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
+        ax.set_title("GSP {:.0f} on {}".format(gsp_id[example_i], t0_datetime.strftime("%Y-%m-%d")), y=0.8)
+        ax.set_ylim(0, 1)
+        ax.set_xlim(historical_pv_datetimes[0], forecast_datetimes[-1])
+        if example_i == 0:
+            fig.legend(framealpha=0, loc="center right")
 
     return fig
 
