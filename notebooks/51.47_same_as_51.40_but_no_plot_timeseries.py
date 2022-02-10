@@ -843,8 +843,8 @@ def plot_timeseries(batch: dict[str, torch.Tensor], network_output: dict[str, to
             mu=network_output[MU],
             sigma=network_output[SIGMA],
             ax=ax,
-            left=mdates.date2num(forecast_datetimes[0]) - FIFTEEN_MINUTES,
-            right=mdates.date2num(forecast_datetimes[-1]) + FIFTEEN_MINUTES,
+            left=forecast_datetimes[0] - FIFTEEN_MINUTES,
+            right=forecast_datetimes[-1] + FIFTEEN_MINUTES,
             example_i=example_i,
         )
         ax.plot(
@@ -868,8 +868,7 @@ def plot_timeseries(batch: dict[str, torch.Tensor], network_output: dict[str, to
         
         # Plot NWP params:
         if "nwp" in batch:
-            #ax2 = ax.twinx()
-            ax2 = ax
+            ax2 = ax.twinx()
             nwp_time_for_example = pd.to_datetime(nwp_time[example_i], unit="s")
             nwp_time_for_example = mdates.date2num(nwp_time_for_example)
             ax2.plot(nwp_time_for_example, nwp[example_i], label="NWP irradiance", color="green", alpha=0.8)
