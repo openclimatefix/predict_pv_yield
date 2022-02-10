@@ -28,7 +28,7 @@ class Model(BaseModel):
         fc1_output_features: int = 128,
         fc2_output_features: int = 128,
         fc3_output_features: int = 64,
-        output_variable: str = "pv_yield",
+        output_variable: str = "gsp_yield",
         embedding_dem: int = 16,
         include_pv_yield_history: int = True,
         include_future_satellite: int = True,
