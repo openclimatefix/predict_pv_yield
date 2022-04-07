@@ -35,7 +35,7 @@ def test_model_forward(configuration_conv3d):
 
     # check out put is the correct shape
     assert len(y.shape) == 2
-    assert y.shape[0] == 32
+    assert y.shape[0] == 2
     assert y.shape[1] == model.forecast_len_30
 
 
@@ -61,7 +61,7 @@ def test_model_forward_no_satellite(configuration_conv3d):
 
     # check out put is the correct shape
     assert len(y.shape) == 2
-    assert y.shape[0] == 32
+    assert y.shape[0] == 2
     assert y.shape[1] == model.forecast_len_30
 
 
