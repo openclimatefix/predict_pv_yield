@@ -13,8 +13,8 @@ Final outcome is PV yield for the future.
 
 ## Conv_nwp
 
-We have built a model that takes nwp input data only. 
-This has several 3dd cnn layers and then a few fully connected layers. 
+We have built a model that takes nwp input data only.
+This has several 3dd cnn layers and then a few fully connected layers.
 
 The only nwp channel is `dswrf`
 

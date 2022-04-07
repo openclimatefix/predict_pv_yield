@@ -9,4 +9,3 @@ fc1_output_features: 128
 fc2_output_features: 128
 fc3_output_features: 64
 number_nwp_channels: 1
-
