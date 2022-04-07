@@ -34,6 +34,7 @@ class Model(BaseModel):
         embedding_dem: int = 16,
         include_pv_yield_history: int = True,
         include_future_satellite: int = True,
+        live_satellite_images: bool = True
     ):
         """
         3d conv model, that takes in different data streams
@@ -61,6 +62,8 @@ class Model(BaseModel):
         output_variable: the output variable to be predicted
         number_nwp_channels: The number of nwp channels there are
         include_future_satellite: option to include future satellite images, or not
+        live_satellite_images: bool. Live satellite images are only available after 30 minutes,
+            so lets make sure we don't use non available data in training
         """
 
         self.include_pv_or_gsp_yield_history = include_pv_or_gsp_yield_history
@@ -77,6 +80,7 @@ class Model(BaseModel):
         self.embedding_dem = embedding_dem
         self.include_pv_yield_history = include_pv_yield_history
         self.include_future_satellite = include_future_satellite
+        self.live_satellite_images = live_satellite_images
 
         super().__init__()
 
@@ -86,6 +90,13 @@ class Model(BaseModel):
             cnn_output_size_time = self.forecast_len_5 + self.history_len_5 + 1
         else:
             cnn_output_size_time = self.history_len_5 + 1
+
+        if live_satellite_images:
+            # remove the last 6 satellite images (30 minutes) as no available live
+            cnn_output_size_time = cnn_output_size_time - 6
+            if cnn_output_size_time <= 0:
+                assert Exception('Need to use at least 30 mintues of satellite data in the past')
+
         self.cnn_output_size = (
             conv3d_channels
             * ((image_size_pixels - 2 * self.number_of_conv3d_layers) ** 2)
@@ -183,6 +194,9 @@ class Model(BaseModel):
 
         if not self.include_future_satellite:
             sat_data = sat_data[:, :, : self.history_len_5 + 1]
+
+        if self.live_satellite_images:
+            sat_data = sat_data[:, :, :-6]
 
         # :) Pass data through the network :)
         out = F.relu(self.sat_conv0(sat_data))
