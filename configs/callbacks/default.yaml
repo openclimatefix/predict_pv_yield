@@ -15,3 +15,7 @@ early_stopping:
   mode: "min" # can be "max" or "min"
   patience: 5 # how many epochs of not improving until training stops
   min_delta: 0 # minimum change in the monitored metric needed to qualify as an improvement
+
+hugging_face:
+  _target_: hf-hub-lightning.callback.HuggingFaceHubCallback
+  repo_name: Openclimatefix/CNN
