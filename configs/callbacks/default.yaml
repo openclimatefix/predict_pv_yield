@@ -17,5 +17,5 @@ early_stopping:
   min_delta: 0 # minimum change in the monitored metric needed to qualify as an improvement
 
 hugging_face:
-  _target_: hf-hub-lightning.callback.HuggingFaceHubCallback
-  repo_name: Openclimatefix/CNN
+  _target_: hf_hub_lightning.callback.HuggingFaceHubCallback
+  repo_name: Openclimatefix/nowcasting_cnn

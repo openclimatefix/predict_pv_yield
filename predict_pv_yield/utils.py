@@ -7,6 +7,7 @@ import warnings
 from typing import List, Sequence
 
 import pytorch_lightning as pl
+import torch
 import rich.syntax
 import rich.tree
 from omegaconf import DictConfig, OmegaConf
@@ -176,6 +177,9 @@ def log_hyperparameters(
     # since we already did that above
     trainer.logger.log_hyperparams = empty
 
+    # save the model
+    save_model(model=model,logger=logger)
+
 
 def finish(
     config: DictConfig,
@@ -193,3 +197,13 @@ def finish(
             import wandb
 
             wandb.finish()
+
+
+def save_model(model:pl.LightningModule, logger):
+
+    torch.save(model, 'model.pickle')
+
+    try:
+        logger.experiment[-1]['model'].upload(f"model.pickle")
+    except:
+        print('Could not save model')
