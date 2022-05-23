@@ -8,3 +8,8 @@ pin_memory: True
 data_path: "/mnt/storage_ssd_4tb/data/ocf/solar_pv_nowcasting/nowcasting_dataset_pipeline/prepared_ML_training_data/v15/"
 fake_data: False
 shuffle_train: True
+data_sources_names:
+- gsp
+- nwp
+- satellite
+- pv

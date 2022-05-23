@@ -34,7 +34,9 @@ class Model(BaseModel):
         embedding_dem: int = 16,
         include_pv_yield_history: int = True,
         include_future_satellite: int = True,
-        live_satellite_images: bool = True
+        live_satellite_images: bool = True,
+        gsp_forecast_minutes: int = 480,
+        gsp_history_minutes: int = 120
     ):
         """
         3d conv model, that takes in different data streams
@@ -64,6 +66,8 @@ class Model(BaseModel):
         include_future_satellite: option to include future satellite images, or not
         live_satellite_images: bool. Live satellite images are only available after 30 minutes,
             so lets make sure we don't use non available data in training
+        gsp_forecast_minutes: number of minutes the gsp should be forecasts by
+        gsp_history_minutes: number of hsitory minutes the gsp should have
         """
 
         self.include_pv_or_gsp_yield_history = include_pv_or_gsp_yield_history
@@ -81,6 +85,11 @@ class Model(BaseModel):
         self.include_pv_yield_history = include_pv_yield_history
         self.include_future_satellite = include_future_satellite
         self.live_satellite_images = live_satellite_images
+        self.gsp_forecast_minutes = gsp_forecast_minutes
+        self.gsp_history_minutes = gsp_history_minutes
+
+        self.gsp_forecast_length = self.gsp_forecast_minutes // 30
+        self.gsp_history_length = self.gsp_history_minutes // 30
 
         super().__init__()
 
@@ -169,7 +178,7 @@ class Model(BaseModel):
 
         fc3_in_features = self.fc2_output_features
         if include_pv_or_gsp_yield_history:
-            fc3_in_features += self.number_of_samples_per_batch * (self.history_len_30 + 1)
+            fc3_in_features += self.number_of_samples_per_batch * (self.gsp_history_length + 1)
         if include_nwp:
             fc3_in_features += 128
         if self.embedding_dem:
@@ -178,7 +187,7 @@ class Model(BaseModel):
             fc3_in_features += 128
 
         self.fc3 = nn.Linear(in_features=fc3_in_features, out_features=self.fc3_output_features)
-        self.fc4 = nn.Linear(in_features=self.fc3_output_features, out_features=self.forecast_len)
+        self.fc4 = nn.Linear(in_features=self.fc3_output_features, out_features=self.gsp_forecast_length)
         # self.fc5 = nn.Linear(in_features=32, out_features=8)
         # self.fc6 = nn.Linear(in_features=8, out_features=1)
 
@@ -215,7 +224,7 @@ class Model(BaseModel):
         if self.include_pv_or_gsp_yield_history:
             if self.output_variable == "gsp_yield":
                 pv_yield_history = (
-                    x.gsp.gsp_yield[:, : self.history_len_30 + 1].nan_to_num(nan=0.0).float()
+                    x.gsp.gsp_yield[:, : self.gsp_history_length + 1].nan_to_num(nan=0.0).float()
                 )
             else:
                 pv_yield_history = (
@@ -248,6 +257,9 @@ class Model(BaseModel):
             # shape: batch_size, n_chans, seq_len, height, width
             nwp_data = x.nwp.data.float()
 
+            # select first few channels
+            nwp_data = nwp_data[:, :self.number_nwp_channels]
+
             out_nwp = F.relu(self.nwp_conv0(nwp_data))
             for i in range(0, self.number_of_conv3d_layers - 1):
                 layer = getattr(self, f"nwp_conv{i + 1}")
@@ -277,6 +289,6 @@ class Model(BaseModel):
         out = F.relu(self.fc3(out))
         out = self.fc4(out)
 
-        out = out.reshape(batch_size, self.forecast_len)
+        out = out.reshape(batch_size, self.gsp_forecast_length)
 
         return out
