@@ -36,7 +36,8 @@ class Model(BaseModel):
         include_future_satellite: int = True,
         live_satellite_images: bool = True,
         gsp_forecast_minutes: int = 480,
-        gsp_history_minutes: int = 120
+        gsp_history_minutes: int = 120,
+        include_sun: bool = False,
     ):
         """
         3d conv model, that takes in different data streams
@@ -87,6 +88,7 @@ class Model(BaseModel):
         self.live_satellite_images = live_satellite_images
         self.gsp_forecast_minutes = gsp_forecast_minutes
         self.gsp_history_minutes = gsp_history_minutes
+        self.include_sun = include_sun
 
         self.gsp_forecast_length = self.gsp_forecast_minutes // 30
         self.gsp_history_length = self.gsp_history_minutes // 30
@@ -175,6 +177,11 @@ class Model(BaseModel):
                 in_features=self.number_of_pv_samples_per_batch * (self.history_len_5 + 1),
                 out_features=128,
             )
+        if self.include_sun:
+            self.sun_fc1 = nn.Linear(
+                in_features=2 * (self.forecast_len_5 + self.history_len_5 + 1),
+                out_features=16,
+            )
 
         fc3_in_features = self.fc2_output_features
         if include_pv_or_gsp_yield_history:
@@ -185,6 +192,8 @@ class Model(BaseModel):
             fc3_in_features += self.embedding_dem
         if self.include_pv_yield_history:
             fc3_in_features += 128
+        if self.include_sun:
+            fc3_in_features += 16
 
         self.fc3 = nn.Linear(in_features=fc3_in_features, out_features=self.fc3_output_features)
         self.fc4 = nn.Linear(in_features=self.fc3_output_features, out_features=self.gsp_forecast_length)
@@ -284,6 +293,12 @@ class Model(BaseModel):
             id = id.to(out.device)
             id_embedding = self.pv_system_id_embedding(id)
             out = torch.cat((out, id_embedding), dim=1)
+
+        if self.include_sun:
+
+            sun = torch.cat((x.sun.sun_azimuth_angle, x.sun.sun_elevation_angle), dim=1)
+            out_sun = self.sun_fc1(sun)
+            out = torch.cat((out, out_sun), dim=1)
 
         # Fully connected layers.
         out = F.relu(self.fc3(out))
