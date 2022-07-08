@@ -185,7 +185,7 @@ class Model(BaseModel):
 
         fc3_in_features = self.fc2_output_features
         if include_pv_or_gsp_yield_history:
-            fc3_in_features += self.number_of_samples_per_batch * (self.gsp_history_length + 1)
+            fc3_in_features += self.number_of_samples_per_batch * self.gsp_history_length
         if include_nwp:
             fc3_in_features += 128
         if self.embedding_dem:
@@ -233,11 +233,11 @@ class Model(BaseModel):
         if self.include_pv_or_gsp_yield_history:
             if self.output_variable == "gsp_yield":
                 pv_yield_history = (
-                    x.gsp.gsp_yield[:, : self.gsp_history_length + 1].nan_to_num(nan=0.0).float()
+                    x.gsp.gsp_yield[:, : self.gsp_history_length].nan_to_num(nan=0.0).float()
                 )
             else:
                 pv_yield_history = (
-                    x.pv.pv_yield[:, : self.history_len_30 + 1].nan_to_num(nan=0.0).float()
+                    x.pv.pv_yield[:, : self.history_len_30].nan_to_num(nan=0.0).float()
                 )
 
             pv_yield_history = pv_yield_history.reshape(
@@ -267,7 +267,7 @@ class Model(BaseModel):
             nwp_data = x.nwp.data.float()
 
             # select first few channels
-            nwp_data = nwp_data[:, :self.number_nwp_channels]
+            nwp_data = nwp_data[:, :self.number_nwp_channels, :4]
 
             out_nwp = F.relu(self.nwp_conv0(nwp_data))
             for i in range(0, self.number_of_conv3d_layers - 1):
@@ -297,6 +297,7 @@ class Model(BaseModel):
         if self.include_sun:
 
             sun = torch.cat((x.sun.sun_azimuth_angle, x.sun.sun_elevation_angle), dim=1)
+            sun = torch.nan_to_num(sun, nan=-100.0)
             out_sun = self.sun_fc1(sun)
             out = torch.cat((out, out_sun), dim=1)
 

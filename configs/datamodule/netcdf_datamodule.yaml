@@ -13,3 +13,6 @@ data_sources_names:
 - nwp
 - satellite
 - pv
+- sun
+nwp_channels:
+- dswrf

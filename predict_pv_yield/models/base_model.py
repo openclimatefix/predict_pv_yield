@@ -73,7 +73,7 @@ class BaseModel(pl.LightningModule):
             self.number_of_samples_per_batch = 32
         self.number_of_pv_samples_per_batch = 128
 
-        self.weighted_losses = WeightedLosses(forecast_length=self.forecast_len)
+        self.weighted_losses = WeightedLosses(forecast_length=self.gsp_forecast_length)
 
     def _training_or_validation_step(self, batch, tag: str, return_model_outputs: bool = False):
         """
@@ -92,7 +92,7 @@ class BaseModel(pl.LightningModule):
             y = batch.gsp.gsp_yield
         else:
             y = batch.pv.pv_yield
-        y = y[0 : self.batch_size, -self.forecast_len :, 0]
+        y = y[0 : self.batch_size, self.gsp_history_length + 1:, 0]
 
         # calculate mse, mae
         mse_loss = F.mse_loss(y_hat, y)
@@ -205,7 +205,7 @@ class BaseModel(pl.LightningModule):
             time_hat = [
                 pd.to_datetime(x, unit="ns")
                 for x in batch.gsp.gsp_datetime_index[
-                    0 : self.batch_size, self.history_len_30 + 1 :
+                    0 : self.batch_size, self.self.gsp_history_length + 1 :
                 ]
                 .cpu()
                 .numpy()
@@ -220,9 +220,9 @@ class BaseModel(pl.LightningModule):
                 pass
 
         # save validation results
-        capacity = batch.gsp.gsp_capacity[:,-self.forecast_len_30:,0].cpu().numpy()
+        capacity = batch.gsp.gsp_capacity[:,-self.gsp_forecast_length:,0].cpu().numpy()
         predictions = model_output.cpu().numpy()
-        truths = batch.gsp.gsp_yield[:, -self.forecast_len_30:, 0].cpu().numpy()
+        truths = batch.gsp.gsp_yield[:, -self.gsp_forecast_length:, 0].cpu().numpy()
         predictions = predictions * capacity
         truths = truths * capacity
 
@@ -243,6 +243,10 @@ class BaseModel(pl.LightningModule):
     def validation_epoch_end(self, outputs):
 
         logger.info("Validation epoch end")
+
+        if self.current_epoch == 0:
+            torch.save(self, 'model.pickle')
+            self.logger.experiment[-1]['model'].upload(f"model.pickle")
 
         save_validation_results_to_logger(results_dfs=self.results_dfs,
                                           results_file_name=self.results_file_name,
