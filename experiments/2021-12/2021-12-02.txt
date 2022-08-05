@@ -1,0 +1,13 @@
+https://app.neptune.ai/o/OpenClimateFix/org/predict-pv-yield/e/PRED-571/monitoring
+
+run Perceiver model
+
+data
+satdata (no future)
+nwp
+no gsp
+historical pv
+
+epoch time ~ 1.5 hours
+
+Validation

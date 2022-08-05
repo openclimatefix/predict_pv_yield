@@ -153,6 +153,12 @@ class BaseModel(pl.LightningModule):
             return self._training_or_validation_step(batch, tag="Train")
 
     def validation_step(self, batch: BatchML, batch_idx):
+        self.validation_or_test_step(batch, batch_idx)
+
+    def test_step(self, batch: BatchML, batch_idx):
+        self.validation_or_test_step(batch, batch_idx)
+
+    def validation_or_test_step(self, batch: BatchML, batch_idx):
 
         if type(batch) == dict:
             batch = BatchML(**batch)
@@ -220,18 +226,18 @@ class BaseModel(pl.LightningModule):
                 pass
 
         # save validation results
-        capacity = batch.gsp.gsp_capacity[:,-self.forecast_len_30:,0].cpu().numpy()
+        capacity = batch.gsp.gsp_capacity[0 : self.batch_size,-self.forecast_len_30:,0].cpu().numpy()
         predictions = model_output.cpu().numpy()
-        truths = batch.gsp.gsp_yield[:, -self.forecast_len_30:, 0].cpu().numpy()
+        truths = batch.gsp.gsp_yield[0 : self.batch_size, -self.forecast_len_30:, 0].cpu().numpy()
         predictions = predictions * capacity
         truths = truths * capacity
 
         results = make_validation_results(truths_mw=truths,
                                           predictions_mw=predictions,
                                           capacity_mwp=capacity,
-                                          gsp_ids=batch.gsp.gsp_id[:, 0].cpu(),
+                                          gsp_ids=batch.gsp.gsp_id[0:self.batch_size, 0].cpu(),
                                           batch_idx=batch_idx,
-                                          t0_datetimes_utc=pd.to_datetime(batch.metadata.t0_datetime_utc))
+                                          t0_datetimes_utc=pd.to_datetime(batch.metadata.t0_datetime_utc)[0:self.batch_size])
 
         # append so in 'validation_epoch_end' the file is saved
         if batch_idx == 0:
@@ -249,8 +255,14 @@ class BaseModel(pl.LightningModule):
                                           current_epoch=self.current_epoch,
                                           logger=self.logger)
 
-    def test_step(self, batch, batch_idx):
-        self._training_or_validation_step(batch, tag="Test")
+    def test_epoch_end(self, outputs):
+
+        logger.info("Test epoch end")
+
+        save_validation_results_to_logger(results_dfs=self.results_dfs,
+                                          results_file_name=self.results_file_name,
+                                          current_epoch=self.current_epoch,
+                                          logger=self.logger)
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=0.0005)

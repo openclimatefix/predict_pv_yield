@@ -1,0 +1,16 @@
+1. Compare no future satellite data, with future satellite data
+
+For conv3d model
+
+With: https://app.neptune.ai/o/OpenClimateFix/org/predict-pv-yield/e/PRED-550/charts
+Not: https://app.neptune.ai/o/OpenClimateFix/org/predict-pv-yield/e/PRED-549/charts
+
+Validation Error
+With: 0.0665
+Not: 0.0670
+
+data:
+nwp
+sat (no hrv, no future)
+no gsp history
+pv history

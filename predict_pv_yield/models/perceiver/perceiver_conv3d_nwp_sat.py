@@ -72,7 +72,9 @@ class Model(BaseModel):
         embedding_dem: int = 16,
         output_variable: str = "pv_yield",
         conv3d_channels: int = 16,
-        use_future_satellite_images: bool = True,  # option not to use future sat images
+        use_future_satellite_images: bool = False,  # option not to use future sat images
+        include_pv_or_gsp_yield_history: bool = False,
+        include_pv_yield_history: int = True,
     ):
         """
         Idea is to have a conv3d (+max pool) layer before both sat and nwp data go into perceiver model.
@@ -86,6 +88,8 @@ class Model(BaseModel):
         self.embedding_dem = embedding_dem
         self.output_variable = output_variable
         self.use_future_satellite_images = use_future_satellite_images
+        self.include_pv_yield_history = include_pv_yield_history
+        self.include_pv_or_gsp_yield_history = include_pv_or_gsp_yield_history
 
         self.total_seq_length = self.history_minutes // 5 + self.forecast_minutes // 5 + 1
 
@@ -117,10 +121,16 @@ class Model(BaseModel):
         if self.embedding_dem:
             self.pv_system_id_embedding = nn.Embedding(num_embeddings=2048, embedding_dim=self.embedding_dem)
 
+        rnn_input_size = FC_OUTPUT_SIZE
+        if self.include_pv_or_gsp_yield_history:
+            rnn_input_size += 1
+        if self.include_pv_yield_history:
+            rnn_input_size += 128
+
         # TODO: Get rid of RNNs!
         self.encoder_rnn = nn.GRU(
             # plus 1 for history
-            input_size=FC_OUTPUT_SIZE + 1,
+            input_size=rnn_input_size,
             hidden_size=RNN_HIDDEN_SIZE,
             num_layers=2,
             batch_first=True,
@@ -171,8 +181,17 @@ class Model(BaseModel):
 
         nwp_data = nwp_data.reshape(new_batch_size, nwp_width, nwp_height, n_nwp_chans)
 
-        assert nwp_width == width, f'widths should be the same({nwp_width},{width})'
-        assert nwp_height == height, f'heights should be the same({nwp_height},{height})'
+        # v15 the width and height are a lot less, so lets expand the sat data. There should be a better way
+        sat_data_zeros = torch.zeros(size=(new_batch_size, nwp_width - width, height, n_chans),
+                                     device=sat_data.device)
+        sat_data = torch.cat([sat_data, sat_data_zeros], dim=1)
+        sat_data_zeros = torch.zeros(size=(new_batch_size, nwp_width, nwp_height - height, n_chans),
+                                     device=sat_data.device)
+        sat_data = torch.cat([sat_data, sat_data_zeros], dim=2)
+        new_batch_size, sat_width, sat_height, sat_n_chans = sat_data.shape
+
+        assert nwp_width == sat_height, f'widths should be the same({nwp_width},{sat_width})'
+        assert nwp_height == sat_height, f'heights should be the same({nwp_height},{sat_height})'
 
         data = torch.cat((sat_data, nwp_data), dim=-1)
 
@@ -216,14 +235,25 @@ class Model(BaseModel):
             dim=2,
         )
 
-        if self.output_variable == 'pv_yield':
-            # take the history of the pv yield of this system,
-            pv_yield_history = x.pv.pv_yield[0 : self.batch_size][:, : self.history_len_5 + 1, 0].unsqueeze(-1).float()
-            encoder_input = torch.cat((rnn_input[:, : self.history_len_5 + 1], pv_yield_history), dim=2)
-        elif self.output_variable == 'gsp_yield':
-            # take the history of the gsp yield of this system,
-            gsp_history = x.gsp.gsp_yield[0: self.batch_size][:, : self.history_len_30 + 1, 0].unsqueeze(-1).float()
-            encoder_input = torch.cat((rnn_input[:, : self.history_len_30 + 1], gsp_history), dim=2)
+        if self.include_pv_or_gsp_yield_history:
+            if self.output_variable == 'pv_yield':
+                # take the history of the pv yield of this system,
+                pv_yield_history = x.pv.pv_yield[0 : self.batch_size][:, : self.history_len_5 + 1, 0].unsqueeze(-1).float()
+                encoder_input = torch.cat((rnn_input[:, : self.history_len_5 + 1], pv_yield_history), dim=2)
+            elif self.output_variable == 'gsp_yield':
+                # take the history of the gsp yield of this system,
+                gsp_history = x.gsp.gsp_yield[0: self.batch_size][:, : self.history_len_30 + 1, 0].unsqueeze(-1).float()
+                encoder_input = torch.cat((rnn_input[:, : self.history_len_30 + 1], gsp_history), dim=2)
+
+        # add the pv yield history. This can be used if trying to predict gsp
+        if self.include_pv_yield_history:
+            pv_yield_history = (
+                x.pv.pv_yield[:self.batch_size].nan_to_num(nan=0.0).float()
+            )
+            # remove future pv
+            pv_yield_history[:, self.history_len_5 + 1:] = 0.0
+
+            encoder_input = torch.cat((rnn_input, pv_yield_history), dim=2)
 
         encoder_output, encoder_hidden = self.encoder_rnn(encoder_input)
         decoder_output, _ = self.decoder_rnn(rnn_input[:, -self.forecast_len :], encoder_hidden)

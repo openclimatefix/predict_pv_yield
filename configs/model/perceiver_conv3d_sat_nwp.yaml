@@ -1,11 +1,13 @@
 _target_: predict_pv_yield.models.perceiver.perceiver_conv3d_nwp_sat.Model
 
-forecast_minutes: 30
-history_minutes: 60
-batch_size: 32
+forecast_minutes: 120
+history_minutes: 30
+batch_size: 16
 num_latents: 24
 latent_dim: 24
 embedding_dem: 0
 output_variable: gsp_yield
 conv3d_channels: 8
 use_future_satellite_images: 0
+include_pv_or_gsp_yield_history: False
+include_pv_yield_history: True

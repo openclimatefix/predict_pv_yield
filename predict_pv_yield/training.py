@@ -77,7 +77,9 @@ def train(config: DictConfig) -> Optional[float]:
 
     # Train the model
     log.info("Starting training!")
-    if 'validate_only' in config:
+    if 'load_model' is config:
+        model = model.load_from_checkpoint(checkpoint_path=config['load_model'])
+    elif 'validate_only' in config:
         trainer.validate(model=model, datamodule=datamodule)
     else:
         trainer.fit(model=model, datamodule=datamodule)
@@ -85,7 +87,7 @@ def train(config: DictConfig) -> Optional[float]:
     # Evaluate model on test set, using the best model achieved during training
     if config.get("test_after_training") and not config.trainer.get("fast_dev_run"):
         log.info("Starting testing!")
-        trainer.test()
+        trainer.test(model=model, datamodule=datamodule)
 
     # Make sure everything closed properly
     log.info("Finalizing!")
