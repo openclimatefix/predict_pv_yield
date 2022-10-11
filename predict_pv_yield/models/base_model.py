@@ -205,7 +205,7 @@ class BaseModel(pl.LightningModule):
             time_hat = [
                 pd.to_datetime(x, unit="ns")
                 for x in batch.gsp.gsp_datetime_index[
-                    0 : self.batch_size, self.self.gsp_history_length + 1 :
+                    0 : self.batch_size, self.gsp_history_length + 1 :
                 ]
                 .cpu()
                 .numpy()

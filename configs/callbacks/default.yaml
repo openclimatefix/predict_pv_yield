@@ -18,4 +18,4 @@ early_stopping:
 
 hugging_face:
   _target_: hf_hub_lightning.callback.HuggingFaceHubCallback
-  repo_name: Openclimatefix/nowcasting_cnn
+  repo_name: openclimatefix/nowcasting_cnn

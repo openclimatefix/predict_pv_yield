@@ -38,6 +38,7 @@ class Model(BaseModel):
         gsp_forecast_minutes: int = 480,
         gsp_history_minutes: int = 120,
         include_sun: bool = False,
+        include_satellite: bool = True
     ):
         """
         3d conv model, that takes in different data streams
@@ -89,6 +90,7 @@ class Model(BaseModel):
         self.gsp_forecast_minutes = gsp_forecast_minutes
         self.gsp_history_minutes = gsp_history_minutes
         self.include_sun = include_sun
+        self.include_satellite=include_satellite
 
         self.gsp_forecast_length = self.gsp_forecast_minutes // 30
         self.gsp_history_length = self.gsp_history_minutes // 30
@@ -215,6 +217,9 @@ class Model(BaseModel):
 
         if self.live_satellite_images:
             sat_data = sat_data[:, :, :-6]
+
+        if not self.include_satellite:
+            sat_data = torch.zeros_like(sat_data)
 
         # :) Pass data through the network :)
         out = F.relu(self.sat_conv0(sat_data))

@@ -20,3 +20,4 @@ embedding_dem: 8
 gsp_forecast_minutes: 480
 gsp_history_minutes: 120
 include_sun: True
+include_satellite: True
